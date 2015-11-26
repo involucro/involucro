@@ -1,4 +1,4 @@
-package main
+package wrap
 
 import (
 	"fmt"
@@ -6,13 +6,11 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-/*type Step interface {
-	WithDockerClient(c *docker.Client) error
-	DryRun()
-	AsShellCommand() string
-}*/
-
 type WrapAsImage struct {
+	SourceDir         string
+	TargetDir         string
+	ParentImage       string
+	NewRepositoryName string
 }
 
 func (img WrapAsImage) DryRun() {
@@ -24,5 +22,5 @@ func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 }
 
 func (img WrapAsImage) AsShellCommand() string {
-	return fmt.Sprintf("docker wrap -t --rm \n")
+	return fmt.Sprintf("echo NOT IMPLEMENTED YET\n")
 }

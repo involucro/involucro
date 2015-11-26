@@ -4,33 +4,32 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"path/filepath"
 )
+
+var workingDir string
 
 func main() {
 
-	arguments := parse()
+	arguments := parseArguments()
 	fmt.Println(arguments)
-	log.Info("Starting")
+
+	relativeWorkDir := arguments["-w"].(string)
+	workingDir, _ = filepath.Abs(relativeWorkDir)
+	log.SetLevel(log.DebugLevel)
+	log.WithFields(log.Fields{"workdir": workingDir}).Info("Start")
 
 	ctx := InstantiateRuntimeEnv()
-	ctx.EvalString(`2 + 3`)
-	result := ctx.GetNumber(-1)
-	ctx.Pop()
-	log.WithFields(log.Fields{"result": result}).Info("result received")
 
-	ctx.EvalString(`inv.task('blah')`)
-	defer func() {
-		if r := recover(); r != nil {
-			log.Info("recovered, something went wrong")
-		}
-	}()
-	ctx.EvalString(`inv.task(5)`)
+	ctx.duk.EvalString(`inv.task('test').using('busybox').run('echo', 'Hello, Inxmail')`)
 
-	endpoint := "unix:///var/run/docker.sock"
-	client, _ := docker.NewClient(endpoint)
+	client, _ := docker.NewClient(arguments["--host"].(string))
 	client.Ping()
-	imgs, _ := client.ListImages(docker.ListImagesOptions{All: false})
-	for _, img := range imgs {
-		log.WithFields(log.Fields{"id": img.ID}).Info("have docker image")
+
+	for _, element := range (arguments["<task>"]).([]string) {
+		for _, step := range ctx.tasks[element] {
+			step.DryRun()
+			step.WithDockerClient(client)
+		}
 	}
 }

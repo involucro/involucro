@@ -2,14 +2,14 @@ package main
 
 import "github.com/docopt/docopt-go"
 
-func parse() map[string]interface{} {
+func parseArguments() map[string]interface{} {
 
 	usage := `Involucro.
 
 Usage:
   involucro -h | --help
   involucro --version
-  involucro [ -H <url> | --host=<url> ] [-v [-v]] [ -f <file> ] [--] <task>...
+  involucro [-w <path>] [ -H <url> | --host=<url> ] [-v [-v]] [ -f <file> ] [--] <task>...
 	involucro (-n | -s) [-v [-v]] [-f <file>] [--] <task>...
 
 Options:
@@ -20,6 +20,7 @@ Options:
   -v                      Increase verbosity (use twice for even more messages).
 	-n                      Do not really execute commands in Docker, just show them.
 	-s                      Instead of executing the commands against Docker, print equivalent shell commands.
+	-w <path>               Set working dir, being the base for all scoping operations. [default: .]
 `
 	arguments, _ := docopt.Parse(usage, nil, true, "Involucro 0.1", false)
 	return arguments

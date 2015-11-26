@@ -1,7 +1,7 @@
 
 all: test
 
-SOURCES = $(wildcard *.go)
+SOURCES = $(wildcard **/*.go)
 PKGS = ./.
 
 get-deps:
