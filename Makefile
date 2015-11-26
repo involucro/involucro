@@ -5,10 +5,12 @@ SOURCES = $(wildcard *.go)
 PKGS = ./.
 
 get-deps:
-	go get ./...
+	@go get ./...
+	@go get github.com/smartystreets/goconvey
 
 test:
-	$(foreach pkg,$(PKGS),go test -v $(pkg) || exit;)
+	@echo Run test...
+	@$(foreach pkg,$(PKGS),go test -v $(pkg) || exit;)
 
 build:
 	@go build ./.
