@@ -1,4 +1,3 @@
-
 package main
 
 import duk "gopkg.in/olebedev/go-duktape.v2"
@@ -13,12 +12,24 @@ func PushDerivedFromThis(c *duk.Context) int {
 
 func RequireStringOrFailGracefully(c *duk.Context, idx int, method string) string {
 	typ := c.GetType(idx)
-	if (typ == duk.TypeString) {
+	if typ == duk.TypeString {
 		return c.GetString(idx)
 	} else {
-		log.WithFields(log.Fields{"method": method, "type": typ}).Fatal("Invalid argument type in method call.")
+		log.WithFields(log.Fields{"method": method, "type": typ}).Panic("Invalid argument type in method call.")
 		return ""
 	}
 }
 
-func AddPropToObject(c *duk.Context)
+const DEF_PROP_FLAGS = (1 << 6) | (1 << 3)
+
+func DefineStringOnObject(c *duk.Context, idx int, key string, value string) {
+	c.PushString(key)
+	c.PushString(value)
+	c.DefProp(idx, DEF_PROP_FLAGS)
+}
+
+func DefineFuncOnObject(c *duk.Context, idx int, key string, value func(*duk.Context) int) {
+	c.PushString(key)
+	c.PushGoFunction(value)
+	c.DefProp(idx, DEF_PROP_FLAGS)
+}
