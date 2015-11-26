@@ -7,10 +7,11 @@ import run "github.com/thriqon/involucro/steps/run"
 
 //import wrap "github.com/thriqon/involucro/steps/wrap"
 
-func InstantiateRuntimeEnv() InvContext {
+func InstantiateRuntimeEnv(workingDir string) InvContext {
 	m := InvContext{
-		duk:   duk.New(),
-		tasks: make(map[string][]Step),
+		duk:        duk.New(),
+		Tasks:      make(map[string][]Step),
+		WorkingDir: workingDir,
 	}
 
 	global := m.duk.PushObject()
@@ -110,7 +111,7 @@ func FileRun(i *InvContext) int {
 	imageId := RequireStringOrFailGracefully(c, -1, "run:image_id")
 	c.Pop()
 
-	bind := workingDir + ":/source"
+	bind := i.WorkingDir + ":/source"
 
 	ei := run.ExecuteImage{
 		Config: docker.Config{
@@ -124,6 +125,6 @@ func FileRun(i *InvContext) int {
 		},
 	}
 
-	i.tasks[taskId] = append(i.tasks[taskId], ei)
+	i.Tasks[taskId] = append(i.Tasks[taskId], ei)
 	return 1
 }

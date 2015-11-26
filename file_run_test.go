@@ -8,7 +8,7 @@ import (
 
 func TestRunTaskDefinition(t *testing.T) {
 	Convey("Given an empty runtime environment", t, func() {
-		inv := InstantiateRuntimeEnv()
+		inv := InstantiateRuntimeEnv(".")
 		env := inv.duk
 
 		runCode := func(s string) func() {
@@ -37,21 +37,21 @@ func TestRunTaskDefinition(t *testing.T) {
 			env.EvalString(`inv.task('test').using('blah').run('test', '123')`)
 
 			Convey("Then the task map has not an entry for another task", func() {
-				_, ok := inv.tasks["another_task"]
+				_, ok := inv.Tasks["another_task"]
 				So(ok, ShouldBeFalse)
 			})
 
 			Convey("Then the task map has an entry for that task", func() {
-				_, ok := inv.tasks["test"]
+				_, ok := inv.Tasks["test"]
 				So(ok, ShouldBeTrue)
 			})
 
 			Convey("Then the task map entry is an ExecuteImage struct", func() {
-				So(inv.tasks["test"][0], ShouldHaveSameTypeAs, run.ExecuteImage{})
+				So(inv.Tasks["test"][0], ShouldHaveSameTypeAs, run.ExecuteImage{})
 			})
 
 			Convey("Then the task map entry has the given command set", func() {
-				ei := inv.tasks["test"][0].(run.ExecuteImage)
+				ei := inv.Tasks["test"][0].(run.ExecuteImage)
 				So(ei.Config.Cmd, ShouldResemble, []string{"test", "123"})
 			})
 		})
@@ -61,22 +61,22 @@ func TestRunTaskDefinition(t *testing.T) {
 			env.EvalString(`inv.task('test3').using('blah').run('test', 'asd', '123')`)
 			env.EvalString(`inv.task('test4').using('blah').run('test', 'asd', '123', 'dsa')`)
 
-			So(inv.tasks["test1"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test"})
-			So(inv.tasks["test2"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd"})
-			So(inv.tasks["test3"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd", "123"})
-			So(inv.tasks["test4"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd", "123", "dsa"})
+			So(inv.Tasks["test1"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test"})
+			So(inv.Tasks["test2"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd"})
+			So(inv.Tasks["test3"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd", "123"})
+			So(inv.Tasks["test4"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd", "123", "dsa"})
 		})
 
-		Convey("Executing multiple run tasks after each other works", func() {
+		Convey("Executing multiple run Tasks after each other works", func() {
 			env.EvalString(`inv.task('test').using('blah').run('test').run('test2').using('asd').run('2')`)
-			So(inv.tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldEqual, "blah")
-			So(inv.tasks["test"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test"})
+			So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldEqual, "blah")
+			So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test"})
 
-			So(inv.tasks["test"][1].(run.ExecuteImage).Config.Image, ShouldEqual, "blah")
-			So(inv.tasks["test"][1].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test2"})
+			So(inv.Tasks["test"][1].(run.ExecuteImage).Config.Image, ShouldEqual, "blah")
+			So(inv.Tasks["test"][1].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test2"})
 
-			So(inv.tasks["test"][2].(run.ExecuteImage).Config.Image, ShouldEqual, "asd")
-			So(inv.tasks["test"][2].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"2"})
+			So(inv.Tasks["test"][2].(run.ExecuteImage).Config.Image, ShouldEqual, "asd")
+			So(inv.Tasks["test"][2].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"2"})
 		})
 	})
 }

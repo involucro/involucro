@@ -7,7 +7,7 @@ import (
 
 func TestTaskDefinition(t *testing.T) {
 	Convey("Given an empty runtime environment", t, func() {
-		inv := InstantiateRuntimeEnv()
+		inv := InstantiateRuntimeEnv(".")
 		env := inv.duk
 
 		runCode := func(s string) func() {

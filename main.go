@@ -7,19 +7,17 @@ import (
 	"path/filepath"
 )
 
-var workingDir string
-
 func main() {
 
 	arguments := parseArguments()
 	fmt.Println(arguments)
 
 	relativeWorkDir := arguments["-w"].(string)
-	workingDir, _ = filepath.Abs(relativeWorkDir)
+	workingDir, _ := filepath.Abs(relativeWorkDir)
 	log.SetLevel(log.DebugLevel)
 	log.WithFields(log.Fields{"workdir": workingDir}).Info("Start")
 
-	ctx := InstantiateRuntimeEnv()
+	ctx := InstantiateRuntimeEnv(workingDir)
 
 	ctx.duk.EvalString(`inv.task('test').using('busybox').run('echo', 'Hello, Inxmail')`)
 
@@ -27,7 +25,7 @@ func main() {
 	client.Ping()
 
 	for _, element := range (arguments["<task>"]).([]string) {
-		for _, step := range ctx.tasks[element] {
+		for _, step := range ctx.Tasks[element] {
 			step.DryRun()
 			step.WithDockerClient(client)
 		}

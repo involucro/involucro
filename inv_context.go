@@ -10,8 +10,9 @@ type Step interface {
 }
 
 type InvContext struct {
-	duk   *duk.Context
-	tasks map[string][]Step
+	duk        *duk.Context
+	Tasks      map[string][]Step
+	WorkingDir string
 }
 
 func (i InvContext) asCallback(f func(*InvContext) int) func(*duk.Context) int {

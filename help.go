@@ -10,7 +10,8 @@ Usage:
   involucro -h | --help
   involucro --version
   involucro [-w <path>] [ -H <url> | --host=<url> ] [-v [-v]] [ -f <file> ] [--] <task>...
-	involucro (-n | -s) [-v [-v]] [-f <file>] [--] <task>...
+  involucro (-n | -s) [-v [-v]] [-f <file>] [--] <task>...
+  involucro --wrap=<source-dir> --into-image=<parent-image> --at=<target-dir> --as=<image-id>
 
 Options:
   -h --help               Show this screen.
@@ -18,9 +19,13 @@ Options:
   --version               Show version.
   -f <file>               Set the control file [default: invfile.js].
   -v                      Increase verbosity (use twice for even more messages).
-	-n                      Do not really execute commands in Docker, just show them.
-	-s                      Instead of executing the commands against Docker, print equivalent shell commands.
-	-w <path>               Set working dir, being the base for all scoping operations. [default: .]
+  -n                      Do not really execute commands in Docker, just show them.
+  -s                      Instead of executing the commands against Docker, print equivalent shell commands.
+  -w <path>               Set working dir, being the base for all scoping operations. [default: .]
+  --wrap=<source-dir>    
+	--into-image=<parent-image>
+	--at=<target-dir>
+	--as=<image-id>
 `
 	arguments, _ := docopt.Parse(usage, nil, true, "Involucro 0.1", false)
 	return arguments
