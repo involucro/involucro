@@ -5,8 +5,14 @@ import log "github.com/Sirupsen/logrus"
 import "github.com/fsouza/go-dockerclient"
 import run "github.com/thriqon/involucro/steps/run"
 
-//import wrap "github.com/thriqon/involucro/steps/wrap"
+//import "path/filepath"
 
+import wrap "github.com/thriqon/involucro/steps/wrap"
+
+// Creates a new InvContext and returns it. This new context
+// uses the working dir that is passed as a parameter.
+// After instantiation, the context will be ready to load
+// additional files.
 func InstantiateRuntimeEnv(workingDir string) InvContext {
 	m := InvContext{
 		duk:        duk.New(),
@@ -49,6 +55,7 @@ func FileWrapping(c *InvContext) int {
 	DefineStringOnObject(c.duk, idx, "sourceDir", source_dir)
 	DefineFuncOnObject(c.duk, idx, "inImage", c.asCallback(FileInImage))
 	DefineFuncOnObject(c.duk, idx, "at", c.asCallback(FileAt))
+	DefineFuncOnObject(c.duk, idx, "as", c.asCallback(FileAs))
 
 	return 1
 }
@@ -69,10 +76,36 @@ func FileAt(c *InvContext) int {
 	return 1
 }
 
-func FileAs(c *InvContext) int {
-	if c.duk.GetTopIndex() == 2 {
-		// have options parameter
+func FileAs(i *InvContext) int {
+	c := i.duk
+	newName := RequireStringOrFailGracefully(c, -1, "as")
+	PushDerivedFromThis(c)
+
+	c.GetPropString(-1, "taskId")
+	taskId := RequireStringOrFailGracefully(c, -1, "run:task_id")
+	c.Pop()
+
+	c.GetPropString(-1, "parentImage")
+	parentImage := RequireStringOrFailGracefully(c, -1, "as:inImage")
+	c.Pop()
+
+	c.GetPropString(-1, "targetDir")
+	targetDir := RequireStringOrFailGracefully(c, -1, "as:at")
+	c.Pop()
+
+	c.GetPropString(-1, "sourceDir")
+	sourceDir := RequireStringOrFailGracefully(c, -1, "as:wrap")
+	c.Pop()
+
+	wi := wrap.WrapAsImage{
+		SourceDir:         sourceDir,
+		TargetDir:         targetDir,
+		ParentImage:       parentImage,
+		NewRepositoryName: newName,
 	}
+
+	i.Tasks[taskId] = append(i.Tasks[taskId], wi)
+
 	return 1
 }
 

@@ -19,3 +19,12 @@ func TestRandomIds(t *testing.T) {
 		})
 	})
 }
+
+func TestRandomIdsWithLength(t *testing.T) {
+	Convey("Given a random identifier of length 64", t, func() {
+		s := RandomIdentifierOfLength(64)
+		Convey("Then it has length 64", func() {
+			So(s, ShouldHaveLength, 64)
+		})
+	})
+}

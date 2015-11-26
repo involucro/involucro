@@ -1,5 +1,5 @@
 
-all: test
+all: test lint
 
 SOURCES = $(wildcard **/*.go)
 PKGS = ./.
@@ -7,6 +7,7 @@ PKGS = ./.
 get-deps:
 	@go get ./...
 	@go get github.com/smartystreets/goconvey
+	@go get -u github.com/golang/lint/golint
 
 test:
 	@echo Run test...
@@ -18,4 +19,10 @@ build:
 run:
 	@go run $(SOURCES)
 
-.PHONY: test build run get-deps all
+run-convey:
+	$$GOPATH/bin/goconvey
+
+lint:
+	@$$GOPATH/bin/golint
+
+.PHONY: test build run get-deps all run-convey lint

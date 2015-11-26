@@ -6,7 +6,8 @@ import (
 )
 
 func RandomIdentifierOfLength(len int) string {
-	buffer := make([]byte, len)
+	buflen := en.DecodedLen(len)
+	buffer := make([]byte, buflen)
 	rand.Read(buffer)
 
 	return en.EncodeToString(buffer)

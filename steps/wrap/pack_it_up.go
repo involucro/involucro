@@ -2,7 +2,6 @@ package wrap
 
 import (
 	"archive/tar"
-	utils "github.com/thriqon/involucro/lib"
 	"io"
 	"os"
 	"path"
@@ -10,45 +9,29 @@ import (
 	"strings"
 )
 
-func random_tarball_file_name() string {
-	dir := os.TempDir()
-	tarid := utils.RandomIdentifier()
-	return filepath.Join(dir, "involucro-volume-"+tarid+".tar")
-}
-
-type TemporaryFile struct {
-	Filename string
-	Close func()
-}
-
-func pack_it_up(source_directory string, prefix string) (string, error) {
-	tarfile_name := random_tarball_file_name()
-	tarfile, err := os.Create(tarfile_name)
-	if err != nil {
-		return "", err
-	}
-	defer tarfile.Close()
-
+func pack_it_up(source_directory string, tarfile io.Writer, prefix string) error {
 	tarball := tar.NewWriter(tarfile)
 	defer tarball.Close()
 
-	info, err := os.Stat(source_directory)
+	_, err := os.Stat(source_directory)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	err := filepath.Walk(source_directory, func(os_path string, info os.FileInfo, err error) error {
+	return filepath.Walk(source_directory, func(os_path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		without_path_prefix := strings.TrimPrefix(source_directory, info.Name())
+		without_path_prefix := strings.TrimPrefix(info.Name(), source_directory)
 		as_slash_path := filepath.ToSlash(without_path_prefix)
-		with_new_prefix := path.Join(prefix, as_slash_path)
+		prefix_without_leading_slash := strings.TrimPrefix(prefix, "/")
+		with_new_prefix := path.Join(prefix_without_leading_slash, as_slash_path)
 
-		header, err := tar.FileInfoHeader(info, with_new_prefix)
+		header, err := tar.FileInfoHeader(info, "")
 		if err != nil {
 			return err
 		}
+		header.Name = with_new_prefix
 		if err := tarball.WriteHeader(header); err != nil {
 			return err
 		}
@@ -65,6 +48,4 @@ func pack_it_up(source_directory string, prefix string) (string, error) {
 		_, err = io.Copy(tarball, file)
 		return err
 	})
-	if err != nil {
-		return 
 }

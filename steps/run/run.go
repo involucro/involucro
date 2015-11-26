@@ -7,12 +7,8 @@ import (
 	utils "github.com/thriqon/involucro/lib"
 )
 
-/*type Step interface {
-	WithDockerClient(c *docker.Client) error
-	DryRun()
-	AsShellCommand() string
-}*/
-
+// Implementation of the Step interface
+// Executes the given config and host config, similar to "docker run"
 type ExecuteImage struct {
 	Config     docker.Config
 	HostConfig docker.HostConfig
