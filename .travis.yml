@@ -13,8 +13,7 @@ install: make get-deps
 
 script:
   - make build test
-  - cd examples/hello_world ; ../../involucro greet
-  - cd ../compile_and_run ; ../../involucro compile package run test
+  - make -C integrationtest
 
 matrix:
   allow_failures:
