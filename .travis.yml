@@ -5,9 +5,7 @@ sudo: required
 services:
   - docker
 
-go:
-  - 1.5
-  - tip
+go: 1.5
 
 install: make get-deps
 
@@ -15,6 +13,3 @@ script:
   - make build test
   - make -C integrationtest
 
-matrix:
-  allow_failures:
-    - go: tip
