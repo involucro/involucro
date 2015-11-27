@@ -1,13 +1,16 @@
-package main
+package file
 
-import "github.com/fsouza/go-dockerclient"
-import duk "gopkg.in/olebedev/go-duktape.v2"
+import (
+	"github.com/fsouza/go-dockerclient"
+	duk "gopkg.in/olebedev/go-duktape.v2"
+	"io"
+)
 
 // Step represents one action taken by the tool.
 type Step interface {
 	WithDockerClient(c *docker.Client) error
 	DryRun()
-	AsShellCommand() string
+	AsShellCommandOn(w io.Writer)
 }
 
 // InvContext encapsulates the state of the tool

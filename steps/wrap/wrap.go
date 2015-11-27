@@ -78,8 +78,8 @@ func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 	return nil
 }
 
-func (img WrapAsImage) AsShellCommand() string {
-	return fmt.Sprintf("echo NOT IMPLEMENTED YET\n")
+func (img WrapAsImage) AsShellCommandOn(w io.Writer) {
+	fmt.Fprintf(w, "echo NOT IMPLEMENTED YET\n")
 }
 
 func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageId string, imageId string) error {

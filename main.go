@@ -4,7 +4,9 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	file "github.com/thriqon/involucro/file"
 	wrap "github.com/thriqon/involucro/steps/wrap"
+	"os"
 	"path/filepath"
 )
 
@@ -14,7 +16,10 @@ func main() {
 	fmt.Println(arguments)
 
 	client, _ := docker.NewClient(arguments["--host"].(string))
-	client.Ping()
+	err := client.Ping()
+	if err != nil {
+		log.Error("Docker not reachable")
+	}
 
 	log.SetLevel(log.DebugLevel)
 	if arguments["--wrap"] != nil {
@@ -37,9 +42,10 @@ func main() {
 	workingDir, _ := filepath.Abs(relativeWorkDir)
 	log.WithFields(log.Fields{"workdir": workingDir}).Info("Start")
 
-	ctx := InstantiateRuntimeEnv(workingDir)
+	ctx := file.InstantiateRuntimeEnv(workingDir)
 
-	ctx.duk.PevalFile(arguments["-f"].(string))
+	fmt.Println("#!/bin/sh")
+	ctx.RunFile(arguments["-f"].(string))
 
 	for _, element := range (arguments["<task>"]).([]string) {
 		steps := ctx.Tasks[element]
@@ -50,7 +56,7 @@ func main() {
 			if arguments["-n"].(bool) {
 				step.DryRun()
 			} else if arguments["-s"].(bool) {
-				//TODO
+				step.AsShellCommandOn(os.Stdout)
 			} else {
 				step.WithDockerClient(client)
 			}

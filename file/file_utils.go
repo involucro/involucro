@@ -1,4 +1,4 @@
-package main
+package file
 
 import duk "gopkg.in/olebedev/go-duktape.v2"
 import log "github.com/Sirupsen/logrus"

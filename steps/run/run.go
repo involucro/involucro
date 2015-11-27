@@ -5,6 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	utils "github.com/thriqon/involucro/lib"
+	"io"
 )
 
 // Implementation of the Step interface
@@ -77,6 +78,6 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	return wait_err
 }
 
-func (img ExecuteImage) AsShellCommand() string {
-	return fmt.Sprintf("docker run -t --rm %s\n", img.Config.Image)
+func (img ExecuteImage) AsShellCommandOn(w io.Writer) {
+	fmt.Fprintf(w, "docker run -t --rm %s\n", img.Config.Image)
 }
