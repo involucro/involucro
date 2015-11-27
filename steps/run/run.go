@@ -5,11 +5,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	utils "github.com/thriqon/involucro/lib"
+	pull "github.com/thriqon/involucro/steps/pull"
 	"io"
 )
 
-// Implementation of the Step interface
-// Executes the given config and host config, similar to "docker run"
+// ExecuteImage executes the given config and host config, similar to "docker
+// run"
 type ExecuteImage struct {
 	Config     docker.Config
 	HostConfig docker.HostConfig
@@ -37,7 +38,7 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	container, err = c.CreateContainer(opts)
 
 	if err == docker.ErrNoSuchImage {
-		err = pull(c, img.Config.Image)
+		err = pull.Pull(c, img.Config.Image)
 
 		if err != nil {
 			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
@@ -59,9 +60,8 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	if err != nil {
 		log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not started and not removed")
 		return err
-	} else {
-		log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
 	}
+	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
 
 	status, waitErr := c.WaitContainer(container.ID)
 

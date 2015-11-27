@@ -21,6 +21,6 @@ run-convey:
 	$$GOPATH/bin/goconvey -host=0.0.0.0
 
 lint:
-	@$(foreach pkg,$(TEST_PKGS),$$GOPATH/bin/golint $(pkg) || exit;)
+	@$(foreach pkg,$(PKGS),$$GOPATH/bin/golint $(pkg) || exit;)
 
 .PHONY: test build run get-deps all run-convey lint

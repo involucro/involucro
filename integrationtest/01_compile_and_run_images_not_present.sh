@@ -1,5 +1,8 @@
 #!/bin/bash
 
+docker rmi sojournlabs/gcc
+docker rmi busybox
+
 set -e
 
 INV=$(pwd)/../involucro
