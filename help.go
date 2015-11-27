@@ -9,8 +9,8 @@ func parseArguments() map[string]interface{} {
 Usage:
   involucro -h | --help
   involucro --version
-  involucro [-w <path>] [ -H <url> | --host=<url> ] [-v [-v]] [ -f <file> ] [--] <task>...
-  involucro (-n | -s) [-v [-v]] [-f <file>] [--] <task>...
+  involucro [-w <path>] [ -H <url> | --host=<url> ] [-v [-v]] [-f <file> | -e <script>] [--] <task>...
+  involucro (-n | -s) [-v [-v]] [-f <file> | -e <script> ] <task>...
   involucro --wrap=<source-dir> --into-image=<parent-image> --at=<target-dir> --as=<image-id>
 
 Options:
@@ -18,6 +18,7 @@ Options:
   -H, --host=<url>        Set the URL for Docker [default: unix:///var/run/docker.sock].
   --version               Show version.
   -f <file>               Set the control file [default: invfile.js].
+  -e <script>             Evaluate the given script directly.
   -v                      Increase verbosity (use twice for even more messages).
   -n                      Do not really execute commands in Docker, just show them.
   -s                      Instead of executing the commands against Docker, print equivalent shell commands.
