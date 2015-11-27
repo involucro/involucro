@@ -33,12 +33,7 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	container, err = c.CreateContainer(opts)
 
 	if err == docker.ErrNoSuchImage {
-		// try pulling
-		pio := docker.PullImageOptions{
-			Repository: img.Config.Image,
-		}
-		log.WithFields(log.Fields{"repository": img.Config.Image}).Debug("Pull Image")
-		err = c.PullImage(pio, docker.AuthConfiguration{})
+		err = pull(c, img.Config.Image)
 
 		if err != nil {
 			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
