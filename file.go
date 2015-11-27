@@ -9,10 +9,9 @@ import run "github.com/thriqon/involucro/steps/run"
 
 import wrap "github.com/thriqon/involucro/steps/wrap"
 
-// Creates a new InvContext and returns it. This new context
-// uses the working dir that is passed as a parameter.
-// After instantiation, the context will be ready to load
-// additional files.
+// InstantiateRuntimeEnv creates a new InvContext and returns it. This new
+// context uses the working dir that is passed as a parameter.  After
+// instantiation, the context will be ready to load additional files.
 func InstantiateRuntimeEnv(workingDir string) InvContext {
 	m := InvContext{
 		duk:        duk.New(),
@@ -24,15 +23,15 @@ func InstantiateRuntimeEnv(workingDir string) InvContext {
 
 	idx := m.duk.PushObject()
 
-	DefineFuncOnObject(m.duk, idx, "task", m.asCallback(func(i *InvContext) int {
-		task_id := RequireStringOrFailGracefully(i.duk, -1, "task")
-		log.WithFields(log.Fields{"taskId": task_id}).Info("defined task")
+	defineFuncOnObject(m.duk, idx, "task", m.asCallback(func(i *InvContext) int {
+		taskID := requireStringOrFailGracefully(i.duk, -1, "task")
+		log.WithFields(log.Fields{"taskId": taskID}).Info("defined task")
 
-		retobj := PushDerivedFromThis(i.duk)
+		retobj := pushDerivedFromThis(i.duk)
 
-		DefineStringOnObject(i.duk, retobj, "taskId", task_id)
-		DefineFuncOnObject(i.duk, retobj, "using", m.asCallback(FileUsing))
-		DefineFuncOnObject(i.duk, retobj, "wrap", m.asCallback(FileWrapping))
+		defineStringOnObject(i.duk, retobj, "taskId", taskID)
+		defineFuncOnObject(i.duk, retobj, "using", m.asCallback(fileUsing))
+		defineFuncOnObject(i.duk, retobj, "wrap", m.asCallback(fileWrapping))
 
 		return 1
 	}))
@@ -48,53 +47,53 @@ func InstantiateRuntimeEnv(workingDir string) InvContext {
 
 // WRAPPING
 
-func FileWrapping(c *InvContext) int {
-	source_dir := RequireStringOrFailGracefully(c.duk, -1, "wrap")
-	idx := PushDerivedFromThis(c.duk)
+func fileWrapping(c *InvContext) int {
+	sourceDir := requireStringOrFailGracefully(c.duk, -1, "wrap")
+	idx := pushDerivedFromThis(c.duk)
 
-	DefineStringOnObject(c.duk, idx, "sourceDir", source_dir)
-	DefineFuncOnObject(c.duk, idx, "inImage", c.asCallback(FileInImage))
-	DefineFuncOnObject(c.duk, idx, "at", c.asCallback(FileAt))
-	DefineFuncOnObject(c.duk, idx, "as", c.asCallback(FileAs))
+	defineStringOnObject(c.duk, idx, "sourceDir", sourceDir)
+	defineFuncOnObject(c.duk, idx, "inImage", c.asCallback(fileInImage))
+	defineFuncOnObject(c.duk, idx, "at", c.asCallback(fileAt))
+	defineFuncOnObject(c.duk, idx, "as", c.asCallback(fileAs))
 
 	return 1
 }
 
-func FileInImage(c *InvContext) int {
-	in_image := RequireStringOrFailGracefully(c.duk, -1, "inImage")
-	idx := PushDerivedFromThis(c.duk)
+func fileInImage(c *InvContext) int {
+	inImage := requireStringOrFailGracefully(c.duk, -1, "inImage")
+	idx := pushDerivedFromThis(c.duk)
 
-	DefineStringOnObject(c.duk, idx, "parentImage", in_image)
+	defineStringOnObject(c.duk, idx, "parentImage", inImage)
 	return 1
 }
 
-func FileAt(c *InvContext) int {
-	target_dir := RequireStringOrFailGracefully(c.duk, -1, "at")
-	idx := PushDerivedFromThis(c.duk)
+func fileAt(c *InvContext) int {
+	targetDir := requireStringOrFailGracefully(c.duk, -1, "at")
+	idx := pushDerivedFromThis(c.duk)
 
-	DefineStringOnObject(c.duk, idx, "targetDir", target_dir)
+	defineStringOnObject(c.duk, idx, "targetDir", targetDir)
 	return 1
 }
 
-func FileAs(i *InvContext) int {
+func fileAs(i *InvContext) int {
 	c := i.duk
-	newName := RequireStringOrFailGracefully(c, -1, "as")
-	PushDerivedFromThis(c)
+	newName := requireStringOrFailGracefully(c, -1, "as")
+	pushDerivedFromThis(c)
 
 	c.GetPropString(-1, "taskId")
-	taskId := RequireStringOrFailGracefully(c, -1, "run:task_id")
+	taskID := requireStringOrFailGracefully(c, -1, "run:task_id")
 	c.Pop()
 
 	c.GetPropString(-1, "parentImage")
-	parentImage := RequireStringOrFailGracefully(c, -1, "as:inImage")
+	parentImage := requireStringOrFailGracefully(c, -1, "as:inImage")
 	c.Pop()
 
 	c.GetPropString(-1, "targetDir")
-	targetDir := RequireStringOrFailGracefully(c, -1, "as:at")
+	targetDir := requireStringOrFailGracefully(c, -1, "as:at")
 	c.Pop()
 
 	c.GetPropString(-1, "sourceDir")
-	sourceDir := RequireStringOrFailGracefully(c, -1, "as:wrap")
+	sourceDir := requireStringOrFailGracefully(c, -1, "as:wrap")
 	c.Pop()
 
 	wi := wrap.WrapAsImage{
@@ -104,44 +103,44 @@ func FileAs(i *InvContext) int {
 		NewRepositoryName: newName,
 	}
 
-	i.Tasks[taskId] = append(i.Tasks[taskId], wi)
+	i.Tasks[taskID] = append(i.Tasks[taskID], wi)
 
 	return 1
 }
 
 // EXECUTION
 
-func FileUsing(c *InvContext) int {
-	image_id := RequireStringOrFailGracefully(c.duk, -1, "using")
-	idx := PushDerivedFromThis(c.duk)
+func fileUsing(c *InvContext) int {
+	imageID := requireStringOrFailGracefully(c.duk, -1, "using")
+	idx := pushDerivedFromThis(c.duk)
 
-	DefineStringOnObject(c.duk, idx, "usingImageId", image_id)
-	DefineFuncOnObject(c.duk, idx, "run", c.asCallback(FileRun))
+	defineStringOnObject(c.duk, idx, "usingImageId", imageID)
+	defineFuncOnObject(c.duk, idx, "run", c.asCallback(fileRun))
 
-	log.WithFields(log.Fields{"usingImageId": image_id}).Debug("Using")
+	log.WithFields(log.Fields{"usingImageId": imageID}).Debug("Using")
 
 	return 1
 }
 
-func FileRun(i *InvContext) int {
+func fileRun(i *InvContext) int {
 	c := i.duk
 	if c.GetTop() < 1 {
 		log.WithFields(log.Fields{"method": "run"}).Panic("Required argument missing")
 	}
 
-	top_index := c.GetTopIndex()
+	topIndex := c.GetTopIndex()
 
-	cmd := make([]string, top_index+1)
-	for pos := 0; pos <= top_index; pos++ {
-		cmd[pos] = RequireStringOrFailGracefully(c, pos, "run")
+	cmd := make([]string, topIndex+1)
+	for pos := 0; pos <= topIndex; pos++ {
+		cmd[pos] = requireStringOrFailGracefully(c, pos, "run")
 	}
 
-	PushDerivedFromThis(c)
+	pushDerivedFromThis(c)
 	c.GetPropString(-1, "taskId")
-	taskId := RequireStringOrFailGracefully(c, -1, "run:task_id")
+	taskID := requireStringOrFailGracefully(c, -1, "run:task_id")
 	c.Pop()
 	c.GetPropString(-1, "usingImageId")
-	imageId := RequireStringOrFailGracefully(c, -1, "run:image_id")
+	imageID := requireStringOrFailGracefully(c, -1, "run:image_id")
 	c.Pop()
 
 	bind := i.WorkingDir + ":/source"
@@ -149,7 +148,7 @@ func FileRun(i *InvContext) int {
 	ei := run.ExecuteImage{
 		Config: docker.Config{
 			Cmd:   cmd,
-			Image: imageId,
+			Image: imageID,
 		},
 		HostConfig: docker.HostConfig{
 			Binds: []string{
@@ -158,6 +157,6 @@ func FileRun(i *InvContext) int {
 		},
 	}
 
-	i.Tasks[taskId] = append(i.Tasks[taskId], ei)
+	i.Tasks[taskID] = append(i.Tasks[taskID], ei)
 	return 1
 }

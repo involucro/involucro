@@ -3,33 +3,33 @@ package main
 import duk "gopkg.in/olebedev/go-duktape.v2"
 import log "github.com/Sirupsen/logrus"
 
-func PushDerivedFromThis(c *duk.Context) int {
+func pushDerivedFromThis(c *duk.Context) int {
 	pos := c.PushObject()
 	c.PushThis()
 	c.SetPrototype(pos)
 	return pos
 }
 
-func RequireStringOrFailGracefully(c *duk.Context, idx int, method string) string {
+func requireStringOrFailGracefully(c *duk.Context, idx int, method string) string {
 	typ := c.GetType(idx)
-	if typ == duk.TypeString {
-		return c.GetString(idx)
-	} else {
+	if typ != duk.TypeString {
 		log.WithFields(log.Fields{"method": method, "type": typ}).Panic("Invalid argument type in method call.")
 		return ""
 	}
+	return c.GetString(idx)
+
 }
 
-const DEF_PROP_FLAGS = (1 << 6) | (1 << 3)
+const defPropFlags = (1 << 6) | (1 << 3)
 
-func DefineStringOnObject(c *duk.Context, idx int, key string, value string) {
+func defineStringOnObject(c *duk.Context, idx int, key string, value string) {
 	c.PushString(key)
 	c.PushString(value)
-	c.DefProp(idx, DEF_PROP_FLAGS)
+	c.DefProp(idx, defPropFlags)
 }
 
-func DefineFuncOnObject(c *duk.Context, idx int, key string, value func(*duk.Context) int) {
+func defineFuncOnObject(c *duk.Context, idx int, key string, value func(*duk.Context) int) {
 	c.PushString(key)
 	c.PushGoFunction(value)
-	c.DefProp(idx, DEF_PROP_FLAGS)
+	c.DefProp(idx, defPropFlags)
 }
