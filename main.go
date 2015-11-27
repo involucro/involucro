@@ -39,12 +39,21 @@ func main() {
 
 	ctx := InstantiateRuntimeEnv(workingDir)
 
-	ctx.duk.EvalString(`inv.task('test').using('busybox').run('echo', 'Hello, Inxmail')`)
+	ctx.duk.PevalFile(arguments["-f"].(string))
 
 	for _, element := range (arguments["<task>"]).([]string) {
-		for _, step := range ctx.Tasks[element] {
-			step.DryRun()
-			step.WithDockerClient(client)
+		steps := ctx.Tasks[element]
+		if len(steps) == 0 {
+			log.WithFields(log.Fields{"task": element}).Warn("no steps defined for task")
+		}
+		for _, step := range steps {
+			if arguments["-n"].(bool) {
+				step.DryRun()
+			} else if arguments["-s"].(bool) {
+				//TODO
+			} else {
+				step.WithDockerClient(client)
+			}
 		}
 	}
 }
