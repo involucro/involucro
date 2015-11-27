@@ -12,19 +12,24 @@ import (
 	"sync"
 )
 
-type WrapAsImage struct {
+// AsImage represents packing up a directory into
+// an image derived from another.
+type AsImage struct {
 	SourceDir         string
 	TargetDir         string
 	ParentImage       string
 	NewRepositoryName string
 }
 
-func (img WrapAsImage) DryRun() {
+// DryRun runs this task without doing anything, but logging an indication of
+// what would have been done
+func (img AsImage) DryRun() {
 	log.WithFields(log.Fields{"dry": true}).Info("WRAP")
 }
 
-func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
-	imageId := utils.RandomIdentifierOfLength(64)
+// WithDockerClient executes the task on the given Docker instance
+func (img AsImage) WithDockerClient(c *docker.Client) error {
+	imageID := utils.RandomIdentifierOfLength(64)
 
 	parentImageConfig, err := c.InspectImage(img.ParentImage)
 	if err != nil {
@@ -44,7 +49,7 @@ func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 
 	log.WithFields(log.Fields{"layerBallName": layerBallName}).Debug("Packing")
 
-	err = pack_it_up(img.SourceDir, layerFile, img.TargetDir)
+	err = packItUp(img.SourceDir, layerFile, img.TargetDir)
 	if err != nil {
 		return err
 	}
@@ -53,12 +58,12 @@ func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	log.WithFields(log.Fields{"image_id": imageId, "repository": img.NewRepositoryName}).Info("Wrapping up")
+	log.WithFields(log.Fields{"image_id": imageID, "repository": img.NewRepositoryName}).Info("Wrapping up")
 
 	go func() {
 		defer wg.Done()
 		defer uploadWriter.Close()
-		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageConfig.ID, imageId)
+		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageConfig.ID, imageID)
 		return
 	}()
 
@@ -78,26 +83,22 @@ func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 	return nil
 }
 
-func (img WrapAsImage) AsShellCommandOn(w io.Writer) {
-	fmt.Fprintf(w, "echo NOT IMPLEMENTED YET\n")
-}
-
-func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageId string, imageId string) error {
+func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageID string, imageID string) error {
 	uploadBall := tar.NewWriter(w)
 	defer uploadBall.Close()
 
-	repositoriesFileHeader, repoFile := repositoriesFile(newRepositoryName, "latest", imageId)
+	repositoriesFileHeader, repoFile := repositoriesFile(newRepositoryName, "latest", imageID)
 	uploadBall.WriteHeader(&repositoriesFileHeader)
 	uploadBall.Write(repoFile)
 
-	imageDirHeader := imageDir(imageId)
+	imageDirHeader := imageDir(imageID)
 	uploadBall.WriteHeader(&imageDirHeader)
 
-	versionFileHeader, versionFileContents := versionFile(imageId)
+	versionFileHeader, versionFileContents := versionFile(imageID)
 	uploadBall.WriteHeader(&versionFileHeader)
 	uploadBall.Write(versionFileContents)
 
-	configFileHeader, configFileContents := imageConfigFile(parentImageId, imageId)
+	configFileHeader, configFileContents := imageConfigFile(parentImageID, imageID)
 	uploadBall.WriteHeader(&configFileHeader)
 	uploadBall.Write(configFileContents)
 
@@ -106,7 +107,7 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 		return err
 	}
 	layerBallHeader := tar.Header{
-		Name:     path.Join(imageId, "layer.tar"),
+		Name:     path.Join(imageID, "layer.tar"),
 		Typeflag: tar.TypeReg,
 		Size:     info.Size(),
 	}
@@ -122,4 +123,10 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 	log.Debug("Pipe finished")
 
 	return err
+}
+
+// AsShellCommandOn prints sh compatible commands into the given writer, that
+// accomplish the funciontality encoded in this step
+func (img AsImage) AsShellCommandOn(w io.Writer) {
+	fmt.Fprintf(w, "echo NOT IMPLEMENTED YET\n")
 }

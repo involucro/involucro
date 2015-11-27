@@ -9,29 +9,29 @@ import (
 	"strings"
 )
 
-func pack_it_up(source_directory string, tarfile io.Writer, prefix string) error {
+func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
 	tarball := tar.NewWriter(tarfile)
 	defer tarball.Close()
 
-	_, err := os.Stat(source_directory)
+	_, err := os.Stat(sourceDirectory)
 	if err != nil {
 		return err
 	}
 
-	return filepath.Walk(source_directory, func(os_path string, info os.FileInfo, err error) error {
+	return filepath.Walk(sourceDirectory, func(os_path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		without_path_prefix := strings.TrimPrefix(info.Name(), source_directory)
-		as_slash_path := filepath.ToSlash(without_path_prefix)
-		prefix_without_leading_slash := strings.TrimPrefix(prefix, "/")
-		with_new_prefix := path.Join(prefix_without_leading_slash, as_slash_path)
+		withoutPathPrefix := strings.TrimPrefix(info.Name(), sourceDirectory)
+		asSlashPath := filepath.ToSlash(withoutPathPrefix)
+		prefixWithoutLeadingSlash := strings.TrimPrefix(prefix, "/")
+		withNewPrefix := path.Join(prefixWithoutLeadingSlash, asSlashPath)
 
 		header, err := tar.FileInfoHeader(info, "")
 		if err != nil {
 			return err
 		}
-		header.Name = with_new_prefix
+		header.Name = withNewPrefix
 		if err := tarball.WriteHeader(header); err != nil {
 			return err
 		}

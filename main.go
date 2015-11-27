@@ -23,7 +23,7 @@ func main() {
 
 	log.SetLevel(log.DebugLevel)
 	if arguments["--wrap"] != nil {
-		conf := wrap.WrapAsImage{
+		conf := wrap.AsImage{
 			SourceDir:         arguments["--wrap"].(string),
 			TargetDir:         arguments["--at"].(string),
 			ParentImage:       arguments["--into-image"].(string),

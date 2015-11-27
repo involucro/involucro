@@ -7,10 +7,10 @@ import (
 	"path"
 )
 
-func imageConfigFile(parentId, imageId string) (tar.Header, []byte) {
+func imageConfigFile(parentID, imageID string) (tar.Header, []byte) {
 	imageConfig, err := json.Marshal(docker.Image{
-		ID:      imageId,
-		Parent:  parentId,
+		ID:      imageID,
+		Parent:  parentID,
 		Comment: "Create with involucro 0.1",
 	})
 	if err != nil {
@@ -18,7 +18,7 @@ func imageConfigFile(parentId, imageId string) (tar.Header, []byte) {
 	}
 
 	imageConfigHeader := tar.Header{
-		Name:     path.Join(imageId, "json"),
+		Name:     path.Join(imageID, "json"),
 		Typeflag: tar.TypeReg,
 		Size:     int64(len(imageConfig)),
 	}

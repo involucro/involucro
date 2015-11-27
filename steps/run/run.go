@@ -15,10 +15,13 @@ type ExecuteImage struct {
 	HostConfig docker.HostConfig
 }
 
+// DryRun runs this task without doing anything, but logging an indication of
+// what would have been done
 func (img ExecuteImage) DryRun() {
 	log.WithFields(log.Fields{"dry": true, "image": img.Config.Image}).Info("RUN")
 }
 
+// WithDockerClient executes the task on the given Docker instance
 func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	var err error
 	var container *docker.Container
@@ -78,6 +81,8 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	return wait_err
 }
 
+// AsShellCommandOn prints sh compatible commands into the given writer, that
+// accomplish the funciontality encoded in this step
 func (img ExecuteImage) AsShellCommandOn(w io.Writer) {
 	fmt.Fprintf(w, "docker run -t --rm %s\n", img.Config.Image)
 }

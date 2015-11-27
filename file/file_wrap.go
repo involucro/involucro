@@ -53,7 +53,7 @@ func fileAs(i *InvContext) int {
 	sourceDir := requireStringOrFailGracefully(c, -1, "as:wrap")
 	c.Pop()
 
-	wi := wrap.WrapAsImage{
+	wi := wrap.AsImage{
 		SourceDir:         sourceDir,
 		TargetDir:         targetDir,
 		ParentImage:       parentImage,
