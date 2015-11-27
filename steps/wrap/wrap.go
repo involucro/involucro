@@ -25,6 +25,12 @@ func (img WrapAsImage) DryRun() {
 
 func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 	imageId := utils.RandomIdentifierOfLength(64)
+
+	parentImageConfig, err := c.InspectImage(img.ParentImage)
+	if err != nil {
+		return err
+	}
+
 	uploadReader, uploadWriter := io.Pipe()
 
 	layerBallName := randomTarballFileName()
@@ -52,7 +58,7 @@ func (img WrapAsImage) WithDockerClient(c *docker.Client) error {
 	go func() {
 		defer wg.Done()
 		defer uploadWriter.Close()
-		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, img.ParentImage, imageId)
+		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageConfig.ID, imageId)
 		return
 	}()
 
