@@ -1,6 +1,6 @@
 
 inv.task('compile')
-	.using('gcc').run('gcc', '-o', 'dist/add', 'add.c', '-static')
+	.using('sojournlabs/gcc').run('gcc', '-o', 'dist/add', 'add.c', '-static')
 
 inv.task('package')
 	.wrap('dist').inImage('busybox').at('/usr/local/bin').as('test/showaddition')

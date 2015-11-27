@@ -1,4 +1,4 @@
-package run
+package pull
 
 import (
 	"encoding/json"
@@ -18,18 +18,9 @@ type progress struct {
 	ErrorMessage string `json:"error,omitempty"`
 }
 
-type pblogger struct {
-	bar *pb.ProgressBar
-}
-
-func (pb pblogger) Write(p []byte) (int, error) {
-	var entry progress
-	err := json.Unmarshal(p, &entry)
-	log.WithFields(log.Fields{"err": err, "entry": entry, "raw": string(p)}).Info("Progress")
-	return len(p), nil
-}
-
-func pull(c *docker.Client, repositoryName string) error {
+// Pull pulls the image with the given identifier from
+// the repository
+func Pull(c *docker.Client, repositoryName string) error {
 	total := 100
 
 	pipeReader, pipeWriter := io.Pipe()

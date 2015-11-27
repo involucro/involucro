@@ -13,7 +13,6 @@ import (
 func main() {
 
 	arguments := parseArguments()
-	fmt.Println(arguments)
 
 	client, _ := docker.NewClient(arguments["--host"].(string))
 	err := client.Ping()
@@ -44,7 +43,9 @@ func main() {
 
 	ctx := file.InstantiateRuntimeEnv(workingDir)
 
-	fmt.Println("#!/bin/sh")
+	if arguments["-s"].(bool) {
+		fmt.Println("#!/bin/sh")
+	}
 	ctx.RunFile(arguments["-f"].(string))
 
 	for _, element := range (arguments["<task>"]).([]string) {

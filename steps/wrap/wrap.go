@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	utils "github.com/thriqon/involucro/lib"
+	pull "github.com/thriqon/involucro/steps/pull"
 	"io"
 	"os"
 	"path"
@@ -33,7 +34,18 @@ func (img AsImage) WithDockerClient(c *docker.Client) error {
 
 	parentImageConfig, err := c.InspectImage(img.ParentImage)
 	if err != nil {
-		return err
+		log.WithFields(log.Fields{"image": img.ParentImage}).Info("Parent image not found, pulling it")
+		err = pull.Pull(c, img.ParentImage)
+		if err != nil {
+			log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Panic("Pulling failed")
+			return err
+		}
+
+		parentImageConfig, err = c.InspectImage(img.ParentImage)
+		if err != nil {
+			log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Panic("Image still not found after pulling, bailing")
+			return err
+		}
 	}
 
 	uploadReader, uploadWriter := io.Pipe()
