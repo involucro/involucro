@@ -147,8 +147,9 @@ func fileRun(i *InvContext) int {
 
 	ei := run.ExecuteImage{
 		Config: docker.Config{
-			Cmd:   cmd,
-			Image: imageID,
+			Cmd:        cmd,
+			Image:      imageID,
+			WorkingDir: "/source",
 		},
 		HostConfig: docker.HostConfig{
 			Binds: []string{
