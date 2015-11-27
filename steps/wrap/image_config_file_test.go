@@ -1,8 +1,11 @@
 package wrap
 
 import (
+	"encoding/json"
+	"github.com/fsouza/go-dockerclient"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"time"
 )
 
 func TestImageConfigFile(t *testing.T) {
@@ -12,6 +15,12 @@ func TestImageConfigFile(t *testing.T) {
 			_, buf := imageConfigFile(parentid, imageid)
 			So(string(buf), ShouldContainSubstring, `"Id":"123"`)
 			So(string(buf), ShouldContainSubstring, `"Parent":"456"`)
+		})
+		Convey("Then the created time is within ten seconds", func() {
+			_, buf := imageConfigFile(parentid, imageid)
+			var conf docker.Image
+			json.Unmarshal(buf, &conf)
+			So(conf.Created, ShouldHappenWithin, time.Duration(10)*time.Second, time.Now())
 		})
 		Convey("Then the header puts the file into the correct location", func() {
 			header, _ := imageConfigFile(parentid, imageid)

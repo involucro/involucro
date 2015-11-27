@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/fsouza/go-dockerclient"
 	"path"
+	"time"
 )
 
 func imageConfigFile(parentID, imageID string) (tar.Header, []byte) {
@@ -12,6 +13,7 @@ func imageConfigFile(parentID, imageID string) (tar.Header, []byte) {
 		ID:      imageID,
 		Parent:  parentID,
 		Comment: "Create with involucro 0.1",
+		Created: time.Now(),
 	})
 	if err != nil {
 		panic(err)
