@@ -1,6 +1,9 @@
 
 language: go
-sudo: false
+sudo: required
+
+services:
+  - docker
 
 go:
   - 1.4
@@ -11,7 +14,8 @@ install: make get-deps
 
 script:
   - make build test
-  - ./involucro -h
+  - cd examples/hello_world ; ../../involucro greet
+  - cd ../compile_and_run ; ../../involucro compile package run test
 
 matrix:
   allow_failures:
