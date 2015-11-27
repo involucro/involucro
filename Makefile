@@ -1,8 +1,9 @@
 
-all: test lint
+all: test lint build
 
-SOURCES = $(wildcard **/*.go)
-PKGS = ./.
+PKGS = $(shell find -name \*.go | xargs dirname | uniq)
+
+TEST_PKGS = $(shell find -name \*_test.go | xargs dirname | uniq)
 
 get-deps:
 	@go get ./...
@@ -11,18 +12,15 @@ get-deps:
 
 test:
 	@echo Run test...
-	@$(foreach pkg,$(PKGS),go test -v $(pkg) || exit;)
+	@$(foreach pkg,$(TEST_PKGS),go test -v $(pkg) || exit;)
 
 build:
 	@go build ./.
-
-run:
-	@go run $(SOURCES)
 
 run-convey:
 	$$GOPATH/bin/goconvey -host=0.0.0.0
 
 lint:
-	@$$GOPATH/bin/golint
+	@$(foreach pkg,$(TEST_PKGS),$$GOPATH/bin/golint $(pkg) || exit;)
 
 .PHONY: test build run get-deps all run-convey lint
