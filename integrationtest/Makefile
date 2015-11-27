@@ -1,5 +1,5 @@
 
-all: 01 02
+all: 01 02 04
 
 
 01:
@@ -8,3 +8,6 @@ all: 01 02
 
 02:
 	./02_hello_world.sh
+
+04:
+	./04_parameters.sh

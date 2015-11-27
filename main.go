@@ -46,7 +46,12 @@ func main() {
 	if arguments["-s"].(bool) {
 		fmt.Println("#!/bin/sh")
 	}
-	ctx.RunFile(arguments["-f"].(string))
+
+	if arguments["-e"] != nil {
+		ctx.RunString(arguments["-e"].(string))
+	} else {
+		ctx.RunFile(arguments["-f"].(string))
+	}
 
 	for _, element := range (arguments["<task>"]).([]string) {
 		steps := ctx.Tasks[element]
