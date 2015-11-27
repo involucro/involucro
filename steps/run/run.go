@@ -52,7 +52,22 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 		log.WithFields(log.Fields{"image": img.Config.Image, "err": err}).Warn("create container failed")
 		return err
 	}
-	defer func() {
+
+	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container created, starting it")
+	err = c.StartContainer(container.ID, nil)
+
+	if err != nil {
+		log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not started and not removed")
+		return err
+	} else {
+		log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
+	}
+
+	status, waitErr := c.WaitContainer(container.ID)
+
+	log.WithFields(log.Fields{"Status": status, "ID": container.ID}).Info("Execution complete")
+
+	if waitErr == nil && status == 0 {
 		err := c.RemoveContainer(docker.RemoveContainerOptions{
 			ID:    container.ID,
 			Force: true,
@@ -62,23 +77,11 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 		} else {
 			log.WithFields(log.Fields{"ID": container.ID}).Debug("Container removed")
 		}
-	}()
-
-	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container created, starting it")
-	err = c.StartContainer(container.ID, nil)
-
-	if err != nil {
-		log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not started")
-		return err
 	} else {
-		log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
+		log.Debug("There was an error in execution or creation, container not removed")
 	}
 
-	status, wait_err := c.WaitContainer(container.ID)
-
-	log.WithFields(log.Fields{"Status": status, "ID": container.ID}).Info("Execution complete")
-
-	return wait_err
+	return waitErr
 }
 
 // AsShellCommandOn prints sh compatible commands into the given writer, that
