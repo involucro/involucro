@@ -20,7 +20,7 @@ run:
 	@go run $(SOURCES)
 
 run-convey:
-	$$GOPATH/bin/goconvey
+	$$GOPATH/bin/goconvey -host=0.0.0.0
 
 lint:
 	@$$GOPATH/bin/golint
