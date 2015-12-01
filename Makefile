@@ -17,6 +17,9 @@ test:
 build:
 	@go build ./.
 
+build-win64:
+	@GOOS=windows GOARCH=amd64 go build ./.
+
 run-convey:
 	$$GOPATH/bin/goconvey -host=0.0.0.0
 
