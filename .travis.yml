@@ -10,14 +10,18 @@ go: 1.5
 install: make get-deps
 
 script:
-  - make build test
+  - make -j3 build build-win64 build-win32
+  - make test
   - make -C integrationtest
 
 deploy:
   provider: releases
   api_key:
     secure: ZdT+SuvSTE1iz9Y5mudZIREGz5HYoJjIPanz0h2YrfhUdB4Rgu0hqkjIE9R5gf9mozN0a59xl1FxpeHVGa5K/Qodt3V2owau+OyiuTrdEvcaKvz/BmmfldwNJsqEgttbataDroRw/fwSB2X+tiW0um6D6SUHDkVQt7PIJPxvpwWJJcjXJSHxDru1fm5eASWiCKKB9uj+JPYz0R9smW//kp2S3/7MFTQjg2vU+IwQRxMaMIrcST0DEW33mEW+4zbwA1Bt/rspCFx9ZkdXVjIhIrNmqo7CCJODyvbhJ/WtJ+yfWF+LWEvaznIc+rM4WAkBn+Y+os6wGhGBnDsFi5FfSt6nOxWv+maNfLY7KQiNaWtGCI90PHQce6EGJUefxB1rbIi6LQmGODdCITwrIcrsFOTe8IRKrmOze7VTsJ4QVNHACy6+tDXLzPE64Dvnapx66bElAJ8QPC8JW0KYDaCQmZUp2ygBFhmmzK+TqwZTX3D/ZQul6tzDuCk9f0K+LCL7loLLI866LL7te+3Y3f19nwDAhqkrxB2ExAv6EVBSQQFdcVBGuzlnL4PzQHp9lqEEPHO2qJqYhBIH40hwaIl+F7wXSZIohQRTJbMGljIP71wq55rk94fRfX55Wj7se2I9eBWHQJWZ2S/BNMYlo9St4P/4RukA/dWevGiuy4xYl+o=
-  file: involucro
+  file:
+    - involucro
+    - involucro.exe
+    - involucro32.exe
   on:
     tags: true
     repo: thriqon/involucro
