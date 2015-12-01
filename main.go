@@ -50,12 +50,12 @@ func main() {
 	if arguments["-e"] != nil {
 		err := ctx.RunString(arguments["-e"].(string))
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("Failed executing script")
+			log.WithFields(log.Fields{"error": err}).Fatal("Failed executing script")
 		}
 	} else {
 		err := ctx.RunFile(arguments["-f"].(string))
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("Failed executing file")
+			log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
 		}
 	}
 
