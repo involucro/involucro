@@ -3,7 +3,6 @@ package pull
 import (
 	"encoding/json"
 	log "github.com/Sirupsen/logrus"
-	"github.com/cheggaaa/pb"
 	"github.com/fsouza/go-dockerclient"
 	"io"
 )
@@ -21,32 +20,9 @@ type progress struct {
 // Pull pulls the image with the given identifier from
 // the repository
 func Pull(c *docker.Client, repositoryName string) error {
-	total := 100
-
 	pipeReader, pipeWriter := io.Pipe()
-	bar := pb.New(total)
-	bar.ShowTimeLeft = false
-	bar.ShowFinalTime = false
-	defer func() {
-		bar.ShowCounters = false
-		bar.Prefix(repositoryName + ": Pull complete  ")
-		bar.Total = 100
-		bar.Set(100)
-		bar.Update()
-	}()
 
 	go func() {
-		if !log.IsTerminal() {
-			return
-		}
-
-		bar.ShowCounters = true
-		bar.SetUnits(pb.U_BYTES)
-		bar.Total = 1
-		bar.Prefix(repositoryName + ": Pulling...  ")
-
-		bar.Format("[=>.]")
-
 		dec := json.NewDecoder(pipeReader)
 		for dec.More() {
 			var m progress
@@ -55,11 +31,9 @@ func Pull(c *docker.Client, repositoryName string) error {
 			} else if err != nil {
 				t := err.(*json.UnmarshalTypeError)
 				log.WithFields(log.Fields{"value": t.Value, "notAssignableTo": t.Type}).Warn("Decode log message error")
+			} else {
+				log.WithFields(log.Fields{"message": m}).Debug("Progress")
 			}
-			bar.Prefix(repositoryName + ": " + m.Status + "  ")
-			bar.Total = m.ProgressDetail.Total
-			bar.Set64(m.ProgressDetail.Current)
-			bar.Update()
 		}
 	}()
 
