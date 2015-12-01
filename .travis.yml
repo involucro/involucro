@@ -10,7 +10,8 @@ go: 1.5
 install: make get-deps
 
 script:
-  - make build build-win64 test
+  - make -j3 build build-win64 build-win32
+  - make test
   - make -C integrationtest
 
 deploy:
@@ -20,6 +21,7 @@ deploy:
   file:
     - involucro
     - involucro.exe
+    - involucro32.exe
   on:
     tags: true
     repo: thriqon/involucro
