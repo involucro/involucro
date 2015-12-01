@@ -12,8 +12,9 @@ import (
 // ExecuteImage executes the given config and host config, similar to "docker
 // run"
 type ExecuteImage struct {
-	Config     docker.Config
-	HostConfig docker.HostConfig
+	Config       docker.Config
+	HostConfig   docker.HostConfig
+	ExpectedCode int
 }
 
 // DryRun runs this task without doing anything, but logging an indication of
