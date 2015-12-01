@@ -17,7 +17,7 @@ Options:
   -h --help               Show this screen.
   -H, --host=<url>        Set the URL for Docker [default: unix:///var/run/docker.sock].
   --version               Show version.
-  -f <file>               Set the control file [default: invfile.js].
+  -f <file>               Set the control file [default: invfile.lua].
   -e <script>             Evaluate the given script directly.
   -v                      Increase verbosity (use twice for even more messages).
   -n                      Do not really execute commands in Docker, just show them.

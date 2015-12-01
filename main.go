@@ -48,9 +48,15 @@ func main() {
 	}
 
 	if arguments["-e"] != nil {
-		ctx.RunString(arguments["-e"].(string))
+		err := ctx.RunString(arguments["-e"].(string))
+		if err != nil {
+			log.WithFields(log.Fields{"error": err}).Error("Failed executing script")
+		}
 	} else {
-		ctx.RunFile(arguments["-f"].(string))
+		err := ctx.RunFile(arguments["-f"].(string))
+		if err != nil {
+			log.WithFields(log.Fields{"error": err}).Error("Failed executing file")
+		}
 	}
 
 	for _, element := range (arguments["<task>"]).([]string) {

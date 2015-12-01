@@ -1,8 +1,8 @@
 package file
 
 import (
+	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
-	duk "gopkg.in/olebedev/go-duktape.v2"
 	"io"
 )
 
@@ -15,13 +15,7 @@ type Step interface {
 
 // InvContext encapsulates the state of the tool
 type InvContext struct {
-	duk        *duk.Context
+	lua        *lua.State
 	Tasks      map[string][]Step
 	WorkingDir string
-}
-
-func (i InvContext) asCallback(f func(*InvContext) int) func(*duk.Context) int {
-	return func(_ *duk.Context) int {
-		return f(&i)
-	}
 }

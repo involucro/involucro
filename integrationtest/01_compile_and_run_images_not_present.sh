@@ -10,6 +10,7 @@ INV=$(pwd)/../involucro
 CONTAINERS_BEFORE=$(docker ps -a)
 
 cd ../examples/compile_and_run
+rm -f dist/*
 $INV compile package run
 
 OUTPUT=$(docker run -i --rm test/showaddition /usr/local/bin/add)
