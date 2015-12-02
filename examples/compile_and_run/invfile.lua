@@ -6,4 +6,6 @@ inv.task('package')
 	.wrap('dist').inImage('busybox').at('/usr/local/bin').as('test/showaddition')
 
 inv.task('run')
-	.using('test/showaddition').run('/usr/local/bin/add')
+  .using('test/showaddition')
+  .withExpectation({code = 0, stdout = "5 \\+ 10 = 15\n"})
+	.run('/usr/local/bin/add')
