@@ -1,12 +1,8 @@
 package run
 
 import (
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	utils "github.com/thriqon/involucro/lib"
-	pull "github.com/thriqon/involucro/steps/pull"
-	"io"
 )
 
 // ExecuteImage executes the given config and host config, similar to "docker
@@ -18,44 +14,17 @@ type ExecuteImage struct {
 	ActualCode   int
 }
 
-// DryRun runs this task without doing anything, but logging an indication of
-// what would have been done
-func (img ExecuteImage) DryRun() {
-	log.WithFields(log.Fields{"dry": true, "image": img.Config.Image}).Info("RUN")
-}
-
 // WithDockerClient executes the task on the given Docker instance
 func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
-	var err error
-	var container *docker.Container
 
-	containerName := "step-" + utils.RandomIdentifier()
-
-	opts := docker.CreateContainerOptions{
-		Name:       containerName,
-		Config:     &img.Config,
-		HostConfig: &img.HostConfig,
-	}
-	log.WithFields(log.Fields{"containerName": containerName}).Debug("Create Container")
-	container, err = c.CreateContainer(opts)
-
-	if err == docker.ErrNoSuchImage {
-		if err = pull.Pull(c, img.Config.Image); err != nil {
-			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
-			return err
-		}
-
-		log.WithFields(log.Fields{"containerName": containerName}).Debug("Retry: Create Container")
-		container, err = c.CreateContainer(opts)
-	}
-
+	container, err := img.createContainer(c)
 	if err != nil {
-		log.WithFields(log.Fields{"image": img.Config.Image, "err": err}).Warn("create container failed")
 		return err
 	}
 
 	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container created, starting it")
-	if err := c.StartContainer(container.ID, nil); err != nil {
+
+	if err = c.StartContainer(container.ID, nil); err != nil {
 		log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not started and not removed")
 		return err
 	}
@@ -80,10 +49,4 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	}
 
 	return err
-}
-
-// AsShellCommandOn prints sh compatible commands into the given writer, that
-// accomplish the funciontality encoded in this step
-func (img ExecuteImage) AsShellCommandOn(w io.Writer) {
-	fmt.Fprintf(w, "docker run -t --rm %s\n", img.Config.Image)
 }
