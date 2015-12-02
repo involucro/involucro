@@ -4,7 +4,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	file "github.com/thriqon/involucro/file"
 	run "github.com/thriqon/involucro/steps/run"
-	"regexp"
 	"testing"
 )
 
@@ -103,36 +102,6 @@ func TestExpectations(t *testing.T) {
 					So(step.ExpectedStderrMatcher, shouldAccept, "48304785947")
 				})
 			})
-		})
-	})
-}
-
-func shouldAccept(actual interface{}, expected ...interface{}) string {
-	regex := actual.(*regexp.Regexp)
-	if regex == nil {
-		return "Regular expression is nil"
-	}
-	for _, x := range expected {
-		s := x.(string)
-		if !regex.MatchString(s) {
-			return regex.String() + " did not accept " + s + ", but it should!"
-		}
-	}
-	return ""
-}
-
-func TestAcceptAssertion(t *testing.T) {
-	Convey("When I use the regex /ttt.../", t, func() {
-		regex := regexp.MustCompile("ttt.[0-9].")
-		Convey("Then the assertion accepts the example strings", func() {
-			So(shouldAccept(regex, "ttta8a", "ttt.2."), ShouldResemble, "")
-		})
-		Convey("Then the assertion rejects the example strings", func() {
-			So(shouldAccept(regex, "ttta8a", "ttt.2"), ShouldNotResemble, "")
-		})
-		Convey("Then the assertion rejects a nil regex", func() {
-			var empty *regexp.Regexp
-			So(shouldAccept(empty, "ttta8a", "ttt.2."), ShouldNotResemble, "")
 		})
 	})
 }
