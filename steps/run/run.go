@@ -15,6 +15,7 @@ type ExecuteImage struct {
 	Config       docker.Config
 	HostConfig   docker.HostConfig
 	ExpectedCode int
+	ActualCode   int
 }
 
 // DryRun runs this task without doing anything, but logging an indication of
@@ -39,9 +40,7 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	container, err = c.CreateContainer(opts)
 
 	if err == docker.ErrNoSuchImage {
-		err = pull.Pull(c, img.Config.Image)
-
-		if err != nil {
+		if err = pull.Pull(c, img.Config.Image); err != nil {
 			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
 			return err
 		}
@@ -56,19 +55,17 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	}
 
 	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container created, starting it")
-	err = c.StartContainer(container.ID, nil)
-
-	if err != nil {
+	if err := c.StartContainer(container.ID, nil); err != nil {
 		log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not started and not removed")
 		return err
 	}
 	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
 
-	status, waitErr := c.WaitContainer(container.ID)
+	img.ActualCode, err = c.WaitContainer(container.ID)
 
-	log.WithFields(log.Fields{"Status": status, "ID": container.ID}).Info("Execution complete")
+	log.WithFields(log.Fields{"Status": img.ActualCode, "ID": container.ID}).Info("Execution complete")
 
-	if waitErr == nil && status == 0 {
+	if err == nil && img.ActualCode == 0 {
 		err := c.RemoveContainer(docker.RemoveContainerOptions{
 			ID:    container.ID,
 			Force: true,
@@ -82,7 +79,7 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 		log.Debug("There was an error in execution or creation, container not removed")
 	}
 
-	return waitErr
+	return err
 }
 
 // AsShellCommandOn prints sh compatible commands into the given writer, that
