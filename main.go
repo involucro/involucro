@@ -17,7 +17,7 @@ func main() {
 	client, _ := docker.NewClient(arguments["--host"].(string))
 	err := client.Ping()
 	if err != nil {
-		log.Error("Docker not reachable")
+		log.Fatal("Docker not reachable")
 	}
 
 	log.SetLevel(log.DebugLevel)
