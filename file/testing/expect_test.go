@@ -13,20 +13,28 @@ func TestExpectations(t *testing.T) {
 
 		prefix := `inv.task('asd').using('asd')`
 
+		Convey("Then I can pass in an empty table", func() {
+			So(inv.RunString(prefix+`.withExpectation({}).run()`), ShouldBeNil)
+		})
+
 		Convey("Then I can specify a task with an expectation", func() {
 			inv.RunString(prefix + `.withExpectation({code = 1}).run()`)
 		})
 
-		Convey("Then it panics when I pass nothing as expectation", func() {
+		Convey("Then it returns an error when I pass nothing as expectation", func() {
 			So(inv.RunString(prefix+`.withExpectation().run()`), ShouldNotBeNil)
 		})
 
-		Convey("Then it panics when I pass in a number as expectation", func() {
+		Convey("Then it returns an error when I pass in a number as expectation", func() {
 			So(inv.RunString(prefix+`.withExpectation(5).run()`), ShouldNotBeNil)
 		})
 
-		Convey("Then it panics when I pass two tables as expectation", func() {
+		Convey("Then it returns an error when I pass two tables as expectation", func() {
 			So(inv.RunString(prefix+`.withExpectation({}, {}).run()`), ShouldNotBeNil)
+		})
+
+		Convey("Then it returns an error when I pass in a string as expected code", func() {
+			So(inv.RunString(prefix+`.withExpectation({code = 'asd'}).run()`), ShouldNotBeNil)
 		})
 
 		Convey("When I don't call withExpectation", func() {

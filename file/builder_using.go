@@ -60,12 +60,11 @@ func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	nubs := ubs
 
 	l.Field(-1, "code")
-	if l.IsNumber(-1) {
+	if !l.IsNil(-1) {
+		lua.ArgumentCheck(l, l.IsNumber(-1), 1, "Expected code to be a number")
 		var x bool
 		nubs.expectedCode, x = l.ToInteger(-1)
 		log.WithFields(log.Fields{"code": nubs.expectedCode, "status": x}).Info("Expecting code")
-	} else {
-		log.WithFields(log.Fields{"type": lua.TypeNameOf(l, -1)}).Warn("Expected number as parameter for exit code, got")
 	}
 	l.Pop(1)
 
