@@ -70,7 +70,9 @@ func main() {
 			} else if arguments["-s"].(bool) {
 				step.AsShellCommandOn(os.Stdout)
 			} else {
-				step.WithDockerClient(client)
+				if err := step.WithDockerClient(client); err != nil {
+					log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
+				}
 			}
 		}
 	}

@@ -33,7 +33,10 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	}
 	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
 
-	img.loadAndProcessLogs(c, container.ID)
+	err = img.loadAndProcessLogs(c, container.ID)
+	if err != nil {
+		return err
+	}
 
 	img.ActualCode, err = c.WaitContainer(container.ID)
 
