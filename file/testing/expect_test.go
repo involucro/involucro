@@ -4,6 +4,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	file "github.com/thriqon/involucro/file"
 	run "github.com/thriqon/involucro/steps/run"
+	"regexp"
 	"testing"
 )
 
@@ -37,6 +38,10 @@ func TestExpectations(t *testing.T) {
 			So(inv.RunString(prefix+`.withExpectation({code = 'asd'}).run()`), ShouldNotBeNil)
 		})
 
+		Convey("Then it returns an error when I pass in a table as expected output", func() {
+			So(inv.RunString(prefix+`.withExpectation({stdout = {}}).run()`), ShouldNotBeNil)
+		})
+
 		Convey("When I don't call withExpectation", func() {
 			So(inv.RunString(prefix+`.run()`), ShouldBeNil)
 			Convey("Then the task is defined", func() {
@@ -49,6 +54,12 @@ func TestExpectations(t *testing.T) {
 				step := inv.Tasks["asd"][0].(run.ExecuteImage)
 				Convey("Then it validates for exit code 0 == SUCCESS", func() {
 					So(step.ExpectedCode, ShouldEqual, 0)
+				})
+				Convey("Then it has no ExpectedStdout matcher", func() {
+					So(step.ExpectedStdoutMatcher, ShouldBeNil)
+				})
+				Convey("Then it has no ExpectedStderr matcher", func() {
+					So(step.ExpectedStderrMatcher, ShouldBeNil)
 				})
 			})
 		})
@@ -63,7 +74,65 @@ func TestExpectations(t *testing.T) {
 				Convey("Then it validates for exit code 1", func() {
 					So(step.ExpectedCode, ShouldEqual, 1)
 				})
+				Convey("Then it has no ExpectedStdout matcher", func() {
+					So(step.ExpectedStdoutMatcher, ShouldBeNil)
+				})
+				Convey("Then it has no ExpectedStderr matcher", func() {
+					So(step.ExpectedStderrMatcher, ShouldBeNil)
+				})
 			})
+		})
+
+		Convey("When I set an expectation to stdout~/asd.../ and stderr~[0-9]*~", func() {
+			So(inv.RunString(prefix+`.withExpectation({stdout = "asd...", stderr = "[0-9]*"}).run()`), ShouldBeNil)
+			Convey("Then the task has exactly one step", func() {
+				So(inv.Tasks["asd"], ShouldHaveLength, 1)
+			})
+			Convey("And when I retrieve that step", func() {
+				step := inv.Tasks["asd"][0].(run.ExecuteImage)
+				Convey("Then it validates for exit code 0", func() {
+					So(step.ExpectedCode, ShouldEqual, 0)
+				})
+				Convey("Then it accepts asdasd as stdout", func() {
+					So(step.ExpectedStdoutMatcher, shouldAccept, "asdasd")
+				})
+				Convey("Then it accepts the empty string as stderr", func() {
+					So(step.ExpectedStderrMatcher, shouldAccept, "")
+				})
+				Convey("Then it accepts a number as string as stderr", func() {
+					So(step.ExpectedStderrMatcher, shouldAccept, "48304785947")
+				})
+			})
+		})
+	})
+}
+
+func shouldAccept(actual interface{}, expected ...interface{}) string {
+	regex := actual.(*regexp.Regexp)
+	if regex == nil {
+		return "Regular expression is nil"
+	}
+	for _, x := range expected {
+		s := x.(string)
+		if !regex.MatchString(s) {
+			return regex.String() + " did not accept " + s + ", but it should!"
+		}
+	}
+	return ""
+}
+
+func TestAcceptAssertion(t *testing.T) {
+	Convey("When I use the regex /ttt.../", t, func() {
+		regex := regexp.MustCompile("ttt.[0-9].")
+		Convey("Then the assertion accepts the example strings", func() {
+			So(shouldAccept(regex, "ttta8a", "ttt.2."), ShouldResemble, "")
+		})
+		Convey("Then the assertion rejects the example strings", func() {
+			So(shouldAccept(regex, "ttta8a", "ttt.2"), ShouldNotResemble, "")
+		})
+		Convey("Then the assertion rejects a nil regex", func() {
+			var empty *regexp.Regexp
+			So(shouldAccept(empty, "ttta8a", "ttt.2."), ShouldNotResemble, "")
 		})
 	})
 }

@@ -3,15 +3,18 @@ package run
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"regexp"
 )
 
 // ExecuteImage executes the given config and host config, similar to "docker
 // run"
 type ExecuteImage struct {
-	Config       docker.Config
-	HostConfig   docker.HostConfig
-	ExpectedCode int
-	ActualCode   int
+	Config                docker.Config
+	HostConfig            docker.HostConfig
+	ExpectedCode          int
+	ExpectedStdoutMatcher *regexp.Regexp
+	ExpectedStderrMatcher *regexp.Regexp
+	ActualCode            int
 }
 
 // WithDockerClient executes the task on the given Docker instance
