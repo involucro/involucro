@@ -17,7 +17,7 @@ func main() {
 	client, _ := docker.NewClient(arguments["--host"].(string))
 	err := client.Ping()
 	if err != nil {
-		log.Error("Docker not reachable")
+		log.Fatal("Docker not reachable")
 	}
 
 	log.SetLevel(log.DebugLevel)
@@ -50,12 +50,12 @@ func main() {
 	if arguments["-e"] != nil {
 		err := ctx.RunString(arguments["-e"].(string))
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("Failed executing script")
+			log.WithFields(log.Fields{"error": err}).Fatal("Failed executing script")
 		}
 	} else {
 		err := ctx.RunFile(arguments["-f"].(string))
 		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Error("Failed executing file")
+			log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
 		}
 	}
 
@@ -70,7 +70,9 @@ func main() {
 			} else if arguments["-s"].(bool) {
 				step.AsShellCommandOn(os.Stdout)
 			} else {
-				step.WithDockerClient(client)
+				if err := step.WithDockerClient(client); err != nil {
+					log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
+				}
 			}
 		}
 	}

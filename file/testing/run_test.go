@@ -24,49 +24,6 @@ func TestRunTaskDefinition(t *testing.T) {
 			So(runCode(`inv.task('test').using('blah').run('test')`), ShouldNotPanic)
 		})
 
-		Convey("I can reuse an old builder context via storing it in a variable", func() {
-			Convey("reusing Task", func() {
-				runCode(`
-					test = inv.task('test')
-					inv.task('build').using('asd').run('asd')
-					test.using('dsa').run('dsa')
-				`)()
-				So(inv.Tasks, ShouldContainKey, "test")
-				tests := inv.Tasks["test"]
-				So(len(tests), ShouldEqual, 1)
-
-				So(inv.Tasks, ShouldContainKey, "build")
-				builds := inv.Tasks["build"]
-				So(len(builds), ShouldEqual, 1)
-
-				So(tests[0].(run.ExecuteImage).Config.Image, ShouldResemble, "dsa")
-				So(tests[0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"dsa"})
-
-				So(builds[0].(run.ExecuteImage).Config.Image, ShouldResemble, "asd")
-				So(builds[0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"asd"})
-			})
-			Convey("reusing Using", func() {
-				runCode(`
-					dsa = inv.task('test').using('dsa')
-					inv.task('build').using('asd').run('asd')
-					dsa.run('dsa')
-				`)()
-				So(inv.Tasks, ShouldContainKey, "test")
-				tests := inv.Tasks["test"]
-				So(len(tests), ShouldEqual, 1)
-
-				So(inv.Tasks, ShouldContainKey, "build")
-				builds := inv.Tasks["build"]
-				So(len(builds), ShouldEqual, 1)
-
-				So(tests[0].(run.ExecuteImage).Config.Image, ShouldResemble, "dsa")
-				So(tests[0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"dsa"})
-
-				So(builds[0].(run.ExecuteImage).Config.Image, ShouldResemble, "asd")
-				So(builds[0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"asd"})
-			})
-		})
-
 		Convey("Defining a Task with a table as ID panics", func() {
 			So(runCode(`inv.task({})`), ShouldPanic)
 		})

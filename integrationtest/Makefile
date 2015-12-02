@@ -1,10 +1,13 @@
 
-all: 01 02 04 06
+all: 01 02 03 04 06
 
 
 01:
 	./01_compile_and_run_images_present.sh
 	./01_compile_and_run_images_not_present.sh
+
+03:
+	./03_expectations.sh
 
 02:
 	./02_hello_world.sh
