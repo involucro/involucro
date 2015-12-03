@@ -9,3 +9,5 @@ set +e
 $INV -e "inv.task('test').runTask('udef')" test && { echo "Accepted output..."; exit 1; }
 set -e
 
+cd ../examples/nested_tasks
+$INV all
