@@ -2,6 +2,7 @@ package file
 
 import (
 	"github.com/Shopify/go-lua"
+	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"strings"
 )
@@ -9,6 +10,17 @@ import (
 func (wbs wrapBuilderState) withConfig(l *lua.State) int {
 	wbs.baseConf = parseImageConfigFromLuaTable(l)
 	return wrapTable(l, &wbs)
+}
+
+func (ubs usingBuilderState) withConfig(l *lua.State) int {
+	oldImageId := ubs.Config.Image
+	ubs.Config = parseImageConfigFromLuaTable(l)
+	if ubs.Config.Image != "" {
+		log.Warn("Overwriting the used image in withConfig is discouraged")
+	} else {
+		ubs.Config.Image = oldImageId
+	}
+	return usingTable(l, &ubs)
 }
 
 func parseImageConfigFromLuaTable(l *lua.State) docker.Config {
