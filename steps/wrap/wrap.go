@@ -20,6 +20,7 @@ type AsImage struct {
 	TargetDir         string
 	ParentImage       string
 	NewRepositoryName string
+	Config            docker.Config
 }
 
 // DryRun runs this task without doing anything, but logging an indication of
@@ -75,7 +76,7 @@ func (img AsImage) WithDockerClient(c *docker.Client) error {
 	go func() {
 		defer wg.Done()
 		defer uploadWriter.Close()
-		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageConfig.ID, imageID)
+		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageConfig.ID, imageID, img.Config)
 		return
 	}()
 
@@ -95,7 +96,7 @@ func (img AsImage) WithDockerClient(c *docker.Client) error {
 	return nil
 }
 
-func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageID string, imageID string) error {
+func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageID string, imageID string, config docker.Config) error {
 	uploadBall := tar.NewWriter(w)
 	defer uploadBall.Close()
 
@@ -110,7 +111,7 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 	uploadBall.WriteHeader(&versionFileHeader)
 	uploadBall.Write(versionFileContents)
 
-	configFileHeader, configFileContents := imageConfigFile(parentImageID, imageID)
+	configFileHeader, configFileContents := imageConfigFile(parentImageID, imageID, config)
 	uploadBall.WriteHeader(&configFileHeader)
 	uploadBall.Write(configFileContents)
 

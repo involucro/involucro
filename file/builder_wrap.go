@@ -2,11 +2,13 @@ package file
 
 import (
 	"github.com/Shopify/go-lua"
+	"github.com/fsouza/go-dockerclient"
 	wrapS "github.com/thriqon/involucro/steps/wrap"
 )
 
 type wrapBuilderState struct {
 	builderState
+	baseConf      docker.Config
 	sourceDir     string
 	targetDir     string
 	parentImageID string
@@ -40,6 +42,7 @@ func (wbs wrapBuilderState) as(l *lua.State) int {
 		TargetDir:         wbs.targetDir,
 		ParentImage:       wbs.parentImageID,
 		NewRepositoryName: requireStringOrFailGracefully(l, -1, "as"),
+		Config:            wbs.baseConf,
 	}
 
 	tasks := wbs.inv.Tasks
@@ -50,11 +53,12 @@ func (wbs wrapBuilderState) as(l *lua.State) int {
 
 func wrapTable(l *lua.State, wbs *wrapBuilderState) int {
 	return tableWith(l, fm{
-		"using":   wbs.using,
-		"task":    wbs.task,
-		"inImage": wbs.inImage,
-		"wrap":    wbs.wrap,
-		"as":      wbs.as,
-		"at":      wbs.at,
+		"using":      wbs.using,
+		"task":       wbs.task,
+		"inImage":    wbs.inImage,
+		"wrap":       wbs.wrap,
+		"as":         wbs.as,
+		"at":         wbs.at,
+		"withConfig": wbs.withConfig,
 	})
 }
