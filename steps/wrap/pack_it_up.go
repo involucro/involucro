@@ -22,7 +22,7 @@ func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
 		if err != nil {
 			return err
 		}
-		withoutPathPrefix := strings.TrimPrefix(info.Name(), sourceDirectory)
+		withoutPathPrefix := strings.TrimPrefix(os_path, sourceDirectory)
 		asSlashPath := filepath.ToSlash(withoutPathPrefix)
 		prefixWithoutLeadingSlash := strings.TrimPrefix(prefix, "/")
 		withNewPrefix := path.Join(prefixWithoutLeadingSlash, asSlashPath)
