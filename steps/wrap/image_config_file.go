@@ -8,12 +8,13 @@ import (
 	"time"
 )
 
-func imageConfigFile(parentID, imageID string) (tar.Header, []byte) {
+func imageConfigFile(parentID, imageID string, containerConfig docker.Config) (tar.Header, []byte) {
 	imageConfig, err := json.Marshal(docker.Image{
 		ID:      imageID,
 		Parent:  parentID,
 		Comment: "Create with involucro 0.1",
 		Created: time.Now(),
+		Config:  &containerConfig,
 	})
 	if err != nil {
 		panic(err)
