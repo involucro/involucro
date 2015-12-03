@@ -88,5 +88,23 @@ func TestRunTaskDefinition(t *testing.T) {
 			So(inv.Tasks["test"][2].(run.ExecuteImage).Config.Image, ShouldEqual, "asd")
 			So(inv.Tasks["test"][2].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"2"})
 		})
+
+		Convey("When I ask for options", func() {
+			So(inv.RunString(`inv.task('test').using('blah').withConfig({ENV = {"FOO=bar"}}).run('test')`), ShouldBeNil)
+			So(inv.Tasks["test"], ShouldHaveLength, 1)
+			Convey("Then it has that option set in the resulting container config", func() {
+				So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Env, ShouldResemble, []string{"FOO=bar"})
+			})
+			Convey("Then it has blah as image id", func() {
+				So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldResemble, "blah")
+			})
+		})
+		Convey("When I overwrite the image id in withConfig", func() {
+			So(inv.RunString(`inv.task('test').using('blah').withConfig({Image = "aaa"}).run('test')`), ShouldBeNil)
+			So(inv.Tasks["test"], ShouldHaveLength, 1)
+			Convey("Then it has aaa as image id", func() {
+				So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldResemble, "aaa")
+			})
+		})
 	})
 }

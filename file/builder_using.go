@@ -10,7 +10,7 @@ import (
 
 type usingBuilderState struct {
 	builderState
-	imageID        string
+	Config         docker.Config
 	expectedCode   int
 	expectedStdout *regexp.Regexp
 	expectedStderr *regexp.Regexp
@@ -19,19 +19,22 @@ type usingBuilderState struct {
 func (bs builderState) using(l *lua.State) int {
 	nbs := usingBuilderState{
 		builderState: bs,
-		imageID:      requireStringOrFailGracefully(l, -1, "using"),
+		Config: docker.Config{
+			Image: requireStringOrFailGracefully(l, -1, "using"),
+		},
 	}
 	return usingTable(l, &nbs)
 }
 
 func (ubs usingBuilderState) usingRun(l *lua.State) int {
 	args := argumentsToStringArray(l)
+	ubs.Config.Cmd = args
+	if ubs.Config.WorkingDir == "" {
+		ubs.Config.WorkingDir = "/source"
+	}
+
 	ei := runS.ExecuteImage{
-		Config: docker.Config{
-			Image:      ubs.imageID,
-			Cmd:        args,
-			WorkingDir: "/source",
-		},
+		Config: ubs.Config,
 		HostConfig: docker.HostConfig{
 			Binds: []string{
 				ubs.inv.WorkingDir + ":/source",
@@ -53,6 +56,7 @@ func usingTable(l *lua.State, ubs *usingBuilderState) int {
 		"run":             ubs.usingRun,
 		"task":            ubs.task,
 		"withExpectation": ubs.usingWithExpectation,
+		"withConfig":      ubs.withConfig,
 	})
 }
 

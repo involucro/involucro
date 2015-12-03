@@ -2,12 +2,25 @@ package file
 
 import (
 	"github.com/Shopify/go-lua"
+	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"strings"
 )
 
 func (wbs wrapBuilderState) withConfig(l *lua.State) int {
 	wbs.baseConf = parseImageConfigFromLuaTable(l)
 	return wrapTable(l, &wbs)
+}
+
+func (ubs usingBuilderState) withConfig(l *lua.State) int {
+	oldImageId := ubs.Config.Image
+	ubs.Config = parseImageConfigFromLuaTable(l)
+	if ubs.Config.Image != "" {
+		log.Warn("Overwriting the used image in withConfig is discouraged")
+	} else {
+		ubs.Config.Image = oldImageId
+	}
+	return usingTable(l, &ubs)
 }
 
 func parseImageConfigFromLuaTable(l *lua.State) docker.Config {
@@ -17,71 +30,71 @@ func parseImageConfigFromLuaTable(l *lua.State) docker.Config {
 
 	l.PushNil()
 	for l.Next(-2) {
-		switch lua.CheckString(l, -2) {
-		case "Hostname":
+		switch strings.ToLower(lua.CheckString(l, -2)) {
+		case "hostname":
 			conf.Hostname = lua.CheckString(l, -1)
-		case "Domainname":
+		case "domainname":
 			conf.Domainname = lua.CheckString(l, -1)
-		case "User":
+		case "user":
 			conf.User = lua.CheckString(l, -1)
-		case "CPUSet":
+		case "cpusetet":
 			conf.CPUSet = lua.CheckString(l, -1)
-		case "StopSignal":
+		case "stopsignal":
 			conf.StopSignal = lua.CheckString(l, -1)
-		case "Image":
+		case "image":
 			conf.Image = lua.CheckString(l, -1)
-		case "VolumeDriver":
+		case "volumedriver":
 			conf.VolumeDriver = lua.CheckString(l, -1)
-		case "VolumesFrom":
+		case "volumesfrom":
 			conf.VolumesFrom = lua.CheckString(l, -1)
-		case "WorkingDir":
+		case "workingdir":
 			conf.WorkingDir = lua.CheckString(l, -1)
-		case "MacAddress":
+		case "macaddress":
 			conf.MacAddress = lua.CheckString(l, -1)
 
-		case "Memory":
+		case "memory":
 			conf.Memory = int64(lua.CheckInteger(l, -1))
-		case "MemorySwap":
+		case "memoryswap":
 			conf.MemorySwap = int64(lua.CheckInteger(l, -1))
-		case "MemoryReservation":
+		case "memoryreservation":
 			conf.MemoryReservation = int64(lua.CheckInteger(l, -1))
-		case "KernelMemory":
+		case "kernelmemory":
 			conf.KernelMemory = int64(lua.CheckInteger(l, -1))
-		case "CPUShares":
+		case "cpushares":
 			conf.CPUShares = int64(lua.CheckInteger(l, -1))
 
-		case "AttachStdin":
+		case "attachatdin":
 			conf.AttachStdin = checkBoolean(l, -1)
-		case "AttachStdout":
+		case "attachatdout":
 			conf.AttachStdout = checkBoolean(l, -1)
-		case "AttachStderr":
+		case "attachatderr":
 			conf.AttachStderr = checkBoolean(l, -1)
-		case "Tty":
+		case "tty":
 			conf.Tty = checkBoolean(l, -1)
-		case "OpenStdin":
+		case "openstdin":
 			conf.OpenStdin = checkBoolean(l, -1)
-		case "StdinOnce":
+		case "stdinonce":
 			conf.StdinOnce = checkBoolean(l, -1)
-		case "NetworkDisabled":
+		case "networkdisabled":
 			conf.NetworkDisabled = checkBoolean(l, -1)
 
-		case "PortSpecs":
+		case "portspecs":
 			conf.PortSpecs = checkStringArray(l, -1)
-		case "Env":
+		case "env":
 			conf.Env = checkStringArray(l, -1)
-		case "Cmd":
+		case "cmd":
 			conf.Cmd = checkStringArray(l, -1)
-		case "DNS":
+		case "dns":
 			conf.DNS = checkStringArray(l, -1)
-		case "Entrypoint":
+		case "entrypoint":
 			conf.Entrypoint = checkStringArray(l, -1)
-		case "SecurityOpts":
+		case "securityopts":
 			conf.SecurityOpts = checkStringArray(l, -1)
-		case "OnBuild":
+		case "onbuild":
 			conf.OnBuild = checkStringArray(l, -1)
-		case "Labels":
+		case "labels":
 			conf.Labels = checkStringMap(l, -1)
-		case "ExposedPorts":
+		case "exposedports", "ports", "expose":
 			conf.ExposedPorts = parseExposedPorts(l, -1)
 		}
 		l.Pop(1)
