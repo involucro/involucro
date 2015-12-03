@@ -22,7 +22,8 @@ func (inv *InvContext) task(l *lua.State) int {
 
 func globalBuilderTable(l *lua.State, bs *builderState) int {
 	return tableWith(l, fm{
-		"using": bs.using,
-		"wrap":  bs.wrap,
+		"using":   bs.using,
+		"wrap":    bs.wrap,
+		"runTask": bs.runTask,
 	})
 }
