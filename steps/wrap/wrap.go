@@ -33,20 +33,27 @@ func (img AsImage) DryRun() {
 func (img AsImage) WithDockerClient(c *docker.Client) error {
 	imageID := utils.RandomIdentifierOfLength(64)
 
-	parentImageConfig, err := c.InspectImage(img.ParentImage)
-	if err != nil {
-		log.WithFields(log.Fields{"image": img.ParentImage}).Info("Parent image not found, pulling it")
-		err = pull.Pull(c, img.ParentImage)
-		if err != nil {
-			log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Panic("Pulling failed")
-			return err
-		}
+	var parentImageID string
 
-		parentImageConfig, err = c.InspectImage(img.ParentImage)
+	if img.ParentImage != "" {
+		parentImageConfig, err := c.InspectImage(img.ParentImage)
 		if err != nil {
-			log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Panic("Image still not found after pulling, bailing")
-			return err
+			log.WithFields(log.Fields{"image": img.ParentImage}).Info("Parent image not found, pulling it")
+			err = pull.Pull(c, img.ParentImage)
+			if err != nil {
+				log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Error("Pulling failed")
+				return err
+			}
+
+			parentImageConfig, err = c.InspectImage(img.ParentImage)
+			if err != nil {
+				log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Error("Image still not found after pulling, bailing")
+				return err
+			}
 		}
+		parentImageID = parentImageConfig.ID
+	} else {
+		parentImageID = ""
 	}
 
 	uploadReader, uploadWriter := io.Pipe()
@@ -76,7 +83,7 @@ func (img AsImage) WithDockerClient(c *docker.Client) error {
 	go func() {
 		defer wg.Done()
 		defer uploadWriter.Close()
-		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageConfig.ID, imageID, img.Config)
+		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageID, imageID, img.Config)
 		return
 	}()
 
