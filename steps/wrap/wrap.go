@@ -107,7 +107,7 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 	uploadBall := tar.NewWriter(w)
 	defer uploadBall.Close()
 
-	repositoriesFileHeader, repoFile := repositoriesFile(newRepositoryName, "latest", imageID)
+	repositoriesFileHeader, repoFile := repositoriesFile(newRepositoryName, imageID)
 	uploadBall.WriteHeader(&repositoriesFileHeader)
 	uploadBall.Write(repoFile)
 

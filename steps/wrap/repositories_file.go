@@ -3,12 +3,16 @@ package wrap
 import (
 	"archive/tar"
 	"encoding/json"
+	"strings"
 )
 
-func repositoriesFile(newRepositoryName, tag, id string) (tar.Header, []byte) {
+func repositoriesFile(newRepositoryName, id string) (tar.Header, []byte) {
 	topMap := make(map[string]map[string]string)
-	topMap[newRepositoryName] = make(map[string]string)
-	topMap[newRepositoryName][tag] = id
+
+	repo, tag := repoNameAndTagFrom(newRepositoryName)
+
+	topMap[repo] = make(map[string]string)
+	topMap[repo][tag] = id
 	val, _ := json.Marshal(topMap)
 
 	repositoriesFileHeader := tar.Header{
@@ -18,4 +22,19 @@ func repositoriesFile(newRepositoryName, tag, id string) (tar.Header, []byte) {
 	}
 
 	return repositoriesFileHeader, val
+}
+
+func repoNameAndTagFrom(name string) (repo, tag string) {
+	parts := strings.Split(name, ":")
+	switch len(parts) {
+	case 1:
+		repo = parts[0]
+		tag = "latest"
+	case 2:
+		repo = parts[0]
+		tag = parts[1]
+	default:
+		panic("Invalid repository name")
+	}
+	return
 }
