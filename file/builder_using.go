@@ -61,6 +61,7 @@ func usingTable(l *lua.State, ubs *usingBuilderState) int {
 		"using":           ubs.using,
 		"run":             ubs.usingRun,
 		"task":            ubs.task,
+		"wrap":            ubs.wrap,
 		"withExpectation": ubs.usingWithExpectation,
 		"withConfig":      ubs.withConfig,
 		"withHostConfig":  ubs.withHostConfig,
