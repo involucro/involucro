@@ -21,3 +21,8 @@ func (ubs usingBuilderState) withConfig(l *lua.State) int {
 	}
 	return usingTable(l, &ubs)
 }
+
+func (ubs usingBuilderState) withHostConfig(l *lua.State) int {
+	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l)
+	return usingTable(l, &ubs)
+}

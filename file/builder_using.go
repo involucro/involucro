@@ -5,12 +5,15 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	runS "github.com/thriqon/involucro/steps/run"
+	"path"
 	"regexp"
+	"strings"
 )
 
 type usingBuilderState struct {
 	builderState
 	Config         docker.Config
+	HostConfig     docker.HostConfig
 	expectedCode   int
 	expectedStdout *regexp.Regexp
 	expectedStderr *regexp.Regexp
@@ -21,6 +24,11 @@ func (bs builderState) using(l *lua.State) int {
 		builderState: bs,
 		Config: docker.Config{
 			Image: requireStringOrFailGracefully(l, -1, "using"),
+		},
+		HostConfig: docker.HostConfig{
+			Binds: []string{
+				"./:/source",
+			},
 		},
 	}
 	return usingTable(l, &nbs)
@@ -33,13 +41,11 @@ func (ubs usingBuilderState) usingRun(l *lua.State) int {
 		ubs.Config.WorkingDir = "/source"
 	}
 
+	ubs.HostConfig = absolutizeBinds(ubs.HostConfig, ubs.inv.WorkingDir)
+
 	ei := runS.ExecuteImage{
-		Config: ubs.Config,
-		HostConfig: docker.HostConfig{
-			Binds: []string{
-				ubs.inv.WorkingDir + ":/source",
-			},
-		},
+		Config:                ubs.Config,
+		HostConfig:            ubs.HostConfig,
 		ExpectedCode:          ubs.expectedCode,
 		ExpectedStdoutMatcher: ubs.expectedStdout,
 		ExpectedStderrMatcher: ubs.expectedStderr,
@@ -57,6 +63,7 @@ func usingTable(l *lua.State, ubs *usingBuilderState) int {
 		"task":            ubs.task,
 		"withExpectation": ubs.usingWithExpectation,
 		"withConfig":      ubs.withConfig,
+		"withHostConfig":  ubs.withHostConfig,
 	})
 }
 
@@ -100,4 +107,18 @@ func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	l.Pop(1)
 
 	return usingTable(l, &nubs)
+}
+
+func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
+	for ind, el := range h.Binds {
+		parts := strings.Split(el, ":")
+		if len(parts) != 2 {
+			log.WithFields(log.Fields{"bind": el}).Panic("Invalid bind, has to be of the form: source:dest")
+		}
+
+		if !path.IsAbs(parts[0]) {
+			h.Binds[ind] = path.Join(workDir, parts[0]) + ":" + parts[1]
+		}
+	}
+	return h
 }

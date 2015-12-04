@@ -1,6 +1,5 @@
 
-all: 01 02 03 04 06 12 14 15 16 17 20
-
+all: 01 02 03 04 06 12 14 15 16 17 20 21
 
 01:
 	./01_compile_and_run_images_present.sh
@@ -35,3 +34,6 @@ all: 01 02 03 04 06 12 14 15 16 17 20
 
 20:
 	./20_tags.sh
+
+21:
+	./21_flexible_mount_dir.sh
