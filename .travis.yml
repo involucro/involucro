@@ -14,14 +14,28 @@ script:
   - make test
   - make -C integrationtest
 
+before_deploy:
+  - mkdir /tmp/depl
+  - cp involucro involucro.exe involucro32.exe /tmp/depl/
+
 deploy:
-  provider: releases
-  api_key:
-    secure: ZdT+SuvSTE1iz9Y5mudZIREGz5HYoJjIPanz0h2YrfhUdB4Rgu0hqkjIE9R5gf9mozN0a59xl1FxpeHVGa5K/Qodt3V2owau+OyiuTrdEvcaKvz/BmmfldwNJsqEgttbataDroRw/fwSB2X+tiW0um6D6SUHDkVQt7PIJPxvpwWJJcjXJSHxDru1fm5eASWiCKKB9uj+JPYz0R9smW//kp2S3/7MFTQjg2vU+IwQRxMaMIrcST0DEW33mEW+4zbwA1Bt/rspCFx9ZkdXVjIhIrNmqo7CCJODyvbhJ/WtJ+yfWF+LWEvaznIc+rM4WAkBn+Y+os6wGhGBnDsFi5FfSt6nOxWv+maNfLY7KQiNaWtGCI90PHQce6EGJUefxB1rbIi6LQmGODdCITwrIcrsFOTe8IRKrmOze7VTsJ4QVNHACy6+tDXLzPE64Dvnapx66bElAJ8QPC8JW0KYDaCQmZUp2ygBFhmmzK+TqwZTX3D/ZQul6tzDuCk9f0K+LCL7loLLI866LL7te+3Y3f19nwDAhqkrxB2ExAv6EVBSQQFdcVBGuzlnL4PzQHp9lqEEPHO2qJqYhBIH40hwaIl+F7wXSZIohQRTJbMGljIP71wq55rk94fRfX55Wj7se2I9eBWHQJWZ2S/BNMYlo9St4P/4RukA/dWevGiuy4xYl+o=
-  file:
+  - provider: releases
+    api_key:
+      secure: ZdT+SuvSTE1iz9Y5mudZIREGz5HYoJjIPanz0h2YrfhUdB4Rgu0hqkjIE9R5gf9mozN0a59xl1FxpeHVGa5K/Qodt3V2owau+OyiuTrdEvcaKvz/BmmfldwNJsqEgttbataDroRw/fwSB2X+tiW0um6D6SUHDkVQt7PIJPxvpwWJJcjXJSHxDru1fm5eASWiCKKB9uj+JPYz0R9smW//kp2S3/7MFTQjg2vU+IwQRxMaMIrcST0DEW33mEW+4zbwA1Bt/rspCFx9ZkdXVjIhIrNmqo7CCJODyvbhJ/WtJ+yfWF+LWEvaznIc+rM4WAkBn+Y+os6wGhGBnDsFi5FfSt6nOxWv+maNfLY7KQiNaWtGCI90PHQce6EGJUefxB1rbIi6LQmGODdCITwrIcrsFOTe8IRKrmOze7VTsJ4QVNHACy6+tDXLzPE64Dvnapx66bElAJ8QPC8JW0KYDaCQmZUp2ygBFhmmzK+TqwZTX3D/ZQul6tzDuCk9f0K+LCL7loLLI866LL7te+3Y3f19nwDAhqkrxB2ExAv6EVBSQQFdcVBGuzlnL4PzQHp9lqEEPHO2qJqYhBIH40hwaIl+F7wXSZIohQRTJbMGljIP71wq55rk94fRfX55Wj7se2I9eBWHQJWZ2S/BNMYlo9St4P/4RukA/dWevGiuy4xYl+o=
+    file:
     - involucro
     - involucro.exe
     - involucro32.exe
-  on:
-    tags: true
-    repo: thriqon/involucro
+    on:
+      tags: true
+      repo: thriqon/involucro
+  - provider: gcs
+    access_key_id: GOOGYBZJ4BN52Y3TLCUL
+    secret_access_key:
+      secure: LrarVjSRnQpey+xMuAxq2uK0BsQ935G4Pu5Zxc+DvCxvG5BCqT7sZScWX8Frr8Bclr88VXv0FDFJvdPWdzeqz2mEMW8ojibPXePtcPZ5kwrwoqww8v9VoQLytOjTqCmCh4E/u+SIstITbg8GjILN794/Z0h2+hXxgmhfXh6rRGgIBE5K4cK/nZEnObDmlVszc8fmQuTDsUU0BklKR8GyX/KpT/vAHcxCRrh7uGoQCLMNh9muScYpc/88+fzwvRLlYJossUsomE9+QKgS8MQ9Qg6NSQD51pQCunGw0ao1EMd7gt0kIUa1O9RIbGuYjrMrBlVKkGEwwKxP8xcnMiEpVluVtrATSVIOFXiSKkjUkE+X10v1NmV5SRHRcEy9IyawhPOJg/AklRimPSH/aHSl7LER5yUpUeUF4JHhHing4sLy/W3zj74WKNOEKhw/SjdnKHXzGwYauX+iJYT8dhU+Df+Q1gmXRhRxuRLr7OdwPCTqAFN+Y76JAmYkBvB2sGoudcPBLH9DxPqzqb9IaKgCzfquYqL73bWh/kJdVgJdb1irjZNCyUMHLDbMxYtYRcFg6dfrJ7FOTHmsSSqW3bfMsYWMIZFQAsD4sJ+PAVa4h4mZu3sm5yIq1zHY9O8cfC9mBzlILU9kAzWvkytC9PVwg73i4WTX1o+xnVbHb9UTW5o=
+    bucket: involucro-1149.appspot.com
+    local-dir: /tmp/depl
+    detect_encoding: true
+    acl: public-read
+    on:
+      repo: thriqon/involucro
