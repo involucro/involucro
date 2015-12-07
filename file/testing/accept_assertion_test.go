@@ -23,9 +23,9 @@ func shouldAccept(actual interface{}, expected ...interface{}) string {
 func shouldNotAccept(actual interface{}, expected ...interface{}) string {
 	if s := shouldAccept(actual, expected...); s == "" {
 		return actual.(*regexp.Regexp).String() + " accepted, but it shouldnt't!"
-	} else {
-		return ""
 	}
+
+	return ""
 }
 
 func TestAcceptAssertion(t *testing.T) {

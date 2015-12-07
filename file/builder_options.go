@@ -12,12 +12,12 @@ func (wbs wrapBuilderState) withConfig(l *lua.State) int {
 }
 
 func (ubs usingBuilderState) withConfig(l *lua.State) int {
-	oldImageId := ubs.Config.Image
+	oldImageID := ubs.Config.Image
 	ubs.Config = translator.ParseImageConfigFromLuaTable(l)
 	if ubs.Config.Image != "" {
 		log.Warn("Overwriting the used image in withConfig is discouraged")
 	} else {
-		ubs.Config.Image = oldImageId
+		ubs.Config.Image = oldImageID
 	}
 	return usingTable(l, &ubs)
 }
