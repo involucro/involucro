@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 )
 
+// Main represents the usual main method of the
+// whole program. It is moved to its own package
+// to testing using go utils.
 func Main(argv []string, exit bool) error {
 
 	arguments, err := parseArguments(argv, exit)

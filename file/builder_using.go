@@ -58,7 +58,7 @@ func usingTable(l *lua.State, ubs *usingBuilderState) int {
 	})
 }
 
-func (nubs usingBuilderState) usingWithExpectation(l *lua.State) int {
+func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	if l.Top() != 1 {
 		lua.Errorf(l, "expected exactly one argument to 'withExpectation'")
 		panic("unreachable")
@@ -67,8 +67,8 @@ func (nubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 
 	l.Field(-1, "code")
 	if !l.IsNil(-1) {
-		nubs.ExpectedCode = lua.CheckInteger(l, -1)
-		log.WithFields(log.Fields{"code": nubs.ExpectedCode}).Info("Expecting code")
+		ubs.ExpectedCode = lua.CheckInteger(l, -1)
+		log.WithFields(log.Fields{"code": ubs.ExpectedCode}).Info("Expecting code")
 	}
 	l.Pop(1)
 
@@ -79,7 +79,7 @@ func (nubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 			lua.ArgumentError(l, 1, "invalid regular expression in stdout: "+err.Error())
 			panic("unreachable")
 		} else {
-			nubs.ExpectedStdoutMatcher = regex
+			ubs.ExpectedStdoutMatcher = regex
 		}
 	}
 	l.Pop(1)
@@ -91,12 +91,12 @@ func (nubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 			lua.ArgumentError(l, 1, "invalid regular expression in stderr: "+err.Error())
 			panic("unreachable")
 		} else {
-			nubs.ExpectedStderrMatcher = regex
+			ubs.ExpectedStderrMatcher = regex
 		}
 	}
 	l.Pop(1)
 
-	return usingTable(l, &nubs)
+	return usingTable(l, &ubs)
 }
 
 func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
