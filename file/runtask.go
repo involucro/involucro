@@ -5,7 +5,6 @@ import (
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"io"
 )
 
 type runtaskStep struct {
@@ -16,18 +15,6 @@ type runtaskStep struct {
 func (s runtaskStep) WithDockerClient(c *docker.Client) error {
 	return s.runOrCrash(func(s Step) error {
 		return s.WithDockerClient(c)
-	})
-}
-func (s runtaskStep) DryRun() {
-	s.runOrCrash(func(s Step) error {
-		s.DryRun()
-		return nil
-	})
-}
-func (s runtaskStep) AsShellCommandOn(w io.Writer) {
-	s.runOrCrash(func(s Step) error {
-		s.AsShellCommandOn(w)
-		return nil
 	})
 }
 

@@ -2,7 +2,6 @@ package wrap
 
 import (
 	"archive/tar"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	utils "github.com/thriqon/involucro/lib"
@@ -21,12 +20,6 @@ type AsImage struct {
 	ParentImage       string
 	NewRepositoryName string
 	Config            docker.Config
-}
-
-// DryRun runs this task without doing anything, but logging an indication of
-// what would have been done
-func (img AsImage) DryRun() {
-	log.WithFields(log.Fields{"dry": true}).Info("WRAP")
 }
 
 // WithDockerClient executes the task on the given Docker instance
@@ -143,10 +136,4 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 	log.Debug("Pipe finished")
 
 	return err
-}
-
-// AsShellCommandOn prints sh compatible commands into the given writer, that
-// accomplish the funciontality encoded in this step
-func (img AsImage) AsShellCommandOn(w io.Writer) {
-	fmt.Fprintf(w, "echo NOT IMPLEMENTED YET\n")
 }

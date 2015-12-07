@@ -1,12 +1,10 @@
 package app
 
 import (
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	file "github.com/thriqon/involucro/file"
 	wrap "github.com/thriqon/involucro/steps/wrap"
-	"os"
 	"path/filepath"
 )
 
@@ -22,14 +20,6 @@ func Main(argv []string, exit bool) error {
 
 	if arguments["-n"].(bool) {
 		f = func(s file.Step) error {
-			s.DryRun()
-			return nil
-		}
-	} else if arguments["-s"].(bool) {
-		fmt.Println("#!/bin/sh")
-
-		f = func(s file.Step) error {
-			s.AsShellCommandOn(os.Stdout)
 			return nil
 		}
 	} else {

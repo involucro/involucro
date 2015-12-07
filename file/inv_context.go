@@ -4,14 +4,11 @@ import (
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"io"
 )
 
 // Step represents one action taken by the tool.
 type Step interface {
 	WithDockerClient(c *docker.Client) error
-	DryRun()
-	AsShellCommandOn(w io.Writer)
 }
 
 // InvContext encapsulates the state of the tool

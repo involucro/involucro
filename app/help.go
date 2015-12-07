@@ -10,7 +10,7 @@ Usage:
   involucro -h | --help
   involucro --version
   involucro [-w <path>] [ -H <url> | --host=<url> ] [-v [-v]] [-f <file> | -e <script>] [--] <task>...
-  involucro (-n | -s) [-v [-v]] [-f <file> | -e <script> ] <task>...
+  involucro -n [-v [-v]] [-f <file> | -e <script> ] <task>...
   involucro --wrap=<source-dir> --into-image=<parent-image> --at=<target-dir> --as=<image-id>
 
 Options:
@@ -21,7 +21,6 @@ Options:
   -e <script>             Evaluate the given script directly.
   -v                      Increase verbosity (use twice for even more messages).
   -n                      Do not really execute commands in Docker, just show them.
-  -s                      Instead of executing the commands against Docker, print equivalent shell commands.
   -w <path>               Set working dir, being the base for all scoping operations. [default: .]
   --wrap=<source-dir>    
 	--into-image=<parent-image>
