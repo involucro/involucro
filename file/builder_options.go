@@ -7,7 +7,7 @@ import (
 )
 
 func (wbs wrapBuilderState) withConfig(l *lua.State) int {
-	wbs.baseConf = translator.ParseImageConfigFromLuaTable(l)
+	wbs.Config = translator.ParseImageConfigFromLuaTable(l)
 	return wrapTable(l, &wbs)
 }
 
