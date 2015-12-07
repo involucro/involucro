@@ -6,16 +6,15 @@ import (
 )
 
 func ExampleAbsolutizeBinds() {
-	h := docker.HostConfig{
+	h := absolutizeBinds(docker.HostConfig{
 		Binds: []string{
 			"./:/source",
 			"/data:/data",
 			"dist:/dist",
 		},
-	}
-	h2 := absolutizeBinds(h, "/projects/alpha")
+	}, "/projects/alpha")
 
-	for _, el := range h2.Binds {
+	for _, el := range h.Binds {
 		fmt.Println(el)
 	}
 	// Output:

@@ -1,8 +1,8 @@
-package main
+package app
 
 import "github.com/docopt/docopt-go"
 
-func parseArguments() map[string]interface{} {
+func parseArguments(argv []string, exit bool) (map[string]interface{}, error) {
 
 	usage := `Involucro.
 
@@ -28,6 +28,5 @@ Options:
 	--at=<target-dir>
 	--as=<image-id>
 `
-	arguments, _ := docopt.Parse(usage, nil, true, "Involucro 0.1", false)
-	return arguments
+	return docopt.Parse(usage, argv, true, "Involucro 0.1", false, exit)
 }
