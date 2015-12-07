@@ -7,6 +7,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
+	"os"
 )
 
 // InvContext encapsulates the state of the tool
@@ -29,6 +30,11 @@ func InstantiateRuntimeEnv(workingDir string) InvContext {
 	utils.TableWith(m.lua, utils.Fm{"task": m.task})
 
 	m.lua.SetGlobal("inv")
+
+	m.lua.NewTable()
+	utils.TableWith(m.lua, utils.Fm{"__index": getEnvValue})
+	m.lua.SetMetaTable(-2)
+	m.lua.SetGlobal("ENV")
 
 	return m
 }
@@ -69,4 +75,10 @@ func (i *InvContext) RunFile(fileName string) error {
 func (i *InvContext) RunString(script string) error {
 	log.WithFields(log.Fields{"script": script}).Debug("Run script")
 	return lua.DoString(i.lua, script)
+}
+
+func getEnvValue(l *lua.State) int {
+	key := lua.CheckString(l, -1)
+	l.PushString(os.Getenv(key))
+	return 1
 }
