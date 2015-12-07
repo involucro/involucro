@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"github.com/fsouza/go-dockerclient"
+	"testing"
 )
 
 func ExampleAbsolutizeBinds() {
@@ -21,4 +22,18 @@ func ExampleAbsolutizeBinds() {
 	// /projects/alpha:/source
 	// /data:/data
 	// /projects/alpha/dist:/dist
+}
+
+func TestAbsolutizeBinds(t *testing.T) {
+	defer func() {
+		if x := recover(); x == nil {
+			panic("Didn't panic")
+		}
+	}()
+
+	absolutizeBinds(docker.HostConfig{
+		Binds: []string{
+			"test",
+		},
+	}, "/projects/alpha")
 }

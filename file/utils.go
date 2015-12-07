@@ -16,21 +16,13 @@ func requireStringOrFailGracefully(c *lua.State, idx int, method string) string 
 
 type fm map[string]lua.Function
 
-func putNamedFunc(l *lua.State, idx int, name string, f lua.Function) {
-	l.PushGoFunction(f)
-	l.SetField(idx, name)
-}
-
-func putFunctions(l *lua.State, idx int, fs fm) {
-	for k := range fs {
-		putNamedFunc(l, idx, k, fs[k])
-	}
-}
-
 func tableWith(l *lua.State, fs fm) int {
 	l.CreateTable(0, len(fs))
 	idx := l.Top()
-	putFunctions(l, idx, fs)
+	for k := range fs {
+		l.PushGoFunction(fs[k])
+		l.SetField(idx, k)
+	}
 	return 1
 }
 

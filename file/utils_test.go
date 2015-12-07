@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"github.com/Shopify/go-lua"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -18,4 +19,13 @@ func TestRequireString(t *testing.T) {
 		ctx.PushString("asd")
 		So(func() { requireStringOrFailGracefully(ctx, -1, "test") }, ShouldNotPanic)
 	})
+}
+
+func ExampleArgumentsToStringArray() {
+	l := lua.NewState()
+	l.PushString("a")
+	l.PushString("s")
+	l.PushString("d")
+	fmt.Println(argumentsToStringArray(l))
+	// Output: [a s d]
 }
