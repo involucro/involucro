@@ -1,6 +1,7 @@
 package run
 
 import (
+	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"regexp"
@@ -17,7 +18,6 @@ type ExecuteImage struct {
 	ActualCode            int
 }
 
-// WithDockerClient executes the task on the given Docker instance
 func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 
 	container, err := img.createContainer(c)
@@ -39,6 +39,11 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	}
 
 	img.ActualCode, err = c.WaitContainer(container.ID)
+
+	if img.ActualCode != img.ExpectedCode {
+		log.WithFields(log.Fields{"ID": container.ID, "expected": img.ExpectedCode, "actual": img.ActualCode}).Error("Unexpected exit code, container not removed")
+		return errors.New("Unexpected exit code")
+	}
 
 	log.WithFields(log.Fields{"Status": img.ActualCode, "ID": container.ID}).Info("Execution complete")
 

@@ -2,14 +2,14 @@ package wrap
 
 import (
 	"archive/tar"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/file/pull"
 	utils "github.com/thriqon/involucro/lib"
-	pull "github.com/thriqon/involucro/steps/pull"
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"sync"
 )
 
@@ -23,13 +23,6 @@ type AsImage struct {
 	Config            docker.Config
 }
 
-// DryRun runs this task without doing anything, but logging an indication of
-// what would have been done
-func (img AsImage) DryRun() {
-	log.WithFields(log.Fields{"dry": true}).Info("WRAP")
-}
-
-// WithDockerClient executes the task on the given Docker instance
 func (img AsImage) WithDockerClient(c *docker.Client) error {
 	imageID := utils.RandomIdentifierOfLength(64)
 
@@ -145,8 +138,8 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 	return err
 }
 
-// AsShellCommandOn prints sh compatible commands into the given writer, that
-// accomplish the funciontality encoded in this step
-func (img AsImage) AsShellCommandOn(w io.Writer) {
-	fmt.Fprintf(w, "echo NOT IMPLEMENTED YET\n")
+func randomTarballFileName() string {
+	dir := os.TempDir()
+	tarid := utils.RandomIdentifier()
+	return filepath.Join(dir, "involucro-volume-"+tarid+".tar")
 }

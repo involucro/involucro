@@ -1,4 +1,4 @@
-package testing
+package translator
 
 import (
 	"github.com/Shopify/go-lua"

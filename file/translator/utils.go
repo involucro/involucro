@@ -13,7 +13,7 @@ func checkBoolean(l *lua.State, index int) bool {
 func checkStringArray(l *lua.State, index int) []string {
 	lua.CheckType(l, index, lua.TypeTable)
 
-	items := make([]string, 0)
+	var items []string
 
 	l.PushNil()
 	for l.Next(-2) {
