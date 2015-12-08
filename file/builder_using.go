@@ -41,7 +41,7 @@ func (ubs usingBuilderState) usingRun(l *lua.State) int {
 	ubs.HostConfig = absolutizeBinds(ubs.HostConfig, ubs.inv.WorkingDir)
 
 	tasks := ubs.inv.Tasks
-	tasks[ubs.taskID] = append(tasks[ubs.taskID], ubs)
+	tasks[ubs.taskID] = append(tasks[ubs.taskID], ubs.ExecuteImage)
 
 	return usingTable(l, &ubs)
 }

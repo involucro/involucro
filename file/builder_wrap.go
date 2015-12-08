@@ -35,7 +35,7 @@ func (wbs wrapBuilderState) as(l *lua.State) int {
 	wbs.NewRepositoryName = requireStringOrFailGracefully(l, -1, "as")
 
 	tasks := wbs.inv.Tasks
-	tasks[wbs.taskID] = append(tasks[wbs.taskID], wbs)
+	tasks[wbs.taskID] = append(tasks[wbs.taskID], wbs.AsImage)
 
 	return wrapTable(l, &wbs)
 }
