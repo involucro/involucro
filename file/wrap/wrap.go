@@ -4,11 +4,12 @@ import (
 	"archive/tar"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/file/pull"
 	utils "github.com/thriqon/involucro/lib"
-	pull "github.com/thriqon/involucro/steps/pull"
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"sync"
 )
 
@@ -22,7 +23,6 @@ type AsImage struct {
 	Config            docker.Config
 }
 
-// WithDockerClient executes the task on the given Docker instance
 func (img AsImage) WithDockerClient(c *docker.Client) error {
 	imageID := utils.RandomIdentifierOfLength(64)
 
@@ -136,4 +136,10 @@ func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName st
 	log.Debug("Pipe finished")
 
 	return err
+}
+
+func randomTarballFileName() string {
+	dir := os.TempDir()
+	tarid := utils.RandomIdentifier()
+	return filepath.Join(dir, "involucro-volume-"+tarid+".tar")
 }

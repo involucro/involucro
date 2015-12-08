@@ -4,7 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	file "github.com/thriqon/involucro/file"
-	wrap "github.com/thriqon/involucro/steps/wrap"
+	wrap "github.com/thriqon/involucro/file/wrap"
 	"path/filepath"
 )
 

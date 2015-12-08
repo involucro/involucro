@@ -5,11 +5,10 @@ import (
 	"github.com/thriqon/involucro/file/translator"
 	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
-	wrapS "github.com/thriqon/involucro/steps/wrap"
 )
 
 type wrapBuilderState struct {
-	wrapS.AsImage
+	AsImage
 	upper        utils.Fm
 	registerStep func(types.Step)
 	workingDir   string

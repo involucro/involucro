@@ -3,7 +3,7 @@ package testing
 import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/thriqon/involucro/file"
-	"github.com/thriqon/involucro/steps/run"
+	"github.com/thriqon/involucro/file/run"
 	"reflect"
 	"testing"
 )

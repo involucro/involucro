@@ -17,7 +17,6 @@ type ExecuteImage struct {
 	ActualCode            int
 }
 
-// WithDockerClient executes the task on the given Docker instance
 func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 
 	container, err := img.createContainer(c)

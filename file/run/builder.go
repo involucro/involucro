@@ -7,14 +7,13 @@ import (
 	"github.com/thriqon/involucro/file/translator"
 	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
-	runS "github.com/thriqon/involucro/steps/run"
 	"path"
 	"regexp"
 	"strings"
 )
 
 type usingBuilderState struct {
-	runS.ExecuteImage
+	ExecuteImage
 	upper        utils.Fm
 	registerStep func(types.Step)
 	workingDir   string
@@ -25,7 +24,7 @@ func NewSubBuilder(upper utils.Fm, register func(types.Step), workingDir string)
 		workingDir:   workingDir,
 		registerStep: register,
 		upper:        upper,
-		ExecuteImage: runS.ExecuteImage{
+		ExecuteImage: ExecuteImage{
 			HostConfig: docker.HostConfig{
 				Binds: []string{
 					"./:/source",
@@ -104,6 +103,22 @@ func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	return ubs.usingTable(l)
 }
 
+func (ubs usingBuilderState) withConfig(l *lua.State) int {
+	oldImageID := ubs.Config.Image
+	ubs.Config = translator.ParseImageConfigFromLuaTable(l)
+	if ubs.Config.Image != "" {
+		log.Warn("Overwriting the used image in withConfig is discouraged")
+	} else {
+		ubs.Config.Image = oldImageID
+	}
+	return ubs.usingTable(l)
+}
+
+func (ubs usingBuilderState) withHostConfig(l *lua.State) int {
+	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l)
+	return ubs.usingTable(l)
+}
+
 func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
 	for ind, el := range h.Binds {
 		parts := strings.Split(el, ":")
@@ -125,20 +140,4 @@ func argumentsToStringArray(l *lua.State) (args []string) {
 		args[i-1] = lua.CheckString(l, i)
 	}
 	return
-}
-
-func (ubs usingBuilderState) withConfig(l *lua.State) int {
-	oldImageID := ubs.Config.Image
-	ubs.Config = translator.ParseImageConfigFromLuaTable(l)
-	if ubs.Config.Image != "" {
-		log.Warn("Overwriting the used image in withConfig is discouraged")
-	} else {
-		ubs.Config.Image = oldImageID
-	}
-	return ubs.usingTable(l)
-}
-
-func (ubs usingBuilderState) withHostConfig(l *lua.State) int {
-	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l)
-	return ubs.usingTable(l)
 }

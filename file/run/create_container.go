@@ -3,8 +3,8 @@ package run
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/file/pull"
 	utils "github.com/thriqon/involucro/lib"
-	pull "github.com/thriqon/involucro/steps/pull"
 )
 
 func (img ExecuteImage) createContainer(c *docker.Client) (container *docker.Container, err error) {
