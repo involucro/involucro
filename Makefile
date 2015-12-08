@@ -6,9 +6,9 @@ PKGS = $(shell find -name \*.go | xargs dirname | uniq)
 TEST_PKGS = $(shell find -name \*_test.go | xargs dirname | uniq)
 
 get-deps:
-	@go get ./...
-	@go get github.com/smartystreets/goconvey
-	@go get -u github.com/golang/lint/golint
+	go get ./...
+	go get github.com/smartystreets/goconvey
+	go get -u github.com/golang/lint/golint
 
 test:
 	@echo Run test...
