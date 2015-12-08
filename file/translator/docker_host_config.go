@@ -2,6 +2,7 @@ package translator
 
 import (
 	"github.com/Shopify/go-lua"
+	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"strings"
 )
@@ -84,6 +85,8 @@ func ParseHostConfigFromLuaTable(l *lua.State) docker.HostConfig {
 			conf.ReadonlyRootfs = checkBoolean(l, -1)
 		case "oomkilldisable":
 			conf.OOMKillDisable = checkBoolean(l, -1)
+		default:
+			log.WithFields(log.Fields{"key": lua.CheckString(l, -2)}).Warn("Unrecognized setting in config, ignoring")
 
 		}
 		l.Pop(1)
