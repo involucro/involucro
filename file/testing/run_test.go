@@ -8,27 +8,18 @@ import (
 	"testing"
 )
 
-func assertPanics(f func()) {
-	defer func() {
-		if x := recover(); x == nil {
-			panic("Didn't panic")
-		}
-	}()
-	f()
-}
-
 func TestDefineTaskWithTableAsIdPanics(t *testing.T) {
 	inv := file.InstantiateRuntimeEnv(".")
-	assertPanics(func() {
-		inv.RunString(`inv.task({})`)
-	})
+	if err := inv.RunString(`inv.task({})`); err == nil {
+		t.Fatal("Didn't return error")
+	}
 }
 
 func TestUsingWithoutParameterPanics(t *testing.T) {
 	inv := file.InstantiateRuntimeEnv(".")
-	assertPanics(func() {
-		inv.RunString(`inv.task('test').using()`)
-	})
+	if err := inv.RunString(`inv.task('test').using()`); err == nil {
+		t.Fatal("Didn't return error")
+	}
 }
 
 func TestRunWithoutParameterWorks(t *testing.T) {
@@ -71,7 +62,6 @@ func TestDefiningRunTask(t *testing.T) {
 	if !reflect.DeepEqual(ei.Config.Cmd, []string{"test", "123"}) {
 		t.Fatal("Didnt store the correct Cmd slice, but: ", ei.Config.Cmd)
 	}
-
 }
 
 func TestRunTaskDefinition(t *testing.T) {

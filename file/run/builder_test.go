@@ -1,7 +1,8 @@
-package file
+package run
 
 import (
 	"fmt"
+	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
 	"testing"
 )
@@ -36,4 +37,13 @@ func TestAbsolutizeBinds(t *testing.T) {
 			"test",
 		},
 	}, "/projects/alpha")
+}
+
+func ExampleArgumentsToStringArray() {
+	l := lua.NewState()
+	l.PushString("a")
+	l.PushString("s")
+	l.PushString("d")
+	fmt.Println(argumentsToStringArray(l))
+	// Output: [a s d]
 }

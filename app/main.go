@@ -19,37 +19,25 @@ func Main(argv []string, exit bool) error {
 	}
 	log.SetLevel(log.DebugLevel)
 
-	var f func(file.Step) error
+	client, _ := docker.NewClient(arguments["--host"].(string))
 
-	if arguments["-n"].(bool) {
-		f = func(s file.Step) error {
-			return nil
+	if err := client.Ping(); err != nil {
+		log.Fatal("Docker not reachable")
+	}
+
+	if arguments["--wrap"] != nil {
+		conf := wrap.AsImage{
+			SourceDir:         arguments["--wrap"].(string),
+			TargetDir:         arguments["--at"].(string),
+			ParentImage:       arguments["--into-image"].(string),
+			NewRepositoryName: arguments["--as"].(string),
 		}
-	} else {
-		client, _ := docker.NewClient(arguments["--host"].(string))
+		log.WithFields(log.Fields{"conf": conf}).Debug("Starting wrap")
 
-		if err := client.Ping(); err != nil {
-			log.Fatal("Docker not reachable")
+		if err := conf.WithDockerClient(client); err != nil {
+			log.WithFields(log.Fields{"error": err}).Panic("Failed wrapping")
 		}
-
-		if arguments["--wrap"] != nil {
-			conf := wrap.AsImage{
-				SourceDir:         arguments["--wrap"].(string),
-				TargetDir:         arguments["--at"].(string),
-				ParentImage:       arguments["--into-image"].(string),
-				NewRepositoryName: arguments["--as"].(string),
-			}
-			log.WithFields(log.Fields{"conf": conf}).Debug("Starting wrap")
-
-			if err := conf.WithDockerClient(client); err != nil {
-				log.WithFields(log.Fields{"error": err}).Panic("Failed wrapping")
-			}
-			return nil
-		}
-
-		f = func(s file.Step) error {
-			return s.WithDockerClient(client)
-		}
+		return nil
 	}
 
 	relativeWorkDir := arguments["-w"].(string)
@@ -70,7 +58,7 @@ func Main(argv []string, exit bool) error {
 
 	for _, element := range (arguments["<task>"]).([]string) {
 		if ctx.HasTask(element) {
-			if err := ctx.RunTaskWith(element, f); err != nil {
+			if err := ctx.RunTaskWith(element, client); err != nil {
 				log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
 			}
 		} else {

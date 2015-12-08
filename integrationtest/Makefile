@@ -2,8 +2,8 @@
 all: 01 02 03 04 06 12 14 15 16 17 20 21
 
 01:
-	./01_compile_and_run_images_present.sh
-	./01_compile_and_run_images_not_present.sh
+	./01_autopull.sh
+	./01_compile_and_run.sh
 
 03:
 	./03_expectations.sh

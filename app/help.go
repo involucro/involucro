@@ -20,7 +20,6 @@ Options:
   -f <file>               Set the control file [default: invfile.lua].
   -e <script>             Evaluate the given script directly.
   -v                      Increase verbosity (use twice for even more messages).
-  -n                      Do not really execute commands in Docker, just show them.
   -w <path>               Set working dir, being the base for all scoping operations. [default: .]
   --wrap=<source-dir>    
 	--into-image=<parent-image>

@@ -1,9 +1,12 @@
-package file
+package run
 
 import (
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/file/translator"
+	"github.com/thriqon/involucro/file/types"
+	"github.com/thriqon/involucro/file/utils"
 	runS "github.com/thriqon/involucro/steps/run"
 	"path"
 	"regexp"
@@ -11,17 +14,18 @@ import (
 )
 
 type usingBuilderState struct {
-	builderState
 	runS.ExecuteImage
+	upper        utils.Fm
+	registerStep func(types.Step)
+	workingDir   string
 }
 
-func (bs builderState) using(l *lua.State) int {
-	nbs := usingBuilderState{
-		builderState: bs,
+func NewSubBuilder(upper utils.Fm, register func(types.Step), workingDir string) lua.Function {
+	ubs := usingBuilderState{
+		workingDir:   workingDir,
+		registerStep: register,
+		upper:        upper,
 		ExecuteImage: runS.ExecuteImage{
-			Config: docker.Config{
-				Image: requireStringOrFailGracefully(l, -1, "using"),
-			},
 			HostConfig: docker.HostConfig{
 				Binds: []string{
 					"./:/source",
@@ -29,7 +33,22 @@ func (bs builderState) using(l *lua.State) int {
 			},
 		},
 	}
-	return usingTable(l, &nbs)
+
+	return ubs.using
+}
+
+func (ubs usingBuilderState) usingTable(l *lua.State) int {
+	return utils.TableWith(l, ubs.upper, utils.Fm{
+		"run":             ubs.usingRun,
+		"withExpectation": ubs.usingWithExpectation,
+		"withConfig":      ubs.withConfig,
+		"withHostConfig":  ubs.withHostConfig,
+	})
+}
+
+func (ubs usingBuilderState) using(l *lua.State) int {
+	ubs.Config.Image = lua.CheckString(l, -1)
+	return ubs.usingTable(l)
 }
 
 func (ubs usingBuilderState) usingRun(l *lua.State) int {
@@ -38,24 +57,10 @@ func (ubs usingBuilderState) usingRun(l *lua.State) int {
 		ubs.Config.WorkingDir = "/source"
 	}
 
-	ubs.HostConfig = absolutizeBinds(ubs.HostConfig, ubs.inv.WorkingDir)
+	ubs.HostConfig = absolutizeBinds(ubs.HostConfig, ubs.workingDir)
 
-	tasks := ubs.inv.Tasks
-	tasks[ubs.taskID] = append(tasks[ubs.taskID], ubs.ExecuteImage)
-
-	return usingTable(l, &ubs)
-}
-
-func usingTable(l *lua.State, ubs *usingBuilderState) int {
-	return tableWith(l, fm{
-		"using":           ubs.using,
-		"run":             ubs.usingRun,
-		"task":            ubs.task,
-		"wrap":            ubs.wrap,
-		"withExpectation": ubs.usingWithExpectation,
-		"withConfig":      ubs.withConfig,
-		"withHostConfig":  ubs.withHostConfig,
-	})
+	ubs.registerStep(ubs.ExecuteImage)
+	return ubs.usingTable(l)
 }
 
 func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
@@ -96,7 +101,7 @@ func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	}
 	l.Pop(1)
 
-	return usingTable(l, &ubs)
+	return ubs.usingTable(l)
 }
 
 func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
@@ -111,4 +116,29 @@ func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
 		}
 	}
 	return h
+}
+
+func argumentsToStringArray(l *lua.State) (args []string) {
+	top := l.Top()
+	args = make([]string, top)
+	for i := 1; i <= top; i++ {
+		args[i-1] = lua.CheckString(l, i)
+	}
+	return
+}
+
+func (ubs usingBuilderState) withConfig(l *lua.State) int {
+	oldImageID := ubs.Config.Image
+	ubs.Config = translator.ParseImageConfigFromLuaTable(l)
+	if ubs.Config.Image != "" {
+		log.Warn("Overwriting the used image in withConfig is discouraged")
+	} else {
+		ubs.Config.Image = oldImageID
+	}
+	return ubs.usingTable(l)
+}
+
+func (ubs usingBuilderState) withHostConfig(l *lua.State) int {
+	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l)
+	return ubs.usingTable(l)
 }
