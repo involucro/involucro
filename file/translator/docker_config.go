@@ -2,6 +2,7 @@ package translator
 
 import (
 	"github.com/Shopify/go-lua"
+	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"strings"
 )
@@ -23,7 +24,7 @@ func ParseImageConfigFromLuaTable(l *lua.State) docker.Config {
 			conf.Domainname = lua.CheckString(l, -1)
 		case "user":
 			conf.User = lua.CheckString(l, -1)
-		case "cpusetet":
+		case "cpuset":
 			conf.CPUSet = lua.CheckString(l, -1)
 		case "stopsignal":
 			conf.StopSignal = lua.CheckString(l, -1)
@@ -49,11 +50,11 @@ func ParseImageConfigFromLuaTable(l *lua.State) docker.Config {
 		case "cpushares":
 			conf.CPUShares = int64(lua.CheckInteger(l, -1))
 
-		case "attachatdin":
+		case "attachstdin":
 			conf.AttachStdin = checkBoolean(l, -1)
-		case "attachatdout":
+		case "attachstdout":
 			conf.AttachStdout = checkBoolean(l, -1)
-		case "attachatderr":
+		case "attachstderr":
 			conf.AttachStderr = checkBoolean(l, -1)
 		case "tty":
 			conf.Tty = checkBoolean(l, -1)
@@ -84,6 +85,8 @@ func ParseImageConfigFromLuaTable(l *lua.State) docker.Config {
 			conf.ExposedPorts = parseExposedPorts(l, -1)
 		case "volumes":
 			conf.Volumes = checkStringSet(l, -1)
+		default:
+			log.WithFields(log.Fields{"key": lua.CheckString(l, -2)}).Warn("Unrecognized setting in config, ignoring")
 		}
 		l.Pop(1)
 	}
