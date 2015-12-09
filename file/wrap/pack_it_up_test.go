@@ -3,6 +3,7 @@ package wrap
 import (
 	"archive/tar"
 	"bytes"
+	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"io"
 	"io/ioutil"
@@ -72,4 +73,17 @@ func TestPackItUp(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 	})
+}
+
+func ExampleRebaseFilename() {
+	fmt.Println(rebaseFilename("p", "x", "p/a/b/c"))
+	fmt.Println(rebaseFilename("y", "x", "p/a/b/c"))
+	// Output:
+	// x/a/b/c
+	// p/a/b/c
+}
+
+func ExamplePreparePathForTarHeader() {
+	fmt.Println(preparePathForTarHeader("/target/compiled/dist/a", "/target/", "/asd"))
+	// Output: asd/compiled/dist/a
 }

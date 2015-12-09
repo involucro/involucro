@@ -22,12 +22,19 @@ func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
 		if err != nil {
 			return err
 		}
-		withoutPathPrefix := strings.TrimPrefix(os_path, sourceDirectory)
-		asSlashPath := filepath.ToSlash(withoutPathPrefix)
-		prefixWithoutLeadingSlash := strings.TrimPrefix(prefix, "/")
-		withNewPrefix := path.Join(prefixWithoutLeadingSlash, asSlashPath)
+		withNewPrefix := preparePathForTarHeader(os_path, sourceDirectory, prefix)
 
-		header, err := tar.FileInfoHeader(info, "")
+		var symlinkTarget string
+		if info.Mode()&os.ModeSymlink > 0 {
+			symlinkOsTarget, err := os.Readlink(os_path)
+			if err != nil {
+				return err
+			}
+
+			symlinkTarget = preparePathForTarHeader(symlinkOsTarget, sourceDirectory, prefix)
+		}
+
+		header, err := tar.FileInfoHeader(info, symlinkTarget)
 		if err != nil {
 			return err
 		}
@@ -36,7 +43,7 @@ func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
 			return err
 		}
 
-		if info.IsDir() {
+		if !info.Mode().IsRegular() {
 			return nil
 		}
 
@@ -48,4 +55,21 @@ func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
 		_, err = io.Copy(tarball, file)
 		return err
 	})
+}
+
+func preparePathForTarHeader(filename string, sourceDir, prefix string) string {
+	prefixWithoutLeadingSlash := strings.TrimPrefix(prefix, "/")
+
+	slashed := filepath.ToSlash(filename)
+
+	return rebaseFilename(sourceDir, prefixWithoutLeadingSlash, slashed)
+}
+
+func rebaseFilename(oldprefix, newprefix string, filename string) string {
+	withoutOld := strings.TrimPrefix(filename, oldprefix)
+	if withoutOld == filename {
+		return filename
+	}
+
+	return path.Join(newprefix, withoutOld)
 }
