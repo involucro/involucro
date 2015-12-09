@@ -57,7 +57,7 @@ func (img AsImage) WithDockerClient(c *docker.Client) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(layerBallName)
+	//defer os.Remove(layerBallName)
 	defer layerFile.Close()
 
 	log.WithFields(log.Fields{"layerBallName": layerBallName}).Debug("Packing")
