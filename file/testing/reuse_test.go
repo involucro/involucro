@@ -9,7 +9,7 @@ import (
 
 func TestReuseReturnValues(t *testing.T) {
 	Convey("Given I have an instance", t, func() {
-		inv := file.InstantiateRuntimeEnv(".")
+		inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
 		Convey("When I store the result of .task('test') in a variable", func() {
 			So(inv.RunString(`
 			test = inv.task('test')

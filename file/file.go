@@ -15,16 +15,18 @@ type InvContext struct {
 	lua        *lua.State
 	Tasks      map[string][]types.Step
 	WorkingDir string
+	Values     map[string]string
 }
 
 // InstantiateRuntimeEnv creates a new InvContext and returns it. This new
 // context uses the working dir that is passed as a parameter.  After
 // instantiation, the context will be ready to load additional files.
-func InstantiateRuntimeEnv(workingDir string) InvContext {
+func InstantiateRuntimeEnv(workingDir string, values map[string]string) InvContext {
 	m := InvContext{
 		lua:        lua.NewStateEx(),
 		Tasks:      make(map[string][]types.Step),
 		WorkingDir: workingDir,
+		Values:     values,
 	}
 
 	utils.TableWith(m.lua, utils.Fm{"task": m.task})
@@ -35,6 +37,11 @@ func InstantiateRuntimeEnv(workingDir string) InvContext {
 	utils.TableWith(m.lua, utils.Fm{"__index": getEnvValue})
 	m.lua.SetMetaTable(-2)
 	m.lua.SetGlobal("ENV")
+
+	m.lua.NewTable()
+	utils.TableWith(m.lua, utils.Fm{"__index": m.getValue})
+	m.lua.SetMetaTable(-2)
+	m.lua.SetGlobal("VAR")
 
 	return m
 }
@@ -80,5 +87,11 @@ func (i *InvContext) RunString(script string) error {
 func getEnvValue(l *lua.State) int {
 	key := lua.CheckString(l, -1)
 	l.PushString(os.Getenv(key))
+	return 1
+}
+
+func (inv *InvContext) getValue(l *lua.State) int {
+	key := lua.CheckString(l, -1)
+	l.PushString(inv.Values[key])
 	return 1
 }

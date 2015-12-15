@@ -1,11 +1,13 @@
 package app
 
 import (
+	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	file "github.com/thriqon/involucro/file"
 	wrap "github.com/thriqon/involucro/file/wrap"
 	"path/filepath"
+	"strings"
 )
 
 // Main represents the usual main method of the
@@ -44,7 +46,12 @@ func Main(argv []string, exit bool) error {
 	workingDir, _ := filepath.Abs(relativeWorkDir)
 	log.WithFields(log.Fields{"workdir": workingDir}).Info("Start")
 
-	ctx := file.InstantiateRuntimeEnv(workingDir)
+	additionalArguments, err := parseAdditionalArguments(arguments["--set"].([]string))
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Fatal("Unable to parse arguments")
+	}
+
+	ctx := file.InstantiateRuntimeEnv(workingDir, additionalArguments)
 
 	if arguments["-e"] != nil {
 		if err := ctx.RunString(arguments["-e"].(string)); err != nil {
@@ -66,4 +73,16 @@ func Main(argv []string, exit bool) error {
 		}
 	}
 	return nil
+}
+
+func parseAdditionalArguments(in []string) (map[string]string, error) {
+	answer := make(map[string]string)
+	for _, x := range in {
+		parts := strings.SplitN(x, "=", 2)
+		if len(parts) < 2 {
+			return nil, errors.New("Invalid parameter usage, should be KEY=VALUE")
+		}
+		answer[parts[0]] = parts[1]
+	}
+	return answer, nil
 }
