@@ -5,7 +5,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	file "github.com/thriqon/involucro/file"
-	wrap "github.com/thriqon/involucro/file/wrap"
 	"path/filepath"
 	"strings"
 )
@@ -25,21 +24,6 @@ func Main(argv []string, exit bool) error {
 
 	if err := client.Ping(); err != nil {
 		log.Fatal("Docker not reachable")
-	}
-
-	if arguments["--wrap"] != nil {
-		conf := wrap.AsImage{
-			SourceDir:         arguments["--wrap"].(string),
-			TargetDir:         arguments["--at"].(string),
-			ParentImage:       arguments["--into-image"].(string),
-			NewRepositoryName: arguments["--as"].(string),
-		}
-		log.WithFields(log.Fields{"conf": conf}).Debug("Starting wrap")
-
-		if err := conf.WithDockerClient(client); err != nil {
-			log.WithFields(log.Fields{"error": err}).Panic("Failed wrapping")
-		}
-		return nil
 	}
 
 	relativeWorkDir := arguments["-w"].(string)
