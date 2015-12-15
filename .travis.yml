@@ -39,3 +39,5 @@ deploy:
     acl: public-read
     on:
       repo: thriqon/involucro
+  - provider: script
+    script: push_to_docker.sh
