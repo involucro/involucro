@@ -9,7 +9,7 @@ import (
 
 func TestWrapTaskDefinition(t *testing.T) {
 	Convey("Given an empty runtime environment", t, func() {
-		inv := file.InstantiateRuntimeEnv(".")
+		inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
 
 		Convey("When I define a wrap task", func() {
 			err := inv.RunString(`inv.task('w').wrap("dist").inImage("p").at("/data").as("test/one")`)
