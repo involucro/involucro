@@ -18,6 +18,10 @@ type ExecuteImage struct {
 	ActualCode            int
 }
 
+func (img ExecuteImage) WithRemoteDockerClient(c *docker.Client) error {
+	return img.WithDockerClient(c)
+}
+
 func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 
 	container, err := img.createContainer(c)

@@ -23,7 +23,7 @@ func (inv InvContext) task(l *lua.State) int {
 
 	subbuilders["using"] = run.NewSubBuilder(subbuilders, registerStep, inv.WorkingDir)
 	subbuilders["wrap"] = wrap.NewSubBuilder(subbuilders, registerStep, inv.WorkingDir)
-	subbuilders["runTask"] = runtask.NewSubBuilder(subbuilders, registerStep, inv.RunTaskWith)
+	subbuilders["runTask"] = runtask.NewSubBuilder(subbuilders, registerStep, &inv)
 
 	return utils.TableWith(l, subbuilders)
 }

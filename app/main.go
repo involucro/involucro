@@ -4,7 +4,9 @@ import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	file "github.com/thriqon/involucro/file"
+	"github.com/thriqon/involucro/file"
+	"github.com/thriqon/involucro/file/utils"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -20,7 +22,29 @@ func Main(argv []string, exit bool) error {
 	}
 	log.SetLevel(log.DebugLevel)
 
-	client, _ := docker.NewClient(arguments["--host"].(string))
+	if arguments["--encoded-state"].(bool) != false {
+		if steps, err := utils.DecodeState(os.Getenv("STATE")); err != nil {
+			log.WithFields(log.Fields{"error": err}).Fatal("Unable to parse state")
+			return err
+		} else {
+			client, err := docker.NewClient("unix://" + arguments["--socket"].(string))
+			if err != nil {
+				log.WithFields(log.Fields{"error": err}).Fatal("Unable to connect to Docker")
+			}
+			for _, step := range steps {
+				if err := step.WithDockerClient(client); err != nil {
+					log.WithFields(log.Fields{"error": err}).Error("Unable to run step")
+					return err
+				}
+			}
+			return nil
+		}
+	}
+
+	client, isremote, err := connectToDocker(arguments)
+	if err != nil {
+		log.Fatal("Unable to create Docker client")
+	}
 
 	if err := client.Ping(); err != nil {
 		log.Fatal("Docker not reachable")
@@ -47,9 +71,13 @@ func Main(argv []string, exit bool) error {
 		}
 	}
 
+	taskrunner := ctx.RunLocallyTaskWith
+	if isremote {
+		taskrunner = ctx.RunTaskOnRemoteSystemWith
+	}
 	for _, element := range (arguments["<task>"]).([]string) {
 		if ctx.HasTask(element) {
-			if err := ctx.RunTaskWith(element, client); err != nil {
+			if err := taskrunner(element, client); err != nil {
 				log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
 			}
 		} else {
@@ -69,4 +97,18 @@ func parseAdditionalArguments(in []string) (map[string]string, error) {
 		answer[parts[0]] = parts[1]
 	}
 	return answer, nil
+}
+
+func connectToDocker(args argumentsMap) (client *docker.Client, isremote bool, err error) {
+	var url string
+	var ok bool
+	if url, ok = args["--host"].(string); !ok {
+		url, err = docker.DefaultDockerHost()
+		if err != nil {
+			return
+		}
+	}
+	client, err = docker.NewClient(url)
+	isremote = strings.HasPrefix(url, "tcp:")
+	return
 }

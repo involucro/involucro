@@ -2,7 +2,6 @@ package runtask
 
 import (
 	"github.com/Shopify/go-lua"
-	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 )
@@ -13,10 +12,10 @@ type runtaskBuilderState struct {
 	registerStep func(types.Step)
 }
 
-func NewSubBuilder(upper utils.Fm, register func(types.Step), runTaskWithID func(string, *docker.Client) error) lua.Function {
+func NewSubBuilder(upper utils.Fm, register func(types.Step), runner Runner) lua.Function {
 	rbs := runtaskBuilderState{
 		runtaskStep: runtaskStep{
-			runTaskWithID: runTaskWithID,
+			runner: runner,
 		},
 		upper:        upper,
 		registerStep: register,

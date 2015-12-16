@@ -18,7 +18,7 @@ fi
 REPO=involucro/tool
 
 set -e
-mkdir -p dist/
+mkdir -p dist/tmp/
 cp involucro dist/
 ./involucro -e "inv.task('wrap-yourself').wrap('dist').at('/').withConfig({entrypoint = {'/involucro'}}).as('$REPO:$TAG')" wrap-yourself
 rm -rf dist/
