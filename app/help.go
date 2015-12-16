@@ -2,7 +2,9 @@ package app
 
 import "github.com/docopt/docopt-go"
 
-func parseArguments(argv []string, exit bool) (map[string]interface{}, error) {
+type argumentsMap map[string]interface{}
+
+func parseArguments(argv []string, exit bool) (argumentsMap, error) {
 
 	usage := `Involucro.
 
