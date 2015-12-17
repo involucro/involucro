@@ -66,7 +66,7 @@ func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	l.Field(-1, "code")
 	if !l.IsNil(-1) {
 		ubs.ExpectedCode = lua.CheckInteger(l, -1)
-		log.WithFields(log.Fields{"code": ubs.ExpectedCode}).Info("Expecting code")
+		log.WithFields(log.Fields{"code": ubs.ExpectedCode}).Debug("Expecting code")
 	}
 	l.Pop(1)
 
