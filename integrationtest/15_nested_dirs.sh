@@ -1,14 +1,18 @@
 #!/bin/bash
 
-rm -rf /tmp/involucro_inttest15
-docker rmi test/i15
-
 INV=$(pwd)/../involucro
 
 set -e
 mkdir -p /tmp/involucro_inttest15/asd/p/aaa
 echo 123 > /tmp/involucro_inttest15/asd/p/aaa/a
 echo 456 > /tmp/involucro_inttest15/asd/p/aaa/b
+
+function finish() {
+  set +e
+  rm -rf /tmp/involucro_inttest15/
+  docker rmi test/i15
+}
+trap finish EXIT
 
 cd /tmp/
 
