@@ -4,7 +4,10 @@ import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"os"
+	"path"
 	"regexp"
+	"strings"
 )
 
 // ExecuteImage executes the given config and host config, similar to "docker
@@ -18,11 +21,26 @@ type ExecuteImage struct {
 	ActualCode            int
 }
 
-func (img ExecuteImage) WithRemoteDockerClient(c *docker.Client) error {
-	return img.WithDockerClient(c)
+func (img ExecuteImage) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
+	if !path.IsAbs(remoteWorkDir) {
+		remoteWorkDir = path.Join("/", remoteWorkDir)
+	}
+	return img.withAbsolutizedWorkDir(c, remoteWorkDir)
 }
 
-func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
+func (img ExecuteImage) WithDockerClient(c *docker.Client, remoteWorkDir string) error {
+	if !path.IsAbs(remoteWorkDir) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		remoteWorkDir = path.Join(cwd, remoteWorkDir)
+	}
+	return img.withAbsolutizedWorkDir(c, remoteWorkDir)
+}
+
+func (img ExecuteImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir string) error {
+	img.HostConfig = absolutizeBinds(img.HostConfig, remoteWorkDir)
 
 	container, err := img.createContainer(c)
 	if err != nil {
@@ -66,4 +84,18 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client) error {
 	}
 
 	return err
+}
+
+func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
+	for ind, el := range h.Binds {
+		parts := strings.Split(el, ":")
+		if len(parts) != 2 {
+			log.WithFields(log.Fields{"bind": el}).Panic("Invalid bind, has to be of the form: source:dest")
+		}
+
+		if !path.IsAbs(parts[0]) {
+			h.Binds[ind] = path.Join(workDir, parts[0]) + ":" + parts[1]
+		}
+	}
+	return h
 }

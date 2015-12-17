@@ -34,6 +34,6 @@ func (ai AsImage) forRemoteExecution() types.Step {
 	}
 }
 
-func (ai AsImage) WithRemoteDockerClient(c *docker.Client) error {
-	return ai.forRemoteExecution().WithRemoteDockerClient(c)
+func (ai AsImage) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
+	return ai.forRemoteExecution().WithRemoteDockerClient(c, remoteWorkDir)
 }

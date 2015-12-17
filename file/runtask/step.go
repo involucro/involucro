@@ -5,8 +5,8 @@ import (
 )
 
 type Runner interface {
-	RunLocallyTaskWith(string, *docker.Client) error
-	RunTaskOnRemoteSystemWith(string, *docker.Client) error
+	RunLocallyTaskWith(string, *docker.Client, string) error
+	RunTaskOnRemoteSystemWith(string, *docker.Client, string) error
 }
 
 type runtaskStep struct {
@@ -14,10 +14,10 @@ type runtaskStep struct {
 	runner Runner
 }
 
-func (s runtaskStep) WithDockerClient(c *docker.Client) error {
-	return s.runner.RunLocallyTaskWith(s.taskID, c)
+func (s runtaskStep) WithDockerClient(c *docker.Client, remoteWorkDir string) error {
+	return s.runner.RunLocallyTaskWith(s.taskID, c, remoteWorkDir)
 }
 
-func (s runtaskStep) WithRemoteDockerClient(c *docker.Client) error {
-	return s.runner.RunTaskOnRemoteSystemWith(s.taskID, c)
+func (s runtaskStep) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
+	return s.runner.RunTaskOnRemoteSystemWith(s.taskID, c, remoteWorkDir)
 }

@@ -23,7 +23,7 @@ type AsImage struct {
 	Config            docker.Config
 }
 
-func (img AsImage) WithDockerClient(c *docker.Client) error {
+func (img AsImage) WithDockerClient(c *docker.Client, remoteWorkDir string) error {
 	imageID := utils.RandomIdentifierOfLength(64)
 
 	var parentImageID string
@@ -62,7 +62,11 @@ func (img AsImage) WithDockerClient(c *docker.Client) error {
 
 	log.WithFields(log.Fields{"layerBallName": layerBallName}).Debug("Packing")
 
-	err = packItUp(img.SourceDir, layerFile, img.TargetDir)
+	sourceDir := img.SourceDir
+	if !path.IsAbs(sourceDir) {
+		sourceDir = path.Join(remoteWorkDir, sourceDir)
+	}
+	err = packItUp(sourceDir, layerFile, img.TargetDir)
 	if err != nil {
 		return err
 	}

@@ -12,21 +12,19 @@ import (
 
 // InvContext encapsulates the state of the tool
 type InvContext struct {
-	lua        *lua.State
-	Tasks      map[string][]types.Step
-	WorkingDir string
-	Values     map[string]string
+	lua    *lua.State
+	Tasks  map[string][]types.Step
+	Values map[string]string
 }
 
 // InstantiateRuntimeEnv creates a new InvContext and returns it. This new
 // context uses the working dir that is passed as a parameter.  After
 // instantiation, the context will be ready to load additional files.
-func InstantiateRuntimeEnv(workingDir string, values map[string]string) InvContext {
+func InstantiateRuntimeEnv(values map[string]string) InvContext {
 	m := InvContext{
-		lua:        lua.NewStateEx(),
-		Tasks:      make(map[string][]types.Step),
-		WorkingDir: workingDir,
-		Values:     values,
+		lua:    lua.NewStateEx(),
+		Tasks:  make(map[string][]types.Step),
+		Values: values,
 	}
 
 	utils.TableWith(m.lua, utils.Fm{"task": m.task})
@@ -58,28 +56,28 @@ func (inv *InvContext) HasTask(taskID string) bool {
 // and calls f once with each step. If any error occurs
 // during an invocation, this error is returned and
 // the loop is interrupted.
-func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client) error {
+func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client, remoteWorkDir string) error {
 	if !inv.HasTask(taskID) {
 		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
 		return errors.New("No steps defined for task")
 	}
 
 	for _, step := range inv.Tasks[taskID] {
-		if err := step.WithDockerClient(client); err != nil {
+		if err := step.WithDockerClient(client, remoteWorkDir); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.Client) error {
+func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.Client, remoteWorkDir string) error {
 	if !inv.HasTask(taskID) {
 		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
 		return errors.New("No steps defined for task")
 	}
 
 	for _, step := range inv.Tasks[taskID] {
-		if err := step.WithRemoteDockerClient(client); err != nil {
+		if err := step.WithRemoteDockerClient(client, remoteWorkDir); err != nil {
 			return err
 		}
 	}

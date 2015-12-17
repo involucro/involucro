@@ -7,7 +7,6 @@ import (
 	"github.com/thriqon/involucro/file"
 	"github.com/thriqon/involucro/file/utils"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -32,7 +31,7 @@ func Main(argv []string, exit bool) error {
 				log.WithFields(log.Fields{"error": err}).Fatal("Unable to connect to Docker")
 			}
 			for _, step := range steps {
-				if err := step.WithDockerClient(client); err != nil {
+				if err := step.WithDockerClient(client, "/"); err != nil {
 					log.WithFields(log.Fields{"error": err}).Error("Unable to run step")
 					return err
 				}
@@ -51,15 +50,13 @@ func Main(argv []string, exit bool) error {
 	}
 
 	relativeWorkDir := arguments["-w"].(string)
-	workingDir, _ := filepath.Abs(relativeWorkDir)
-	log.WithFields(log.Fields{"workdir": workingDir}).Info("Start")
 
 	additionalArguments, err := parseAdditionalArguments(arguments["--set"].([]string))
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Fatal("Unable to parse arguments")
 	}
 
-	ctx := file.InstantiateRuntimeEnv(workingDir, additionalArguments)
+	ctx := file.InstantiateRuntimeEnv(additionalArguments)
 
 	if arguments["-e"] != nil {
 		if err := ctx.RunString(arguments["-e"].(string)); err != nil {
@@ -77,7 +74,7 @@ func Main(argv []string, exit bool) error {
 	}
 	for _, element := range (arguments["<task>"]).([]string) {
 		if ctx.HasTask(element) {
-			if err := taskrunner(element, client); err != nil {
+			if err := taskrunner(element, client, relativeWorkDir); err != nil {
 				log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
 			}
 		} else {

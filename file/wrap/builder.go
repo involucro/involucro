@@ -11,14 +11,12 @@ type wrapBuilderState struct {
 	AsImage
 	upper        utils.Fm
 	registerStep func(types.Step)
-	workingDir   string
 }
 
-func NewSubBuilder(upper utils.Fm, register func(types.Step), workingDir string) lua.Function {
+func NewSubBuilder(upper utils.Fm, register func(types.Step)) lua.Function {
 	wbs := wrapBuilderState{
 		upper:        upper,
 		registerStep: register,
-		workingDir:   workingDir,
 	}
 	return wbs.wrap
 }
