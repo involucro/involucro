@@ -1,7 +1,5 @@
 #!/bin/bash
 
-docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-
 if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
   exit 0
 fi
@@ -16,6 +14,8 @@ if [[ $TAG == "master" ]]; then
 fi
 
 REPO=involucro/tool
+
+docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
 set -e
 mkdir -p dist/tmp/
