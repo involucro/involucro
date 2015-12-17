@@ -4,11 +4,20 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-type runtaskStep struct {
-	taskID        string
-	runTaskWithID func(string, *docker.Client) error
+type Runner interface {
+	RunLocallyTaskWith(string, *docker.Client, string) error
+	RunTaskOnRemoteSystemWith(string, *docker.Client, string) error
 }
 
-func (s runtaskStep) WithDockerClient(c *docker.Client) error {
-	return s.runTaskWithID(s.taskID, c)
+type runtaskStep struct {
+	taskID string
+	runner Runner
+}
+
+func (s runtaskStep) WithDockerClient(c *docker.Client, remoteWorkDir string) error {
+	return s.runner.RunLocallyTaskWith(s.taskID, c, remoteWorkDir)
+}
+
+func (s runtaskStep) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
+	return s.runner.RunTaskOnRemoteSystemWith(s.taskID, c, remoteWorkDir)
 }

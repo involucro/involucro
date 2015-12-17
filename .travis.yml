@@ -7,7 +7,10 @@ services:
 
 go: 1.5
 
-install: make get-deps
+install:
+  - sudo apt-get update
+  - sudo apt-get install socat
+  - make get-deps
 
 script:
   - make -j3 build build-win64 build-win32
@@ -39,3 +42,5 @@ deploy:
     acl: public-read
     on:
       repo: thriqon/involucro
+  - provider: script
+    script: push_to_docker.sh

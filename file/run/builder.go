@@ -7,21 +7,17 @@ import (
 	"github.com/thriqon/involucro/file/translator"
 	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
-	"path"
 	"regexp"
-	"strings"
 )
 
 type usingBuilderState struct {
 	ExecuteImage
 	upper        utils.Fm
 	registerStep func(types.Step)
-	workingDir   string
 }
 
-func NewSubBuilder(upper utils.Fm, register func(types.Step), workingDir string) lua.Function {
+func NewSubBuilder(upper utils.Fm, register func(types.Step)) lua.Function {
 	ubs := usingBuilderState{
-		workingDir:   workingDir,
 		registerStep: register,
 		upper:        upper,
 		ExecuteImage: ExecuteImage{
@@ -55,8 +51,6 @@ func (ubs usingBuilderState) usingRun(l *lua.State) int {
 	if ubs.Config.WorkingDir == "" {
 		ubs.Config.WorkingDir = "/source"
 	}
-
-	ubs.HostConfig = absolutizeBinds(ubs.HostConfig, ubs.workingDir)
 
 	ubs.registerStep(ubs.ExecuteImage)
 	return ubs.usingTable(l)
@@ -117,20 +111,6 @@ func (ubs usingBuilderState) withConfig(l *lua.State) int {
 func (ubs usingBuilderState) withHostConfig(l *lua.State) int {
 	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l)
 	return ubs.usingTable(l)
-}
-
-func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
-	for ind, el := range h.Binds {
-		parts := strings.Split(el, ":")
-		if len(parts) != 2 {
-			log.WithFields(log.Fields{"bind": el}).Panic("Invalid bind, has to be of the form: source:dest")
-		}
-
-		if !path.IsAbs(parts[0]) {
-			h.Binds[ind] = path.Join(workDir, parts[0]) + ":" + parts[1]
-		}
-	}
-	return h
 }
 
 func argumentsToStringArray(l *lua.State) (args []string) {

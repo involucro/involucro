@@ -9,35 +9,35 @@ import (
 )
 
 func TestDefineTaskWithTableAsIdPanics(t *testing.T) {
-	inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
 	if err := inv.RunString(`inv.task({})`); err == nil {
 		t.Fatal("Didn't return error")
 	}
 }
 
 func TestUsingWithoutParameterPanics(t *testing.T) {
-	inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
 	if err := inv.RunString(`inv.task('test').using()`); err == nil {
 		t.Fatal("Didn't return error")
 	}
 }
 
 func TestRunWithoutParameterWorks(t *testing.T) {
-	inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
 	if err := inv.RunString(`inv.task('test').using('asd').run()`); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestUsingRunWithParameterWorks(t *testing.T) {
-	inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
 	if err := inv.RunString(`inv.task('test').using('asd').run('test')`); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestDefiningRunTask(t *testing.T) {
-	inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
 	if err := inv.RunString(`inv.task('test').using('blah').run('test', '123')`); err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func TestDefiningRunTask(t *testing.T) {
 
 func TestRunTaskDefinition(t *testing.T) {
 	Convey("Given an empty runtime environment", t, func() {
-		inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+		inv := file.InstantiateRuntimeEnv(make(map[string]string))
 
 		Convey("Passing arguments to run works with different lengths", func() {
 			So(inv.RunString(`inv.task('test1').using('blah').run('test')`), ShouldBeNil)

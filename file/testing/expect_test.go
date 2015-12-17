@@ -9,7 +9,7 @@ import (
 
 func TestExpectations(t *testing.T) {
 	Convey("Given I have an empty state", t, func() {
-		inv := file.InstantiateRuntimeEnv(".", make(map[string]string))
+		inv := file.InstantiateRuntimeEnv(make(map[string]string))
 
 		prefix := `inv.task('asd').using('asd')`
 

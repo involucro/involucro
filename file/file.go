@@ -12,21 +12,19 @@ import (
 
 // InvContext encapsulates the state of the tool
 type InvContext struct {
-	lua        *lua.State
-	Tasks      map[string][]types.Step
-	WorkingDir string
-	Values     map[string]string
+	lua    *lua.State
+	Tasks  map[string][]types.Step
+	Values map[string]string
 }
 
 // InstantiateRuntimeEnv creates a new InvContext and returns it. This new
 // context uses the working dir that is passed as a parameter.  After
 // instantiation, the context will be ready to load additional files.
-func InstantiateRuntimeEnv(workingDir string, values map[string]string) InvContext {
+func InstantiateRuntimeEnv(values map[string]string) InvContext {
 	m := InvContext{
-		lua:        lua.NewStateEx(),
-		Tasks:      make(map[string][]types.Step),
-		WorkingDir: workingDir,
-		Values:     values,
+		lua:    lua.NewStateEx(),
+		Tasks:  make(map[string][]types.Step),
+		Values: values,
 	}
 
 	utils.TableWith(m.lua, utils.Fm{"task": m.task})
@@ -54,18 +52,32 @@ func (inv *InvContext) HasTask(taskID string) bool {
 	return ok
 }
 
-// RunTaskWith retrieves the steps for the given task ID
+// RunLocallyTaskWith retrieves the steps for the given task ID
 // and calls f once with each step. If any error occurs
 // during an invocation, this error is returned and
 // the loop is interrupted.
-func (inv *InvContext) RunTaskWith(taskID string, client *docker.Client) error {
-	steps := inv.Tasks[taskID]
-	if len(steps) == 0 {
-		log.WithFields(log.Fields{"task": taskID}).Warn("no steps defined for task")
+func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client, remoteWorkDir string) error {
+	if !inv.HasTask(taskID) {
+		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
 		return errors.New("No steps defined for task")
 	}
-	for _, step := range steps {
-		if err := step.WithDockerClient(client); err != nil {
+
+	for _, step := range inv.Tasks[taskID] {
+		if err := step.WithDockerClient(client, remoteWorkDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.Client, remoteWorkDir string) error {
+	if !inv.HasTask(taskID) {
+		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
+		return errors.New("No steps defined for task")
+	}
+
+	for _, step := range inv.Tasks[taskID] {
+		if err := step.WithRemoteDockerClient(client, remoteWorkDir); err != nil {
 			return err
 		}
 	}
@@ -73,15 +85,15 @@ func (inv *InvContext) RunTaskWith(taskID string, client *docker.Client) error {
 }
 
 // RunFile runs the file with the given filename in this context
-func (i *InvContext) RunFile(fileName string) error {
+func (inv *InvContext) RunFile(fileName string) error {
 	log.WithFields(log.Fields{"fileName": fileName}).Debug("Run file")
-	return lua.DoFile(i.lua, fileName)
+	return lua.DoFile(inv.lua, fileName)
 }
 
 // RunString runs the given parameter directly
-func (i *InvContext) RunString(script string) error {
+func (inv *InvContext) RunString(script string) error {
 	log.WithFields(log.Fields{"script": script}).Debug("Run script")
-	return lua.DoString(i.lua, script)
+	return lua.DoString(inv.lua, script)
 }
 
 func getEnvValue(l *lua.State) int {
