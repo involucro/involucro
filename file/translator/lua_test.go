@@ -2,45 +2,53 @@ package translator
 
 import (
 	"github.com/Shopify/go-lua"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestLuaTableTraversal(t *testing.T) {
-	Convey("Given I have a Lua Context", t, func() {
-		state := lua.NewState()
-		Convey("When I put some keys into a table", func() {
-			err := lua.DoString(state, "tab = {a = 1, b = 2}")
-			So(err, ShouldBeNil)
-			Convey("Then I can iterate over the keys", func() {
-				state.Global("tab")
-				state.PushNil()
+	state := lua.NewState()
+	if err := lua.DoString(state, "tab = {a = 1, b = 2}"); err != nil {
+		t.Fatal("Unable to run code", err)
+	}
+	state.Global("tab")
+	state.PushNil()
 
-				So(state.Next(-2), ShouldBeTrue)
+	if !state.Next(-2) {
+		t.Fatal("no next value")
+	}
 
-				key1 := lua.CheckString(state, -2)
-				var val1, key2, val2 string
+	key1 := lua.CheckString(state, -2)
+	var val1, key2, val2 string
 
-				if key1 == "a" {
-					val1 = "1"
-					key2 = "b"
-					val2 = "2"
-				} else {
-					val1 = "2"
-					key2 = "a"
-					val2 = "1"
-				}
-				So(lua.CheckString(state, -2), ShouldResemble, key1)
-				So(lua.CheckString(state, -1), ShouldResemble, val1)
-				state.Pop(1)
+	if key1 == "a" {
+		val1 = "1"
+		key2 = "b"
+		val2 = "2"
+	} else {
+		val1 = "2"
+		key2 = "a"
+		val2 = "1"
+	}
+	if actual := lua.CheckString(state, -2); actual != key1 {
+		t.Error("Unexpected key", actual)
+	}
+	if actual := lua.CheckString(state, -1); actual != val1 {
+		t.Error("Unexpected value", actual)
+	}
+	state.Pop(1)
 
-				So(state.Next(-2), ShouldBeTrue)
-				So(lua.CheckString(state, -2), ShouldResemble, key2)
-				So(lua.CheckString(state, -1), ShouldResemble, val2)
-				state.Pop(1)
+	if !state.Next(-2) {
+		t.Fatal("No next value")
+	}
+	if actual := lua.CheckString(state, -2); actual != key2 {
+		t.Error("Unexpected key", actual)
+	}
+	if actual := lua.CheckString(state, -1); actual != val2 {
+		t.Error("Unexpected value", actual)
+	}
+	state.Pop(1)
 
-				So(state.Next(-2), ShouldBeFalse)
-			})
-		})
-	})
+	if state.Next(-2) {
+		t.Fatal("Has next value")
+	}
 }

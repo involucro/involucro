@@ -40,7 +40,11 @@ func (img ExecuteImage) WithDockerClient(c *docker.Client, remoteWorkDir string)
 }
 
 func (img ExecuteImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir string) error {
-	img.HostConfig = absolutizeBinds(img.HostConfig, remoteWorkDir)
+	var err error
+	img.HostConfig, err = absolutizeBinds(img.HostConfig, remoteWorkDir)
+	if err != nil {
+		return err
+	}
 
 	container, err := img.createContainer(c)
 	if err != nil {
@@ -67,7 +71,7 @@ func (img ExecuteImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir s
 		return errors.New("Unexpected exit code")
 	}
 
-	log.WithFields(log.Fields{"Status": img.ActualCode, "ID": container.ID}).Info("Execution complete")
+	log.WithFields(log.Fields{"Status": img.ActualCode, "ID": container.ID}).Debug("Execution complete")
 
 	if err == nil && img.ActualCode == 0 {
 		err := c.RemoveContainer(docker.RemoveContainerOptions{
@@ -86,16 +90,21 @@ func (img ExecuteImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir s
 	return err
 }
 
-func absolutizeBinds(h docker.HostConfig, workDir string) docker.HostConfig {
+func absolutizeBinds(h docker.HostConfig, workDir string) (docker.HostConfig, error) {
 	for ind, el := range h.Binds {
 		parts := strings.Split(el, ":")
 		if len(parts) != 2 {
-			log.WithFields(log.Fields{"bind": el}).Panic("Invalid bind, has to be of the form: source:dest")
+			log.WithFields(log.Fields{"bind": el}).Error("Invalid bind, has to be of the form: source:dest")
+			return h, errors.New("Invalid bind specification")
 		}
 
 		if !path.IsAbs(parts[0]) {
 			h.Binds[ind] = path.Join(workDir, parts[0]) + ":" + parts[1]
 		}
 	}
-	return h
+	return h, nil
+}
+
+func (img ExecuteImage) ShowStartInfo() {
+	log.WithFields(log.Fields{"Image": img.Config.Image, "Cmd": img.Config.Cmd}).Info("run image")
 }

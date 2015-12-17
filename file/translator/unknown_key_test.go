@@ -3,40 +3,38 @@ package translator
 import (
 	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
-	. "github.com/smartystreets/goconvey/convey"
+	"reflect"
 	"testing"
 )
 
 func TestUnknownPropertiesConfig(t *testing.T) {
-	Convey("When I try to set an unknown key", t, func() {
-		source := `x = {blah = 5}`
+	source := `x = {blah = 5}`
 
-		expected := docker.Config{}
+	expected := docker.Config{}
 
-		state := lua.NewState()
-		So(lua.DoString(state, source), ShouldBeNil)
-		state.Global("x")
+	state := lua.NewState()
+	if err := lua.DoString(state, source); err != nil {
+		t.Errorf("Error executing string: %s", err)
+	}
+	state.Global("x")
 
-		Convey("Then it is accepted and results in an unchaged result", func() {
-			actual := ParseImageConfigFromLuaTable(state)
-			So(actual, ShouldResemble, expected)
-		})
-	})
+	if actual := ParseImageConfigFromLuaTable(state); !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Wasn't unchanged: %s != %s", actual, expected)
+	}
 }
 
 func TestUnknownPropertiesHostConfig(t *testing.T) {
-	Convey("When I try to set an unknown key", t, func() {
-		source := `x = {blah = 5}`
+	source := `x = {blah = 5}`
 
-		expected := docker.HostConfig{}
+	expected := docker.HostConfig{}
 
-		state := lua.NewState()
-		So(lua.DoString(state, source), ShouldBeNil)
-		state.Global("x")
+	state := lua.NewState()
+	if err := lua.DoString(state, source); err != nil {
+		t.Errorf("Error executing string: %s", err)
+	}
+	state.Global("x")
 
-		Convey("Then it is accepted and results in an unchaged result", func() {
-			actual := ParseHostConfigFromLuaTable(state)
-			So(actual, ShouldResemble, expected)
-		})
-	})
+	if actual := ParseHostConfigFromLuaTable(state); !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Wasn't unchanged: %s != %s", actual, expected)
+	}
 }

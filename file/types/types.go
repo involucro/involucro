@@ -12,4 +12,7 @@ type Step interface {
 	// assuming that the instance doesn't share the filesystem with this process.
 	// Non-local paths are resolved relative to the remoteWorkDir.
 	WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error
+
+	// ShowStartInfo displays some information on the default logger that identifies the step
+	ShowStartInfo()
 }

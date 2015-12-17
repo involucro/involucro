@@ -8,7 +8,7 @@ import (
 )
 
 func ExampleAbsolutizeBinds() {
-	h := absolutizeBinds(docker.HostConfig{
+	h, _ := absolutizeBinds(docker.HostConfig{
 		Binds: []string{
 			"./:/source",
 			"/data:/data",
@@ -26,17 +26,14 @@ func ExampleAbsolutizeBinds() {
 }
 
 func TestAbsolutizeBinds(t *testing.T) {
-	defer func() {
-		if x := recover(); x == nil {
-			panic("Didn't panic")
-		}
-	}()
-
-	absolutizeBinds(docker.HostConfig{
+	_, err := absolutizeBinds(docker.HostConfig{
 		Binds: []string{
 			"test",
 		},
 	}, "/projects/alpha")
+	if err == nil {
+		t.Error("Didn't returne error")
+	}
 }
 
 func ExampleArgumentsToStringArray() {

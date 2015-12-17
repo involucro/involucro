@@ -31,7 +31,7 @@ func (img AsImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 	if img.ParentImage != "" {
 		parentImageConfig, err := c.InspectImage(img.ParentImage)
 		if err != nil {
-			log.WithFields(log.Fields{"image": img.ParentImage}).Info("Parent image not found, pulling it")
+			log.WithFields(log.Fields{"image": img.ParentImage}).Debug("Parent image not found, pulling it")
 			err = pull.Pull(c, img.ParentImage)
 			if err != nil {
 				log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Error("Pulling failed")
@@ -75,7 +75,7 @@ func (img AsImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	log.WithFields(log.Fields{"image_id": imageID, "repository": img.NewRepositoryName}).Info("Wrapping up")
+	log.WithFields(log.Fields{"image_id": imageID, "repository": img.NewRepositoryName}).Debug("Wrapping up")
 
 	go func() {
 		defer wg.Done()
@@ -95,7 +95,6 @@ func (img AsImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 	}(uploadReader)
 
 	wg.Wait()
-	log.Info("DONE")
 
 	return nil
 }
@@ -146,4 +145,8 @@ func randomTarballFileName() string {
 	dir := os.TempDir()
 	tarid := utils.RandomIdentifier()
 	return filepath.Join(dir, "involucro-volume-"+tarid+".tar")
+}
+
+func (img AsImage) ShowStartInfo() {
+	log.WithFields(log.Fields{"as": img.NewRepositoryName}).Info("wrap")
 }

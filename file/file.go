@@ -63,6 +63,7 @@ func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client, 
 	}
 
 	for _, step := range inv.Tasks[taskID] {
+		step.ShowStartInfo()
 		if err := step.WithDockerClient(client, remoteWorkDir); err != nil {
 			return err
 		}
@@ -77,6 +78,7 @@ func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.C
 	}
 
 	for _, step := range inv.Tasks[taskID] {
+		step.ShowStartInfo()
 		if err := step.WithRemoteDockerClient(client, remoteWorkDir); err != nil {
 			return err
 		}

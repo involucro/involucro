@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,67 +11,60 @@ import (
 	"testing"
 )
 
-func TestPackItUp(t *testing.T) {
-	Convey("Given I have a prepared temp dir", t, func() {
-		dir, err := ioutil.TempDir("", "involucro-test-wrap-packitup")
-		So(err, ShouldBeNil)
-		defer os.RemoveAll(dir)
+func TestPackItUpPrepared(t *testing.T) {
+	dir, err := ioutil.TempDir("", "involucro-test-wrap-packitup")
+	if err != nil {
+		t.Fatal("Unable to create temp dir", err)
+	}
+	defer os.RemoveAll(dir)
 
-		os.MkdirAll(filepath.Join(dir, "a", "b", "c", "d"), 0777)
-		ioutil.WriteFile(filepath.Join(dir, "a", "b", "asd"), []byte("ASD"), 0777)
+	os.MkdirAll(filepath.Join(dir, "a", "b", "c", "d"), 0777)
+	ioutil.WriteFile(filepath.Join(dir, "a", "b", "asd"), []byte("ASD"), 0777)
 
-		Convey("When I pack that up into a buffer with prefix 'blubb'", func() {
-			var buf bytes.Buffer
-			err := packItUp(dir, &buf, "blubb")
-			Convey("Then no error occurred", func() {
-				So(err, ShouldBeNil)
-			})
+	var buf bytes.Buffer
+	if err := packItUp(dir, &buf, "blubb"); err != nil {
+		t.Fatal("Unable to pack it up", err)
+	}
 
-			Convey("When I read that with archive/tar", func() {
-				tarReader := tar.NewReader(&buf)
-				Convey("Then I find all the directories, e.g. blubb/a, blubb/a/b...", func() {
-					seen := make(map[string]struct{})
-					for {
-						header, err := tarReader.Next()
-						if err == io.EOF {
-							break
-						}
-						if header.Typeflag == tar.TypeDir {
-							seen[header.Name] = struct{}{}
-						}
-					}
+	tarReader := tar.NewReader(&buf)
+	var contents []byte
+	expected := map[string]int{
+		"blubb":         1,
+		"blubb/a":       1,
+		"blubb/a/b":     1,
+		"blubb/a/b/asd": 1,
+		"blubb/a/b/c":   1,
+		"blubb/a/b/c/d": 1,
+	}
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		delete(expected, header.Name)
+		if header.Name == "blubb/a/b/asd" {
+			var err error
+			contents, err = ioutil.ReadAll(tarReader)
+			if err != nil {
+				t.Fatal("Error during reading", err)
+			}
+		}
+	}
 
-					So(seen, ShouldContainKey, "blubb")
-					So(seen, ShouldContainKey, "blubb/a")
-					So(seen, ShouldContainKey, "blubb/a/b")
-					So(seen, ShouldContainKey, "blubb/a/b/c")
-					So(seen, ShouldContainKey, "blubb/a/b/c/d")
-				})
-				Convey("Then I can find and read blubb/a/b/asd", func() {
-					var contents []byte
-					for {
-						header, err := tarReader.Next()
-						if err == io.EOF {
-							break
-						}
-						if header.Name == "blubb/a/b/asd" {
-							var err error
-							contents, err = ioutil.ReadAll(tarReader)
-							So(err, ShouldBeNil)
-						}
-					}
-					So(contents, ShouldResemble, []byte("ASD"))
-				})
-			})
-		})
-	})
-	Convey("When I give it an not existing directory", t, func() {
-		var buf bytes.Buffer
-		err := packItUp("/not_existing", &buf, "blubb")
-		Convey("Then it returns an error", func() {
-			So(err, ShouldNotBeNil)
-		})
-	})
+	if fmt.Sprint(expected) != fmt.Sprint(map[string]int{}) {
+		t.Error("Didn't see all expected keys, missing were", expected)
+	}
+
+	if string(contents) != "ASD" {
+		t.Errorf("Contents didn't receive the expected value, were %s", string(contents))
+	}
+}
+func TestPackItUpNotPreparedDir(t *testing.T) {
+	var buf bytes.Buffer
+	err := packItUp("/not_existing", &buf, "blubb")
+	if err == nil {
+		t.Error("Didn't return an error when accessing not existent directory")
+	}
 }
 
 func ExampleRebaseFilename() {
