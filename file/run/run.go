@@ -90,7 +90,7 @@ func (img ExecuteImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir s
 	return err
 }
 
-func absolutizeBinds(h docker.HostConfig, workDir string) (docker.HostConfig, err) {
+func absolutizeBinds(h docker.HostConfig, workDir string) (docker.HostConfig, error) {
 	for ind, el := range h.Binds {
 		parts := strings.Split(el, ":")
 		if len(parts) != 2 {

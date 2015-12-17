@@ -2,7 +2,6 @@ package run
 
 import (
 	"github.com/fsouza/go-dockerclient"
-	. "github.com/smartystreets/goconvey/convey"
 	"io"
 	"regexp"
 	"strings"
@@ -10,36 +9,23 @@ import (
 )
 
 func TestReadAndMatchAgainst(t *testing.T) {
-	Convey("Given I have a blob of data in a reader", t, func() {
-		reader := strings.NewReader("asdjsdkfsdjkl")
-		Convey("When I use the regex /^asd$/ on it", func() {
-			regex := regexp.MustCompile("^asd$")
-			Convey("Then readAndMatchAgainst sends back an error", func() {
-				ch := make(chan error, 1)
-				readAndMatchAgainst(reader, regex, ch, "testing")
-				val := <-ch
-				So(val, ShouldNotBeNil)
-			})
-		})
-		Convey("When I use the regex /dfd92hj/ on it", func() {
-			regex := regexp.MustCompile("dfd92hj")
-			Convey("Then readAndMatchAgainst sends back an error", func() {
-				ch := make(chan error, 1)
-				readAndMatchAgainst(reader, regex, ch, "testing")
-				val := <-ch
-				So(val, ShouldNotBeNil)
-			})
-		})
-		Convey("When I use the regex /asd.*/ on it", func() {
-			regex := regexp.MustCompile("asd.*")
-			Convey("Then readAndMatchAgainst accepts that", func() {
-				ch := make(chan error, 1)
-				readAndMatchAgainst(reader, regex, ch, "testing")
-				val := <-ch
-				So(val, ShouldBeNil)
-			})
-		})
-	})
+	ch := make(chan error, 1)
+	readAndMatchAgainst(strings.NewReader("asdjsdkfsdjkl"), regexp.MustCompile("^asd$"), ch, "testing")
+	if val := <-ch; val == nil {
+		t.Error("Expected error")
+	}
+
+	ch = make(chan error, 1)
+	readAndMatchAgainst(strings.NewReader("asdjsdkfsdjkl"), regexp.MustCompile("dfd92hj"), ch, "testing")
+	if val := <-ch; val == nil {
+		t.Error("Unexpectedly no error")
+	}
+
+	ch = make(chan error, 1)
+	readAndMatchAgainst(strings.NewReader("asdjsdkfsdjkl"), regexp.MustCompile("asd.*"), ch, "testing")
+	if val := <-ch; val != nil {
+		t.Error("Unexpected error", val)
+	}
 }
 
 type mockDockerLogsProvider struct {
@@ -55,22 +41,15 @@ func (md *mockDockerLogsProvider) Logs(l docker.LogsOptions) error {
 	return nil
 }
 
-//func (img *ExecuteImage) loadAndProcessLogs(c dockerLogsProvider, containerID string) error {
-
 func TestProcessLogs(t *testing.T) {
 	containerID := "123"
 	prov := mockDockerLogsProvider{}
+	ei := ExecuteImage{}
 
-	Convey("Given an ExcuteImage without any matchers", t, func() {
-		ei := ExecuteImage{}
-		Convey("When asked to process the logs", func() {
-			err := ei.loadAndProcessLogs(&prov, containerID)
-			Convey("Then it executes without an error", func() {
-				So(err, ShouldBeNil)
-			})
-			Convey("Then it uses the container ID 123", func() {
-				So(prov.lastCalledWith.Container, ShouldResemble, "123")
-			})
-		})
-	})
+	if err := ei.loadAndProcessLogs(&prov, containerID); err != nil {
+		t.Fatal("Error during load and process", err)
+	}
+	if x := prov.lastCalledWith.Container; x != "123" {
+		t.Error("Unexpected container id", x)
+	}
 }
