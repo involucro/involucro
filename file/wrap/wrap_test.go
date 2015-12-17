@@ -1,33 +1,31 @@
 package wrap
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func TestRandomFileName(t *testing.T) {
-	Convey("Given a random file name", t, func() {
-		filename := randomTarballFileName()
-		Convey("Then it contains the label 'involucro'", func() {
-			So(filename, ShouldContainSubstring, "involucro")
-		})
-		Convey("When I generate another file name", func() {
-			otherFilename := randomTarballFileName()
-			Convey("Then it is a different path", func() {
-				So(otherFilename, ShouldNotResemble, filename)
-			})
-		})
+	filename := randomTarballFileName()
+	if !strings.Contains(filename, "involucro") {
+		t.Errorf("Didn't contain involucro: %s", filename)
+	}
+	otherFilename := randomTarballFileName()
+	if otherFilename == filename {
+		t.Errorf("Other filename is not different from the original: %s == %s", otherFilename, filename)
+	}
 
-		Convey("Then it doesn't exist yet", func() {
-			_, err := os.Stat(filename)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("Then is has an existing parent directory", func() {
-			info, err := os.Stat(filepath.Dir(filename))
-			So(err, ShouldBeNil)
-			So(info.IsDir(), ShouldBeTrue)
-		})
-	})
+	if _, err := os.Stat(filename); err == nil {
+		t.Errorf("Stat succeeded, file shouldn't exist: %s", filename)
+	}
+
+	if info, err := os.Stat(filepath.Dir(filename)); err != nil {
+		t.Errorf("Parent failed to stat: %s", err)
+	} else {
+		if !info.IsDir() {
+			t.Errorf("Parent should be a directory")
+		}
+	}
 }

@@ -1,10 +1,10 @@
 package testing
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"github.com/thriqon/involucro/file"
 	"github.com/thriqon/involucro/file/run"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -64,55 +64,85 @@ func TestDefiningRunTask(t *testing.T) {
 	}
 }
 
-func TestRunTaskDefinition(t *testing.T) {
-	Convey("Given an empty runtime environment", t, func() {
-		inv := file.InstantiateRuntimeEnv(make(map[string]string))
+func testWithParameters(t *testing.T, params ...string) {
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
+	paramsQ := make([]string, len(params))
+	for i, el := range params {
+		paramsQ[i] = "'" + el + "'"
+	}
+	if err := inv.RunString(`inv.task('test1').using('blah').run(` + strings.Join(paramsQ, ", ") + `)`); err != nil {
+		t.Fatal("Failed executing code", params)
+	}
+	if l := len(inv.Tasks["test1"]); l == 0 {
+		t.Fatal("No steps for task test1")
+	}
 
-		Convey("Passing arguments to run works with different lengths", func() {
-			So(inv.RunString(`inv.task('test1').using('blah').run('test')`), ShouldBeNil)
-			So(inv.RunString(`inv.task('test2').using('blah').run('test', 'asd')`), ShouldBeNil)
-			So(inv.RunString(`inv.task('test3').using('blah').run('test', 'asd', '123')`), ShouldBeNil)
-			So(inv.RunString(`inv.task('test4').using('blah').run('test', 'asd', '123', 'dsa')`), ShouldBeNil)
+	if cmd := inv.Tasks["test1"][0].(run.ExecuteImage).Config.Cmd; !reflect.DeepEqual(cmd, params) {
+		t.Error("cmd doesn't params: ", cmd, params)
+	}
+}
 
-			So(len(inv.Tasks["test1"]), ShouldBeGreaterThan, 0)
-			So(len(inv.Tasks["test2"]), ShouldBeGreaterThan, 0)
-			So(len(inv.Tasks["test3"]), ShouldBeGreaterThan, 0)
-			So(len(inv.Tasks["test4"]), ShouldBeGreaterThan, 0)
-			So(inv.Tasks["test1"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test"})
-			So(inv.Tasks["test2"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd"})
-			So(inv.Tasks["test3"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd", "123"})
-			So(inv.Tasks["test4"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test", "asd", "123", "dsa"})
-		})
+func TestRunTaskDefinitionMultipleParameterLengths(t *testing.T) {
+	testWithParameters(t, "test")
+	testWithParameters(t, "test", "asd")
+	testWithParameters(t, "test", "asd", "123")
+	testWithParameters(t, "test", "asd", "123", "dsa")
+}
 
-		Convey("Executing multiple run Tasks after each other works", func() {
-			So(inv.RunString(`inv.task('test').using('blah').run('test').run('test2').using('asd').run('2')`), ShouldBeNil)
-			So(len(inv.Tasks["test"]), ShouldBeGreaterThan, 2)
-			So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldEqual, "blah")
-			So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test"})
+func TestRunTaskDefinitionMultipleSteps(t *testing.T) {
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
+	if err := inv.RunString(`inv.task('test').using('blah').run('test').run('test2').using('asd').run('2')`); err != nil {
+		t.Fatal("Unable to run code", err)
+	}
 
-			So(inv.Tasks["test"][1].(run.ExecuteImage).Config.Image, ShouldEqual, "blah")
-			So(inv.Tasks["test"][1].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"test2"})
+	if len(inv.Tasks["test"]) != 3 {
+		t.Fatal("Not exactly three steps in task")
+	}
+	if image := inv.Tasks["test"][0].(run.ExecuteImage).Config.Image; image != "blah" {
+		t.Error("Image is not expected value (blah)", image)
+	}
+	if cmd := inv.Tasks["test"][0].(run.ExecuteImage).Config.Cmd; !reflect.DeepEqual(cmd, []string{"test"}) {
+		t.Error("Cmd is not expected value", cmd)
+	}
 
-			So(inv.Tasks["test"][2].(run.ExecuteImage).Config.Image, ShouldEqual, "asd")
-			So(inv.Tasks["test"][2].(run.ExecuteImage).Config.Cmd, ShouldResemble, []string{"2"})
-		})
+	if image := inv.Tasks["test"][1].(run.ExecuteImage).Config.Image; image != "blah" {
+		t.Error("Image is not expected value (blah)", image)
+	}
+	if cmd := inv.Tasks["test"][1].(run.ExecuteImage).Config.Cmd; !reflect.DeepEqual(cmd, []string{"test2"}) {
+		t.Error("Cmd is not expected value", cmd)
+	}
 
-		Convey("When I ask for options", func() {
-			So(inv.RunString(`inv.task('test').using('blah').withConfig({ENV = {"FOO=bar"}}).run('test')`), ShouldBeNil)
-			So(inv.Tasks["test"], ShouldHaveLength, 1)
-			Convey("Then it has that option set in the resulting container config", func() {
-				So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Env, ShouldResemble, []string{"FOO=bar"})
-			})
-			Convey("Then it has blah as image id", func() {
-				So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldResemble, "blah")
-			})
-		})
-		Convey("When I overwrite the image id in withConfig", func() {
-			So(inv.RunString(`inv.task('test').using('blah').withConfig({Image = "aaa"}).run('test')`), ShouldBeNil)
-			So(inv.Tasks["test"], ShouldHaveLength, 1)
-			Convey("Then it has aaa as image id", func() {
-				So(inv.Tasks["test"][0].(run.ExecuteImage).Config.Image, ShouldResemble, "aaa")
-			})
-		})
-	})
+	if image := inv.Tasks["test"][2].(run.ExecuteImage).Config.Image; image != "asd" {
+		t.Error("Image is not expected value (asd)", image)
+	}
+	if cmd := inv.Tasks["test"][2].(run.ExecuteImage).Config.Cmd; !reflect.DeepEqual(cmd, []string{"2"}) {
+		t.Error("Cmd is not expected value", cmd)
+	}
+}
+
+func TestRunTaskDefinitionWithOptions(t *testing.T) {
+	inv := file.InstantiateRuntimeEnv(make(map[string]string))
+
+	if err := inv.RunString(`inv.task('test').using('blah').withConfig({ENV = {"FOO=bar"}}).run('test')`); err != nil {
+		t.Fatal("Unable to run code", err)
+	}
+	if len(inv.Tasks["test"]) != 1 {
+		t.Fatal("test doesn't have exactly one step")
+	}
+	if env := inv.Tasks["test"][0].(run.ExecuteImage).Config.Env; !reflect.DeepEqual(env, []string{"FOO=bar"}) {
+		t.Error("Env has unexpected value", env)
+	}
+	if image := inv.Tasks["test"][0].(run.ExecuteImage).Config.Image; image != "blah" {
+		t.Error("Image has unexpected value", image)
+	}
+
+	if err := inv.RunString(`inv.task('test1').using('blah').withConfig({Image = "aaa"}).run('test')`); err != nil {
+		t.Fatal("Unable to run code", err)
+	}
+	if len(inv.Tasks["test1"]) != 1 {
+		t.Fatal("test1 doesn't have exactly one step")
+	}
+	if image := inv.Tasks["test1"][0].(run.ExecuteImage).Config.Image; image != "aaa" {
+		t.Error("Image not aaa, but", image)
+	}
 }

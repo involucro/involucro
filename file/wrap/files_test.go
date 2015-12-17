@@ -4,21 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fsouza/go-dockerclient"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
 )
 
-func TestImageConfigFile(t *testing.T) {
-	Convey("Given imageid=123 parentid=456", t, func() {
-		imageid, parentid := "123", "456"
-		Convey("Then the created time is within ten seconds", func() {
-			_, buf := imageConfigFile(parentid, imageid, docker.Config{})
-			var conf docker.Image
-			json.Unmarshal(buf, &conf)
-			So(conf.Created, ShouldHappenWithin, time.Duration(10)*time.Second, time.Now())
-		})
-	})
+func TestImageConfigFileIsGeneratedWithDateWithinTenSeconds(t *testing.T) {
+	imageid, parentid := "123", "456"
+	_, buf := imageConfigFile(parentid, imageid, docker.Config{})
+	var conf docker.Image
+	json.Unmarshal(buf, &conf)
+
+	duration := time.Since(conf.Created).Seconds()
+	if duration < 0 {
+		duration *= -1
+	}
+	if duration > 10 {
+		t.Errorf("Created was more than 10 seconds ago/in more than 10 seconds")
+	}
 }
 
 func ExampleImageConfigFile_Contents() {
