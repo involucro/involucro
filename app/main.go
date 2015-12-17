@@ -19,7 +19,13 @@ func Main(argv []string, exit bool) error {
 	if err != nil {
 		return err
 	}
-	log.SetLevel(log.DebugLevel)
+	if add := arguments["-v"].(int); add == 0 {
+		log.SetLevel(log.WarnLevel)
+	} else if add == 1 {
+		log.SetLevel(log.InfoLevel)
+	} else if add == 2 {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	if arguments["--encoded-state"].(bool) != false {
 		if steps, err := utils.DecodeState(os.Getenv("STATE")); err != nil {
