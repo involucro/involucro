@@ -5,7 +5,6 @@ import (
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 	"os"
 )
@@ -13,7 +12,7 @@ import (
 // InvContext encapsulates the state of the tool
 type InvContext struct {
 	lua    *lua.State
-	tasks  map[string][]types.Step
+	tasks  map[string][]utils.Step
 	Values map[string]string
 }
 
@@ -23,7 +22,7 @@ type InvContext struct {
 func InstantiateRuntimeEnv(values map[string]string) InvContext {
 	m := InvContext{
 		lua:    lua.NewStateEx(),
-		tasks:  make(map[string][]types.Step),
+		tasks:  make(map[string][]utils.Step),
 		Values: values,
 	}
 

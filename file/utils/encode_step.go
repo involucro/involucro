@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/gob"
-	"github.com/thriqon/involucro/file/types"
 )
 
 var (
@@ -18,7 +17,7 @@ func RegisterEncodeableType(v interface{}) {
 	gob.Register(v)
 }
 
-func EncodeState(steps []types.Step) string {
+func EncodeState(steps []Step) string {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	enc.Encode(steps)
@@ -27,7 +26,7 @@ func EncodeState(steps []types.Step) string {
 	return encoding.EncodeToString(encodedState)
 }
 
-func DecodeState(state string) ([]types.Step, error) {
+func DecodeState(state string) ([]Step, error) {
 	debased, err := encoding.DecodeString(state)
 	if err != nil {
 		return nil, err
@@ -36,7 +35,7 @@ func DecodeState(state string) ([]types.Step, error) {
 	buffer := bytes.NewBuffer(debased)
 	dec := gob.NewDecoder(buffer)
 
-	var steps []types.Step
+	var steps []Step
 	err = dec.Decode(&steps)
 	return steps, err
 }

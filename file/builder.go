@@ -7,14 +7,13 @@ import (
 	"github.com/thriqon/involucro/file/runtask"
 	"github.com/thriqon/involucro/file/wrap"
 
-	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 )
 
 func (inv InvContext) task(l *lua.State) int {
 	taskID := lua.CheckString(l, -1)
 
-	registerStep := func(s types.Step) {
+	registerStep := func(s utils.Step) {
 		inv.tasks[taskID] = append(inv.tasks[taskID], s)
 	}
 
