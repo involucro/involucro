@@ -15,7 +15,7 @@ func (inv InvContext) task(l *lua.State) int {
 	taskID := lua.CheckString(l, -1)
 
 	registerStep := func(s types.Step) {
-		inv.Tasks[taskID] = append(inv.Tasks[taskID], s)
+		inv.tasks[taskID] = append(inv.tasks[taskID], s)
 	}
 
 	subbuilders := make(map[string]lua.Function)
