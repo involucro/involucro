@@ -2,17 +2,16 @@ package runtask
 
 import (
 	"github.com/Shopify/go-lua"
-	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 )
 
 type runtaskBuilderState struct {
 	runtaskStep
 	upper        utils.Fm
-	registerStep func(types.Step)
+	registerStep func(utils.Step)
 }
 
-func NewSubBuilder(upper utils.Fm, register func(types.Step), runner Runner) lua.Function {
+func NewSubBuilder(upper utils.Fm, register func(utils.Step), runner Runner) lua.Function {
 	rbs := runtaskBuilderState{
 		runtaskStep: runtaskStep{
 			runner: runner,

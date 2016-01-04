@@ -3,7 +3,6 @@ package wrap
 import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/file/run"
-	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 )
 
@@ -11,13 +10,13 @@ func init() {
 	utils.RegisterEncodeableType(AsImage{})
 }
 
-func (ai AsImage) forRemoteExecution() types.Step {
+func (ai AsImage) forRemoteExecution() utils.Step {
 	dockerSocket := "/var/run/docker.sock"
 
 	origSourceDir := ai.SourceDir
 	ai.SourceDir = "/source"
 
-	steps := []types.Step{ai}
+	steps := []utils.Step{ai}
 
 	return run.ExecuteImage{
 		Config: docker.Config{

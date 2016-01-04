@@ -5,7 +5,6 @@ import (
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 	"os"
 )
@@ -13,7 +12,7 @@ import (
 // InvContext encapsulates the state of the tool
 type InvContext struct {
 	lua    *lua.State
-	Tasks  map[string][]types.Step
+	tasks  map[string][]utils.Step
 	Values map[string]string
 }
 
@@ -23,7 +22,7 @@ type InvContext struct {
 func InstantiateRuntimeEnv(values map[string]string) InvContext {
 	m := InvContext{
 		lua:    lua.NewStateEx(),
-		Tasks:  make(map[string][]types.Step),
+		tasks:  make(map[string][]utils.Step),
 		Values: values,
 	}
 
@@ -48,7 +47,7 @@ func InstantiateRuntimeEnv(values map[string]string) InvContext {
 // the given task ID, i.e. whether any steps have been
 // registered for that name.
 func (inv *InvContext) HasTask(taskID string) bool {
-	_, ok := inv.Tasks[taskID]
+	_, ok := inv.tasks[taskID]
 	return ok
 }
 
@@ -62,7 +61,7 @@ func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client, 
 		return errors.New("No steps defined for task")
 	}
 
-	for _, step := range inv.Tasks[taskID] {
+	for _, step := range inv.tasks[taskID] {
 		step.ShowStartInfo()
 		if err := step.WithDockerClient(client, remoteWorkDir); err != nil {
 			return err
@@ -77,7 +76,7 @@ func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.C
 		return errors.New("No steps defined for task")
 	}
 
-	for _, step := range inv.Tasks[taskID] {
+	for _, step := range inv.tasks[taskID] {
 		step.ShowStartInfo()
 		if err := step.WithRemoteDockerClient(client, remoteWorkDir); err != nil {
 			return err

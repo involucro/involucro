@@ -15,8 +15,7 @@ test:
 	@$(foreach pkg,$(TEST_PKGS),go test -v $(pkg) || exit;)
 
 build:
-	@CGO_ENABLED=0 go build ./.
-	strip involucro
+	@CGO_ENABLED=0 go build -ldflags "-s -w" ./.
 
 build-win32:
 	@CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o involucro32.exe ./.

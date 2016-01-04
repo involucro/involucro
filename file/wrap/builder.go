@@ -3,17 +3,16 @@ package wrap
 import (
 	"github.com/Shopify/go-lua"
 	"github.com/thriqon/involucro/file/translator"
-	"github.com/thriqon/involucro/file/types"
 	"github.com/thriqon/involucro/file/utils"
 )
 
 type wrapBuilderState struct {
 	AsImage
 	upper        utils.Fm
-	registerStep func(types.Step)
+	registerStep func(utils.Step)
 }
 
-func NewSubBuilder(upper utils.Fm, register func(types.Step)) lua.Function {
+func NewSubBuilder(upper utils.Fm, register func(utils.Step)) lua.Function {
 	wbs := wrapBuilderState{
 		upper:        upper,
 		registerStep: register,
