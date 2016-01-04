@@ -1,4 +1,4 @@
-package pull
+package utils
 
 import (
 	"errors"

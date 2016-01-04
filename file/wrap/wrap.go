@@ -4,8 +4,7 @@ import (
 	"archive/tar"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file/pull"
-	utils "github.com/thriqon/involucro/lib"
+	"github.com/thriqon/involucro/file/utils"
 	"io"
 	"os"
 	"path"
@@ -32,7 +31,7 @@ func (img AsImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 		parentImageConfig, err := c.InspectImage(img.ParentImage)
 		if err != nil {
 			log.WithFields(log.Fields{"image": img.ParentImage}).Debug("Parent image not found, pulling it")
-			err = pull.Pull(c, img.ParentImage)
+			err = utils.Pull(c, img.ParentImage)
 			if err != nil {
 				log.WithFields(log.Fields{"image": img.ParentImage, "error": err}).Error("Pulling failed")
 				return err

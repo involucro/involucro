@@ -3,8 +3,7 @@ package run
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file/pull"
-	utils "github.com/thriqon/involucro/lib"
+	"github.com/thriqon/involucro/file/utils"
 )
 
 func (img ExecuteImage) createContainer(c *docker.Client) (container *docker.Container, err error) {
@@ -20,7 +19,7 @@ func (img ExecuteImage) createContainer(c *docker.Client) (container *docker.Con
 	container, err = c.CreateContainer(opts)
 
 	if err == docker.ErrNoSuchImage {
-		if err = pull.Pull(c, img.Config.Image); err != nil {
+		if err = utils.Pull(c, img.Config.Image); err != nil {
 			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
 			return
 		}
