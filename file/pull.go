@@ -1,4 +1,4 @@
-package utils
+package runtime
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-type Pullable interface {
+type pullimager interface {
 	PullImage(docker.PullImageOptions, docker.AuthConfiguration) error
 }
 
@@ -22,9 +22,9 @@ type progress struct {
 	ErrorMessage string `json:"error,omitempty"`
 }
 
-// Pull pulls the image with the given identifier from
+// pull pulls the image with the given identifier from
 // the repository
-func Pull(c Pullable, repositoryName string) error {
+func pull(c pullimager, repositoryName string) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	defer wg.Wait()

@@ -1,14 +1,13 @@
-package file
+package runtime
 
 import (
-	"github.com/thriqon/involucro/file/run"
 	"testing"
 )
 
 func TestReuseReturnValuesStoreTaskTest(t *testing.T) {
 	t.Parallel()
 
-	inv := InstantiateRuntimeEnv(make(map[string]string))
+	inv := New(make(map[string]string))
 	if err := inv.RunString(`test = inv.task('test'); inv.task('build').using('asd').run('asd'); test.using('dsa').run('dsa')`); err != nil {
 		t.Fatal("Err not nil", err)
 	}
@@ -22,7 +21,7 @@ func TestReuseReturnValuesStoreTaskTest(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	config := test[0].(run.ExecuteImage).Config
+	config := test[0].(executeImage).Config
 	if config.Image != "dsa" || len(config.Cmd) != 1 || config.Cmd[0] != "dsa" {
 		t.Fatal("Unexpected configuration values", config)
 	}
@@ -36,7 +35,7 @@ func TestReuseReturnValuesStoreTaskTest(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	config = build[0].(run.ExecuteImage).Config
+	config = build[0].(executeImage).Config
 	if config.Image != "asd" || len(config.Cmd) != 1 || config.Cmd[0] != "asd" {
 		t.Error("Unexpected configuration values")
 	}
@@ -46,7 +45,7 @@ func TestReuseReturnValuesStoreTaskTest(t *testing.T) {
 func TestReuseReturnValuesStoreTaskDsa(t *testing.T) {
 	t.Parallel()
 
-	inv := InstantiateRuntimeEnv(make(map[string]string))
+	inv := New(make(map[string]string))
 	if err := inv.RunString(`dsa = inv.task('test').using('dsa'); inv.task('build').using('asd').run('asd'); dsa.run('dsa')`); err != nil {
 		t.Fatal("err not nil", nil)
 	}
@@ -60,7 +59,7 @@ func TestReuseReturnValuesStoreTaskDsa(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	config := test[0].(run.ExecuteImage).Config
+	config := test[0].(executeImage).Config
 	if config.Image != "dsa" || len(config.Cmd) != 1 || config.Cmd[0] != "dsa" {
 		t.Fatal("Unexpected configuration values", config)
 	}
@@ -74,7 +73,7 @@ func TestReuseReturnValuesStoreTaskDsa(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	config = build[0].(run.ExecuteImage).Config
+	config = build[0].(executeImage).Config
 	if config.Image != "asd" || len(config.Cmd) != 1 || config.Cmd[0] != "asd" {
 		t.Error("Unexpected configuration values")
 	}

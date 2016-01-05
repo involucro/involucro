@@ -1,42 +1,41 @@
-package file
+package runtime
 
 import (
 	"errors"
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file/utils"
 	"os"
 )
 
-// InvContext encapsulates the state of the tool
-type InvContext struct {
+// Runtime encapsulates the state of the tool
+type Runtime struct {
 	lua    *lua.State
-	tasks  map[string][]utils.Step
+	tasks  map[string][]Step
 	Values map[string]string
 }
 
-// InstantiateRuntimeEnv creates a new InvContext and returns it. This new
-// context uses the working dir that is passed as a parameter.  After
-// instantiation, the context will be ready to load additional files.
-func InstantiateRuntimeEnv(values map[string]string) InvContext {
-	m := InvContext{
+// New creates a new Runtime and returns it. This new context uses the
+// working dir that is passed as a parameter.  After instantiation, the context
+// will be ready to load additional files.
+func New(values map[string]string) Runtime {
+	m := Runtime{
 		lua:    lua.NewStateEx(),
-		tasks:  make(map[string][]utils.Step),
+		tasks:  make(map[string][]Step),
 		Values: values,
 	}
 
-	utils.TableWith(m.lua, utils.Fm{"task": m.task})
+	tableWith(m.lua, fm{"task": m.task})
 
 	m.lua.SetGlobal("inv")
 
 	m.lua.NewTable()
-	utils.TableWith(m.lua, utils.Fm{"__index": getEnvValue})
+	tableWith(m.lua, fm{"__index": getEnvValue})
 	m.lua.SetMetaTable(-2)
 	m.lua.SetGlobal("ENV")
 
 	m.lua.NewTable()
-	utils.TableWith(m.lua, utils.Fm{"__index": m.getValue})
+	tableWith(m.lua, fm{"__index": m.getValue})
 	m.lua.SetMetaTable(-2)
 	m.lua.SetGlobal("VAR")
 
@@ -46,7 +45,7 @@ func InstantiateRuntimeEnv(values map[string]string) InvContext {
 // HasTask tells whether the receiver has a task with
 // the given task ID, i.e. whether any steps have been
 // registered for that name.
-func (inv *InvContext) HasTask(taskID string) bool {
+func (inv *Runtime) HasTask(taskID string) bool {
 	_, ok := inv.tasks[taskID]
 	return ok
 }
@@ -55,7 +54,7 @@ func (inv *InvContext) HasTask(taskID string) bool {
 // and calls f once with each step. If any error occurs
 // during an invocation, this error is returned and
 // the loop is interrupted.
-func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client, remoteWorkDir string) error {
+func (inv *Runtime) RunLocallyTaskWith(taskID string, client *docker.Client, remoteWorkDir string) error {
 	if !inv.HasTask(taskID) {
 		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
 		return errors.New("No steps defined for task")
@@ -70,7 +69,7 @@ func (inv *InvContext) RunLocallyTaskWith(taskID string, client *docker.Client, 
 	return nil
 }
 
-func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.Client, remoteWorkDir string) error {
+func (inv *Runtime) RunTaskOnRemoteSystemWith(taskID string, client *docker.Client, remoteWorkDir string) error {
 	if !inv.HasTask(taskID) {
 		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
 		return errors.New("No steps defined for task")
@@ -86,13 +85,13 @@ func (inv *InvContext) RunTaskOnRemoteSystemWith(taskID string, client *docker.C
 }
 
 // RunFile runs the file with the given filename in this context
-func (inv *InvContext) RunFile(fileName string) error {
+func (inv *Runtime) RunFile(fileName string) error {
 	log.WithFields(log.Fields{"fileName": fileName}).Debug("Run file")
 	return lua.DoFile(inv.lua, fileName)
 }
 
 // RunString runs the given parameter directly
-func (inv *InvContext) RunString(script string) error {
+func (inv *Runtime) RunString(script string) error {
 	log.WithFields(log.Fields{"script": script}).Debug("Run script")
 	return lua.DoString(inv.lua, script)
 }
@@ -103,8 +102,25 @@ func getEnvValue(l *lua.State) int {
 	return 1
 }
 
-func (inv *InvContext) getValue(l *lua.State) int {
+func (inv *Runtime) getValue(l *lua.State) int {
 	key := lua.CheckString(l, -1)
 	l.PushString(inv.Values[key])
 	return 1
+}
+
+func (inv *Runtime) task(l *lua.State) int {
+	taskID := lua.CheckString(l, -1)
+
+	registerStep := func(s Step) {
+		inv.tasks[taskID] = append(inv.tasks[taskID], s)
+	}
+
+	subbuilders := make(map[string]lua.Function)
+	subbuilders["task"] = inv.task
+
+	subbuilders["using"] = newRunSubBuilder(subbuilders, registerStep)
+	subbuilders["wrap"] = newWrapSubBuilder(subbuilders, registerStep)
+	subbuilders["runTask"] = newRuntaskSubBuilder(subbuilders, registerStep, inv)
+
+	return tableWith(l, subbuilders)
 }

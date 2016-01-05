@@ -1,4 +1,4 @@
-package utils
+package runtime
 
 import (
 	"crypto/rand"
@@ -8,7 +8,7 @@ import (
 // RandomIdentifierOfLength returns a string
 // composed of random integers (from `crypto/rand`)
 // with exactly len characters.
-func RandomIdentifierOfLength(len int) string {
+func randomIdentifierOfLength(len int) string {
 	buflen := en.DecodedLen(len)
 	buffer := make([]byte, buflen)
 	rand.Read(buffer)
@@ -19,7 +19,7 @@ func RandomIdentifierOfLength(len int) string {
 // RandomIdentifier is a shorthand for
 // RandomIdentifierOfLength with a preset
 // length
-func RandomIdentifier() string {
+func randomIdentifier() string {
 	const LEN = 10
-	return RandomIdentifierOfLength(LEN)
+	return randomIdentifierOfLength(LEN)
 }

@@ -1,18 +1,18 @@
-package utils
+package runtime
 
 import (
 	"fmt"
 )
 
 func ExampleRandomIdentifier_AreDifferent() {
-	a := RandomIdentifier()
-	b := RandomIdentifier()
+	a := randomIdentifier()
+	b := randomIdentifier()
 	fmt.Println(a == b)
 	// Output: false
 }
 
 func ExampleRandomIdentifierOfLength() {
-	s := RandomIdentifierOfLength(64)
+	s := randomIdentifierOfLength(64)
 	fmt.Println(len(s))
 	// Output: 64
 }

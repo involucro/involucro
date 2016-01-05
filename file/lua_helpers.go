@@ -1,14 +1,14 @@
-package utils
+package runtime
 
 import "github.com/Shopify/go-lua"
 
-// Fm is used as a blueprint for a Lua table,
+// fm is used as a blueprint for a Lua table,
 // containing functions identified by strings.
-type Fm map[string]lua.Function
+type fm map[string]lua.Function
 
-// TableWith translates the given blueprint to
+// tableWith translates the given blueprint to
 // a table, pushed to the top of the stack.
-func TableWith(l *lua.State, fs ...Fm) int {
+func tableWith(l *lua.State, fs ...fm) int {
 	l.CreateTable(0, len(fs))
 	idx := l.Top()
 	for _, x := range fs {

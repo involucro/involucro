@@ -1,4 +1,4 @@
-package utils
+package runtime
 
 import "github.com/Shopify/go-lua"
 import "testing"
@@ -8,12 +8,12 @@ func TestTableWith(t *testing.T) {
 
 	var a, b, c bool
 
-	i := TableWith(l, Fm{
+	i := tableWith(l, fm{
 		"a": func(l *lua.State) int {
 			a = true
 			return 0
 		},
-	}, Fm{
+	}, fm{
 		"b": func(l *lua.State) int {
 			b = true
 			return 0

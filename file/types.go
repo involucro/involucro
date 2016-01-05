@@ -1,4 +1,4 @@
-package utils
+package runtime
 
 import "github.com/fsouza/go-dockerclient"
 

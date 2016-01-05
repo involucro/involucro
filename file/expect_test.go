@@ -1,14 +1,13 @@
-package file
+package runtime
 
 import (
-	"github.com/thriqon/involucro/file/run"
 	"testing"
 )
 
 func TestExpectations(t *testing.T) {
 	t.Parallel()
 
-	inv := InstantiateRuntimeEnv(make(map[string]string))
+	inv := New(make(map[string]string))
 	prefix := `inv.task('asd').using('asd')`
 
 	if err := inv.RunString(prefix + `.withExpectation({}).run()`); err != nil {
@@ -43,7 +42,7 @@ func TestExpectations(t *testing.T) {
 func TestExpectationsWithoutOverrides(t *testing.T) {
 	t.Parallel()
 
-	inv := InstantiateRuntimeEnv(make(map[string]string))
+	inv := New(make(map[string]string))
 	prefix := `inv.task('asd').using('asd')`
 	if err := inv.RunString(prefix + `.run()`); err != nil {
 		t.Fatal(err)
@@ -53,7 +52,7 @@ func TestExpectationsWithoutOverrides(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	step := inv.tasks["asd"][0].(run.ExecuteImage)
+	step := inv.tasks["asd"][0].(executeImage)
 
 	if step.ExpectedCode != 0 {
 		t.Error("ExpectedCode should be 0, is", step.ExpectedCode)
@@ -68,7 +67,7 @@ func TestExpectationsWithoutOverrides(t *testing.T) {
 func TestExpectationsExpectCode1(t *testing.T) {
 	t.Parallel()
 
-	inv := InstantiateRuntimeEnv(make(map[string]string))
+	inv := New(make(map[string]string))
 	prefix := `inv.task('asd').using('asd')`
 
 	if err := inv.RunString(prefix + `.withExpectation({code = 1}).run()`); err != nil {
@@ -79,7 +78,7 @@ func TestExpectationsExpectCode1(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	step := inv.tasks["asd"][0].(run.ExecuteImage)
+	step := inv.tasks["asd"][0].(executeImage)
 
 	if step.ExpectedCode != 1 {
 		t.Error("ExpectedCode should be 1, is", step.ExpectedCode)
@@ -92,7 +91,7 @@ func TestExpectationsExpectCode1(t *testing.T) {
 func TestExpectationsExpectCertainOutputs(t *testing.T) {
 	t.Parallel()
 
-	inv := InstantiateRuntimeEnv(make(map[string]string))
+	inv := New(make(map[string]string))
 	prefix := `inv.task('asd').using('asd')`
 
 	if err := inv.RunString(prefix + `.withExpectation({stdout = "asd...", stderr = "[0-9]*"}).run()`); err != nil {
@@ -103,7 +102,7 @@ func TestExpectationsExpectCertainOutputs(t *testing.T) {
 		t.Fatal("Invalid number of steps")
 	}
 
-	step := inv.tasks["asd"][0].(run.ExecuteImage)
+	step := inv.tasks["asd"][0].(executeImage)
 
 	if step.ExpectedCode != 0 {
 		t.Error("ExpectedCode should be 0, is", step.ExpectedCode)
