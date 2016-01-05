@@ -263,7 +263,7 @@ func imageConfigFile(parentID, imageID string, containerConfig docker.Config) (t
 func repositoriesFile(newRepositoryName, id string) (tar.Header, []byte) {
 	topMap := make(map[string]map[string]string)
 
-	repo, tag := repoNameAndTagFrom(newRepositoryName)
+	repo, _, tag := repoNameAndTagFrom(newRepositoryName)
 
 	topMap[repo] = make(map[string]string)
 	topMap[repo][tag] = id
@@ -276,21 +276,6 @@ func repositoriesFile(newRepositoryName, id string) (tar.Header, []byte) {
 	}
 
 	return repositoriesFileHeader, val
-}
-
-func repoNameAndTagFrom(name string) (repo, tag string) {
-	parts := strings.Split(name, ":")
-	switch len(parts) {
-	case 1:
-		repo = parts[0]
-		tag = "latest"
-	case 2:
-		repo = parts[0]
-		tag = parts[1]
-	default:
-		panic("Invalid repository name")
-	}
-	return
 }
 
 func versionFile(imageID string) (versionHeader tar.Header, contents []byte) {
