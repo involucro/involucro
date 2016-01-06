@@ -130,6 +130,7 @@ func (img asImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 	}
 	layerFile.Close()
 
+	var uploadErr error
 	var wg sync.WaitGroup
 	wg.Add(2)
 
@@ -147,6 +148,7 @@ func (img asImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 		err := c.LoadImage(docker.LoadImageOptions{InputStream: r})
 		if err != nil {
 			log.WithFields(log.Fields{"error": err}).Warn("Failed loading image into Docker")
+			uploadErr = err
 		} else {
 			log.Debug("Upload finished")
 		}
@@ -154,7 +156,7 @@ func (img asImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 
 	wg.Wait()
 
-	return nil
+	return uploadErr
 }
 
 // enforceParentImagePresenceAndGetId gets the ID of the image with the given
