@@ -7,7 +7,7 @@ import (
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file/translator"
+	"github.com/thriqon/involucro/runtime/translator"
 	"io"
 	"os"
 	"path"

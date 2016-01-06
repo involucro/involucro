@@ -4,7 +4,7 @@ import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file"
+	"github.com/thriqon/involucro/runtime"
 	"os"
 	"strings"
 )
