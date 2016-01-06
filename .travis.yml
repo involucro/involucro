@@ -15,6 +15,7 @@ install:
 script:
   - make -j3 build build-win64 build-win32
   - make test
+  - ./involucro --set REPO=involucro/tool --set TAG=latest wrap-yourself
   - make -C integrationtest
 
 before_deploy:
