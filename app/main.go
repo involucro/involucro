@@ -68,8 +68,18 @@ func Main(argv []string, exit bool) error {
 			log.WithFields(log.Fields{"error": err}).Fatal("Failed executing script")
 		}
 	} else {
-		if err := ctx.RunFile(arguments["-f"].(string)); err != nil {
-			log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
+		filename := arguments["-f"].(string)
+
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			if _, err := os.Stat(filename + ".md"); err == nil {
+				filename += ".md"
+			}
+		}
+
+		if err := ctx.RunFile(filename); err != nil {
+			if err := ctx.RunLiterateFile(filename); err != nil {
+				log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
+			}
 		}
 	}
 
