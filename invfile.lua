@@ -1,0 +1,10 @@
+
+inv.task('wrap-yourself')
+	.using('busybox')
+		.run('mkdir', '-p', 'dist/tmp/')
+		.run('cp', 'involucro', 'dist/')
+	.wrap('dist').at('/')
+		.withConfig({entrypoint = {'/involucro'}})
+		.as(VAR.REPO .. ':' .. VAR.TAG)
+	.using('busybox')
+		.run('rm', '-rf', 'dist')

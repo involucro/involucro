@@ -1,4 +1,4 @@
-package run
+package runtime
 
 import (
 	"flag"

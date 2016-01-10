@@ -19,7 +19,7 @@ func TestUnknownPropertiesConfig(t *testing.T) {
 	state.Global("x")
 
 	if actual := ParseImageConfigFromLuaTable(state); !reflect.DeepEqual(actual, expected) {
-		t.Errorf("Wasn't unchanged: %s != %s", actual, expected)
+		t.Errorf("Wasn't unchanged: %v != %v", actual, expected)
 	}
 }
 
@@ -35,6 +35,6 @@ func TestUnknownPropertiesHostConfig(t *testing.T) {
 	state.Global("x")
 
 	if actual := ParseHostConfigFromLuaTable(state); !reflect.DeepEqual(actual, expected) {
-		t.Errorf("Wasn't unchanged: %s != %s", actual, expected)
+		t.Errorf("Wasn't unchanged: %v != %v", actual, expected)
 	}
 }

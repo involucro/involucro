@@ -4,8 +4,7 @@ import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/file"
-	"github.com/thriqon/involucro/file/utils"
+	"github.com/thriqon/involucro/runtime"
 	"os"
 	"strings"
 )
@@ -28,7 +27,7 @@ func Main(argv []string, exit bool) error {
 	}
 
 	if arguments["--encoded-state"].(bool) != false {
-		if steps, err := utils.DecodeState(os.Getenv("STATE")); err != nil {
+		if steps, err := runtime.DecodeState(os.Getenv("STATE")); err != nil {
 			log.WithFields(log.Fields{"error": err}).Fatal("Unable to parse state")
 			return err
 		} else {
@@ -62,7 +61,7 @@ func Main(argv []string, exit bool) error {
 		log.WithFields(log.Fields{"error": err}).Fatal("Unable to parse arguments")
 	}
 
-	ctx := file.InstantiateRuntimeEnv(additionalArguments)
+	ctx := runtime.New(additionalArguments)
 
 	if arguments["-e"] != nil {
 		if err := ctx.RunString(arguments["-e"].(string)); err != nil {
