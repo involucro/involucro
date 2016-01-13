@@ -1,15 +1,11 @@
 package runtime
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"io"
-	"os"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
 )
@@ -191,26 +187,6 @@ func ExampleArgumentsToStringArray() {
 	// Output: [a s d]
 }
 
-func TestReadAndMatchAgainst(t *testing.T) {
-	ch := make(chan error, 1)
-	readAndMatchAgainst(strings.NewReader("asdjsdkfsdjkl"), regexp.MustCompile("^asd$"), ch, "testing")
-	if val := <-ch; val == nil {
-		t.Error("Expected error")
-	}
-
-	ch = make(chan error, 1)
-	readAndMatchAgainst(strings.NewReader("asdjsdkfsdjkl"), regexp.MustCompile("dfd92hj"), ch, "testing")
-	if val := <-ch; val == nil {
-		t.Error("Unexpectedly no error")
-	}
-
-	ch = make(chan error, 1)
-	readAndMatchAgainst(strings.NewReader("asdjsdkfsdjkl"), regexp.MustCompile("asd.*"), ch, "testing")
-	if val := <-ch; val != nil {
-		t.Error("Unexpected error", val)
-	}
-}
-
 type mockDockerLogsProvider struct {
 	lastCalledWith docker.LogsOptions
 	forStdout      string
@@ -235,25 +211,4 @@ func TestProcessLogs(t *testing.T) {
 	if x := prov.lastCalledWith.Container; x != "123" {
 		t.Error("Unexpected container id", x)
 	}
-}
-
-func ExampleOutputLogLines() {
-	logger := &log.Logger{
-		Out:       os.Stdout,
-		Formatter: &log.JSONFormatter{TimestampFormat: "omitted"},
-		Hooks:     make(log.LevelHooks),
-		Level:     log.DebugLevel,
-	}
-	output := bytes.NewBufferString("ASD\nasd\ndsa\n")
-
-	val := make(chan error, 1)
-	outputLogLines(output, val, "chan", "xxx", logger)
-	err := <-val
-	fmt.Println(err)
-
-	// Output:
-	// {"container":"xxx","level":"debug","msg":"chan: ASD","time":"omitted"}
-	// {"container":"xxx","level":"debug","msg":"chan: asd","time":"omitted"}
-	// {"container":"xxx","level":"debug","msg":"chan: dsa","time":"omitted"}
-	// <nil>
 }

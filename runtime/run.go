@@ -13,6 +13,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // executeImage executes the given config and host config, similar to "docker
@@ -263,111 +264,156 @@ func (e ErrRegexNotMatched) Error() string {
 	return fmt.Sprintf("Regex not matched for channel %s", e.Channel)
 }
 
-func outputLogLines(r io.Reader, errCh chan error, channel, container string, logger *log.Logger) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		logger.WithFields(log.Fields{"container": container}).Debug(channel + ": " + scanner.Text())
+type dataAcceptorLineSender struct {
+	cs []chan string
+	pr *io.PipeReader
+	pw *io.PipeWriter
+	br *bufio.Reader
+}
+
+func newDataAcceptorLineSender(cs []chan string) dataAcceptorLineSender {
+	pr, pw := io.Pipe()
+	dals := dataAcceptorLineSender{cs, pr, pw, bufio.NewReader(pr)}
+	go dals.run()
+	return dals
+}
+
+func (dals dataAcceptorLineSender) Write(p []byte) (int, error) {
+	return dals.pw.Write(p)
+}
+
+func (dals dataAcceptorLineSender) Close() error {
+	dals.pw.Close()
+	return dals.pr.Close()
+}
+
+func (dals dataAcceptorLineSender) run() {
+	defer func() {
+		for _, c := range dals.cs {
+			close(c)
+		}
+		dals.Close()
+	}()
+
+	for {
+		line, err := dals.br.ReadString('\n')
+		if err == nil {
+			line = strings.TrimSpace(line)
+		}
+		if err == nil || err == io.EOF {
+			for _, c := range dals.cs {
+				c <- line
+			}
+		}
+		if err != nil {
+			return
+		}
 	}
-	errCh <- scanner.Err()
-}
-
-func readAndMatchAgainst(r io.Reader, re *regexp.Regexp, val chan error, channel string) {
-	runeReader := bufio.NewReader(r)
-	if re.MatchReader(runeReader) {
-		log.WithFields(log.Fields{"regex": re.String(), "channel": channel}).Debug("Regex matched")
-		val <- nil
-	} else {
-		log.WithFields(log.Fields{"regex": re.String(), "channel": channel}).Warn("Regex not matched")
-		val <- ErrRegexNotMatched{channel}
-	}
-}
-
-func setupMatching(re *regexp.Regexp, ch chan error, channel string) *io.PipeWriter {
-	pR, pW := io.Pipe()
-	go readAndMatchAgainst(pR, re, ch, channel)
-	return pW
-}
-
-func setupDump(ch chan error, channel, container string) *io.PipeWriter {
-	pR, pW := io.Pipe()
-	go outputLogLines(pR, ch, channel, container, log.StandardLogger())
-	return pW
 }
 
 type dockerLogsProvider interface {
 	Logs(docker.LogsOptions) error
 }
 
-func (img *executeImage) loadAndProcessLogs(c dockerLogsProvider, containerID string) error {
-	var stdOutWriters, stdErrWriters []io.Writer
-	var closers []io.Closer
+type logWriter struct {
+	input     chan string
+	logger    *log.Logger
+	channel   string
+	container string
+}
 
-	stdoutErrorChan := make(chan error, 1)
-	stderrErrorChan := make(chan error, 1)
-	stdoutDumpChan := make(chan error, 1)
-	stderrDumpChan := make(chan error, 1)
+func (lw logWriter) run(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for line := range lw.input {
+		lw.logger.WithFields(log.Fields{"container": lw.container}).Debug(lw.channel + ": " + line)
+	}
+}
+
+func newLogWriter(channel, container string, logger *log.Logger, wg *sync.WaitGroup) chan string {
+	lw := logWriter{
+		input:     make(chan string),
+		logger:    logger,
+		channel:   channel,
+		container: container,
+	}
+	go lw.run(wg)
+	return lw.input
+}
+
+type regexpCheckWriter struct {
+	input     chan string
+	re        *regexp.Regexp
+	channel   string
+	container string
+	err       error
+}
+
+func (rcw *regexpCheckWriter) run(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for line := range rcw.input {
+		if rcw.re.MatchString(line) {
+			log.WithFields(log.Fields{"regex": rcw.re.String(), "channel": rcw.channel, "container": rcw.container}).Debug("Regex matched")
+			return
+		}
+	}
+	log.WithFields(log.Fields{"regex": rcw.re.String(), "channel": rcw.channel, "container": rcw.container}).Warn("Regex not matched")
+	rcw.err = ErrRegexNotMatched{rcw.channel}
+}
+
+func (img *executeImage) loadAndProcessLogs(c dockerLogsProvider, containerID string) error {
+
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	stdoutChans := []chan string{newLogWriter("stdout", containerID, log.StandardLogger(), &wg)}
+	stderrChans := []chan string{newLogWriter("stderr", containerID, log.StandardLogger(), &wg)}
+
+	stdoutMatcher := regexpCheckWriter{make(chan string), img.ExpectedStdoutMatcher, "stdout", containerID, nil}
+	stderrMatcher := regexpCheckWriter{make(chan string), img.ExpectedStderrMatcher, "stderr", containerID, nil}
 
 	if img.ExpectedStdoutMatcher != nil {
-		w := setupMatching(img.ExpectedStdoutMatcher, stdoutErrorChan, "stdout")
-		closers = append(closers, w)
-		defer w.Close()
-		stdOutWriters = append(stdOutWriters, w)
-	} else {
-		stdoutErrorChan <- nil
+		wg.Add(1)
+		stdoutChans = append(stdoutChans, stdoutMatcher.input)
+		go stdoutMatcher.run(&wg)
 	}
 
 	if img.ExpectedStderrMatcher != nil {
-		w := setupMatching(img.ExpectedStderrMatcher, stderrErrorChan, "stderr")
-		closers = append(closers, w)
-		defer w.Close()
-		stdErrWriters = append(stdErrWriters, w)
-	} else {
-		stderrErrorChan <- nil
+		wg.Add(1)
+		stderrChans = append(stderrChans, stderrMatcher.input)
+		go stderrMatcher.run(&wg)
 	}
-
-	{
-		w := setupDump(stdoutDumpChan, "stdout", containerID)
-		closers = append(closers, w)
-		defer w.Close()
-		stdOutWriters = append(stdOutWriters, w)
-	}
-	{
-		w := setupDump(stderrDumpChan, "stderr", containerID)
-		closers = append(closers, w)
-		defer w.Close()
-		stdErrWriters = append(stdErrWriters, w)
-	}
+	dalsOutput := newDataAcceptorLineSender(stdoutChans)
+	dalsError := newDataAcceptorLineSender(stderrChans)
 
 	lOpt := docker.LogsOptions{
-		Container: containerID,
-		Follow:    true,
-		Stdout:    true,
-		Stderr:    true,
+		Container:    containerID,
+		Follow:       true,
+		Stdout:       true,
+		Stderr:       true,
+		OutputStream: dalsOutput,
+		ErrorStream:  dalsError,
 	}
 
-	if len(stdOutWriters) > 0 {
-		lOpt.OutputStream = io.MultiWriter(stdOutWriters...)
-	}
-	if len(stdErrWriters) > 0 {
-		lOpt.ErrorStream = io.MultiWriter(stdErrWriters...)
-	}
 	if err := c.Logs(lOpt); err != nil {
 		log.WithFields(log.Fields{"error": err}).Warn("Log retrieval failed")
 		return err
 	}
 
-	for _, w := range closers {
-		w.Close()
+	dalsOutput.Close()
+	dalsError.Close()
+
+	wg.Wait()
+
+	if stdoutMatcher.err != nil {
+		return stdoutMatcher.err
+	}
+	if stderrMatcher.err != nil {
+		return stderrMatcher.err
 	}
 
-	chans := [...]chan error{stdoutErrorChan, stderrErrorChan, stdoutDumpChan, stderrDumpChan}
-	for _, c := range chans {
-		x := <-c
-		if x != nil {
-			log.WithFields(log.Fields{"error": x}).Warn("Log processing failed")
-			return x
-		}
-	}
 	log.Debug("Logs processed.")
 	return nil
 }

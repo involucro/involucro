@@ -9,5 +9,5 @@ inv.task('package')
 
 inv.task('run')
   .using('test/showaddition:v1')
-  .withExpectation({code = 0, stdout = "5 \\+ 10 = 15\n"})
+  .withExpectation({code = 0, stdout = "5 \\+ 10 = 15"})
 	.run()
