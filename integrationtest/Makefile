@@ -1,5 +1,5 @@
 
-all: 01 02 03 04 06 09 12 14 15 16 17 20 21 23 26 27 bats
+all: 01 02 03 04 06 09 12 14 15 16 17 20 21 23 27 bats
 
 01:
 	./01_autopull.sh
@@ -43,9 +43,6 @@ all: 01 02 03 04 06 09 12 14 15 16 17 20 21 23 26 27 bats
 
 23:
 	./23_env_in_invfile.sh
-
-26:
-	./26_correctly_handle_files.sh
 
 27:
 	./27_values_from_cli.sh
