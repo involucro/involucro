@@ -3,7 +3,7 @@
 INV=$(pwd)/../involucro
 
 setup() {
-  FILE=$(mktemp)
+  FILE=$(mktemp).md
   DIR=$(mktemp -d)
 
   cat > $FILE <<EOF

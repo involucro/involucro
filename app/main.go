@@ -77,8 +77,12 @@ func Main(argv []string, exit bool) error {
 			}
 		}
 
-		if err := ctx.RunFile(filename); err != nil {
+		if strings.HasSuffix(filename, ".md") {
 			if err := ctx.RunLiterateFile(filename); err != nil {
+				log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
+			}
+		} else {
+			if err := ctx.RunFile(filename); err != nil {
 				log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
 			}
 		}
