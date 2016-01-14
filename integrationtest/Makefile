@@ -1,9 +1,5 @@
 
-all: 01 02 04 06 09 12 14 15 17 bats
-
-01:
-	./01_autopull.sh
-	./01_compile_and_run.sh
+all: 02 04 06 09 12 14 15 17 bats
 
 02:
 	./02_hello_world.sh
