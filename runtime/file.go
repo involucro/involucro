@@ -39,6 +39,8 @@ func New(values map[string]string) Runtime {
 	m.lua.SetMetaTable(-2)
 	m.lua.SetGlobal("VAR")
 
+	injectIoLib(m.lua)
+
 	return m
 }
 
