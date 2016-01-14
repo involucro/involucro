@@ -1,8 +1,5 @@
 
-all: 04 17 bats
-
-04:
-	./04_parameters.sh
+all: 17 bats
 
 17:
 	./17_runoptions.sh
