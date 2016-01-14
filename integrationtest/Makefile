@@ -1,14 +1,11 @@
 
-all: 04 06 09 12 14 15 17 bats
+all: 04 06 12 14 15 17 bats
 
 04:
 	./04_parameters.sh
 
 06:
 	./06_timing.sh
-
-09:
-	./09_remote_docker.sh
 
 12:
 	./12_runtask.sh
