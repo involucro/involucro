@@ -12,6 +12,7 @@ Usage:
   involucro -h | --help
   involucro --version
   involucro [-w <path>] [ -H <url> | --host=<url> ] [-v [-v]] [-f <file> | -e <script>] [-s KEY=VALUE | --set KEY=VALUE]... [--] <task>...
+  involucro [-f <file> | -e <script>] [-s KEY=VALUE | --set KEY=VALUE] (--tasks | -T)
   involucro --socket <socket> --encoded-state
 
 Options:
@@ -25,6 +26,7 @@ Options:
   -v                      Increase verbosity (use twice for even more messages).
   -w <path>               Set working dir, being the base for all scoping operations. [default: .]
   -s, --set KEY=VALUE     Makes VAR[KEY] available with value VALUE in the Lua script.
+  -T --tasks              Instead of executing the tasks print a list of defined tasks.'
 `
 	return docopt.Parse(usage, argv, true, "Involucro 0.1", false, exit)
 }

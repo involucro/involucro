@@ -124,3 +124,12 @@ func (inv *Runtime) task(l *lua.State) int {
 
 	return tableWith(l, subbuilders)
 }
+
+// TaskIDList gives back a list of tasks that are defined at the time of calling
+func (inv *Runtime) TaskIDList() []string {
+	taskIDs := []string{}
+	for key := range inv.tasks {
+		taskIDs = append(taskIDs, key)
+	}
+	return taskIDs
+}
