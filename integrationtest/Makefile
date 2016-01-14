@@ -1,5 +1,5 @@
 
-all: 01 02 03 04 06 09 12 14 15 16 17 20 21 23 bats
+all: 01 02 03 04 06 09 12 14 15 16 17 20 21 bats
 
 01:
 	./01_autopull.sh
@@ -40,9 +40,6 @@ all: 01 02 03 04 06 09 12 14 15 16 17 20 21 23 bats
 
 21:
 	./21_flexible_mount_dir.sh
-
-23:
-	./23_env_in_invfile.sh
 
 bats:
 	@bats .
