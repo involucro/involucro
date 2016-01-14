@@ -1,5 +1,5 @@
 
-all: 01 02 03 04 06 09 12 14 15 16 17 20 21 bats
+all: 01 02 03 04 06 09 12 14 15 16 17 21 bats
 
 01:
 	./01_autopull.sh
@@ -34,9 +34,6 @@ all: 01 02 03 04 06 09 12 14 15 16 17 20 21 bats
 
 16:
 	./16_from_scratch.sh
-
-20:
-	./20_tags.sh
 
 21:
 	./21_flexible_mount_dir.sh
