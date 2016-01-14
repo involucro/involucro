@@ -1,5 +1,5 @@
 
-all: 01 02 03 04 06 09 12 14 15 17 21 bats
+all: 01 02 03 04 06 09 12 14 15 17 bats
 
 01:
 	./01_autopull.sh
@@ -31,9 +31,6 @@ all: 01 02 03 04 06 09 12 14 15 17 21 bats
 
 17:
 	./17_runoptions.sh
-
-21:
-	./21_flexible_mount_dir.sh
 
 bats:
 	@bats .
