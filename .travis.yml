@@ -7,9 +7,12 @@ services:
 
 go: 1.5
 
+before_install:
+  - sudo add-apt-repository ppa:duggan/bats --yes
+  - sudo apt-get update -qq
+
 install:
-  - sudo apt-get update
-  - sudo apt-get install socat
+  - sudo apt-get install -qq bats socat
   - make get-deps
 
 script:
