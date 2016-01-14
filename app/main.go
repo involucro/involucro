@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/runtime"
@@ -81,6 +82,13 @@ func Main(argv []string, exit bool) error {
 				log.WithFields(log.Fields{"error": err}).Fatal("Failed executing file")
 			}
 		}
+	}
+
+	if arguments["--tasks"].(bool) {
+		for _, id := range ctx.TaskIDList() {
+			fmt.Println(id)
+		}
+		return nil
 	}
 
 	taskrunner := ctx.RunLocallyTaskWith
