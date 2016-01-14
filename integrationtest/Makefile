@@ -1,5 +1,5 @@
 
-all: 04 06 14 15 17 bats
+all: 04 06 14 17 bats
 
 04:
 	./04_parameters.sh
@@ -9,9 +9,6 @@ all: 04 06 14 15 17 bats
 
 14:
 	./14_wrapoptions.sh
-
-15:
-	./15_nested_dirs.sh
 
 17:
 	./17_runoptions.sh
