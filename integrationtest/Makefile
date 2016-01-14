@@ -1,8 +1,5 @@
 
-all: 02 04 06 09 12 14 15 17 bats
-
-02:
-	./02_hello_world.sh
+all: 04 06 09 12 14 15 17 bats
 
 04:
 	./04_parameters.sh
