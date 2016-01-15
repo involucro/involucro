@@ -19,11 +19,12 @@ func Main(argv []string, exit bool) error {
 	if err != nil {
 		return err
 	}
-	if add := arguments["-v"].(int); add == 0 {
+	switch arguments["-v"].(int) {
+	case 0:
 		log.SetLevel(log.WarnLevel)
-	} else if add == 1 {
+	case 1:
 		log.SetLevel(log.InfoLevel)
-	} else if add == 2 {
+	case 2:
 		log.SetLevel(log.DebugLevel)
 	}
 
