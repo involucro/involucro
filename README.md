@@ -157,6 +157,17 @@ from `Makefile`s. Exceptionally, the introductory method for this step is also t
 **task.runTask**(`<ID>`) (*introductory registration*) registers a step that executes the task with the given ID
 as part of the steps in this task. Example: `inv.task('all').runTask('compile').runTask('package')`.
 
+### Tag Step
+
+Sometimes, there should be two versions of the same image sharing the same image ID, for example to have the `latest`
+tag equivalent to version `v2`. The tag step helps in this case.
+
+**task.tag**(`<NAME>`) (*introductory*) starts a tagging by setting the name of the original image. This can be anything
+Docker accepts, including `test/asd:v2`, but also actual image IDs. Example: `task.tag('test/asd')`.
+
+**tagstep.as**(`<NAME>`) (*registration*) registers a step that tags the image named in introductory method to the name given
+as parameter. Example: `tagstep.as('test/asd')`.
+
 ## Trademarks
 
 Docker® is a registered trademark of Docker, Inc.
