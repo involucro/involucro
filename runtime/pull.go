@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"io"
@@ -37,16 +38,14 @@ func pull(c pullimager, repositoryName string) error {
 		dec := json.NewDecoder(pipeReader)
 		for dec.More() {
 			var m progress
-			if err := dec.Decode(&m); err == io.EOF {
-				break
-			} else if err != nil {
-				if t, ok := err.(*json.UnmarshalTypeError); ok {
-					log.WithFields(log.Fields{"value": t.Value, "notAssignableTo": t.Type}).Warn("Decode log message error")
-				} else {
-					log.WithFields(log.Fields{"error": err}).Warn("Decode log message error")
-				}
-			} else {
-				log.WithFields(log.Fields{"message": m}).Debug("Progress")
+			err := dec.Decode(&m)
+			switch {
+			case err == io.EOF:
+				return
+			case err != nil:
+				log.WithFields(log.Fields{"error": err}).Warn("Decode log message error")
+			case log.GetLevel() == log.DebugLevel:
+				fmt.Printf("Pull Progress: %#v\r", m)
 			}
 		}
 	}()
