@@ -111,6 +111,7 @@ func (inv *Runtime) task(l *lua.State) int {
 	subbuilders["wrap"] = newWrapSubBuilder(subbuilders, registerStep)
 	subbuilders["runTask"] = newRuntaskSubBuilder(subbuilders, registerStep)
 	subbuilders["tag"] = newTagSubBuilder(subbuilders, registerStep)
+	subbuilders["hook"] = newHookSubBuilder(subbuilders, registerStep)
 
 	return tableWith(l, subbuilders)
 }

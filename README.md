@@ -168,6 +168,14 @@ Docker accepts, including `test/asd:v2`, but also actual image IDs. Example: `ta
 **tagstep.as**(`<NAME>`) (*registration*) registers a step that tags the image named in introductory method to the name given
 as parameter. Example: `tagstep.as('test/asd')`.
 
+### Hook Step
+
+Control files can change their behaviour during tasks with hooks, for example to use the results of previous tasks
+with `io.lines`.
+
+**task.hook**(`<FUNCTION>`) (*introductory registration*) registers a step that, when taken, runs the given function. No
+arguments are passed, and any return values are ignored. Example: `task.hook(function () print('in step') end)`.
+
 ## Trademarks
 
 Docker® is a registered trademark of Docker, Inc.
