@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV="$(pwd)/../involucro -vv"
+INV="$(pwd)/../involucro -v"
 
 setup() {
   FILE=$(mktemp)

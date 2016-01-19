@@ -26,12 +26,12 @@ EOF
 }
 
 @test "literate mode: using filename" {
-  $INV -vv -f $FILE blubb 2>&1| grep "stdout: Test OK"
+  $INV -v -f $FILE blubb 2>&1| grep "stdout: Test OK"
 }
 
 @test "literate mode: using automatic recognition in directory" {
   cd $DIR
-  $INV -vv blubb 2>&1| grep "stdout: Test OK"
+  $INV -v blubb 2>&1| grep "stdout: Test OK"
 }
 
 teardown() {

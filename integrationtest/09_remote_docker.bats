@@ -26,7 +26,7 @@ setup() {
 }
 
 @test "remote: working when connecting via TCP" {
-  $INV -vv -w $(pwd) -H tcp://127.0.0.1:4243 -e $TASK  wrap
+  $INV -v -w $(pwd) -H tcp://127.0.0.1:4243 -e $TASK  wrap
   docker inspect -f '{{.Id}}' inttest/9
 
   docker run -it --rm inttest/9 /bin/cat "/blah/asd" | grep blahblubb

@@ -363,23 +363,21 @@ func rebaseFilename(oldprefix, newprefix string, filename string) string {
 	return path.Join(newprefix, withoutOld)
 }
 
-func init() {
-	RegisterEncodeableType(asImage{})
-}
-
 func (img asImage) forRemoteExecution() Step {
 	dockerSocket := "/var/run/docker.sock"
 
 	origSourceDir := img.SourceDir
 	img.SourceDir = "/source"
 
-	steps := []Step{img}
+	encoded, err := json.Marshal(img)
+	if err != nil {
+		panic(err)
+	}
 
 	return executeImage{
 		Config: docker.Config{
 			Image: "involucro/tool:latest",
-			Env:   []string{"STATE=" + EncodeState(steps)},
-			Cmd:   []string{"--encoded-state", "--socket", "/sock"},
+			Cmd:   []string{"--wrap", string(encoded)},
 		},
 		HostConfig: docker.HostConfig{
 			Binds: []string{
@@ -388,6 +386,14 @@ func (img asImage) forRemoteExecution() Step {
 			},
 		},
 	}
+}
+
+func DecodeWrapStep(in string) Step {
+	img := asImage{}
+	if err := json.Unmarshal([]byte(in), &img); err != nil {
+		panic(err)
+	}
+	return img
 }
 
 func (img asImage) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
