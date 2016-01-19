@@ -1,20 +1,20 @@
 package app
 
 import (
-	"errors"
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/runtime"
-	"os"
-	"strings"
 )
 
 // Main represents the usual main method of the
 // whole program. It is moved to its own package
 // to testing using go utils.
-func Main(argv []string, exit bool) error {
+func Main() error {
 	flag.Parse()
 
 	switch {
@@ -33,14 +33,15 @@ func Main(argv []string, exit bool) error {
 			log.WithFields(log.Fields{"error": err}).Fatal("Unable to connect to Docker")
 		}
 
-		if err := step.WithDockerClient(client, "/"); err != nil {
+		ctx := runtime.New(make(map[string]string), client, "/")
+		if err := step.Take(&ctx); err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("Unable to run step")
 			return err
 		}
 		return nil
 	}
 
-	client, isremote, err := connectToDocker(dockerUrl)
+	client, err := docker.NewClient(dockerUrl)
 	if err != nil {
 		log.Fatal("Unable to create Docker client")
 	}
@@ -49,7 +50,7 @@ func Main(argv []string, exit bool) error {
 		log.Fatal("Docker not reachable")
 	}
 
-	ctx := runtime.New(variables)
+	ctx := runtime.New(variables, client, relativeWorkDir)
 
 	if controlScript != "" && isControlFileOverriden() {
 		log.Fatal("Specified both -e and -f")
@@ -86,36 +87,11 @@ func Main(argv []string, exit bool) error {
 		return nil
 	}
 
-	taskrunner := ctx.RunLocallyTaskWith
-	if isremote {
-		taskrunner = ctx.RunTaskOnRemoteSystemWith
-	}
 	for _, element := range flag.Args() {
-		if ctx.HasTask(element) {
-			if err := taskrunner(element, client, relativeWorkDir); err != nil {
-				log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
-			}
-		} else {
-			log.WithFields(log.Fields{"task": element}).Warn("no steps defined for task")
+		if err := ctx.RunTask(element); err != nil {
+			log.WithFields(log.Fields{"error": err}).Fatal("Error during task processing")
+			return err
 		}
 	}
 	return nil
-}
-
-func parseAdditionalArguments(in []string) (map[string]string, error) {
-	answer := make(map[string]string)
-	for _, x := range in {
-		parts := strings.SplitN(x, "=", 2)
-		if len(parts) < 2 {
-			return nil, errors.New("Invalid parameter usage, should be KEY=VALUE")
-		}
-		answer[parts[0]] = parts[1]
-	}
-	return answer, nil
-}
-
-func connectToDocker(url string) (client *docker.Client, isremote bool, err error) {
-	isremote = strings.HasPrefix(url, "tcp:")
-	client, err = docker.NewClient(url)
-	return
 }

@@ -17,17 +17,8 @@ type tagStepBuilder struct {
 	registerStep func(Step)
 }
 
-// WithDockerClient executes the task with the ID stored in the step on the
-// given Docker client.
-func (s tagStep) WithDockerClient(c *docker.Client, _ string) error {
-	return c.TagImage(s.originalName, s.tagImageOptions)
-}
-
-// WithRemoteDockerClient executes the task with the ID stored in the step on
-// the given Docker client, assuming it resides in a remote filesystem and
-// networking space.
-func (s tagStep) WithRemoteDockerClient(c *docker.Client, _ string) error {
-	return c.TagImage(s.originalName, s.tagImageOptions)
+func (s tagStep) Take(i *Runtime) error {
+	return i.client.TagImage(s.originalName, s.tagImageOptions)
 }
 
 // ShowStartInfo displays logging information including the executed task.

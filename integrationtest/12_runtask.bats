@@ -8,7 +8,7 @@ INV=$(pwd)/../involucro
 
 @test "runtask: other task not present" {
   run $INV -e "inv.task('test').runTask('udef')" test
-  [ "$status" -ne 0 ]
+  [ "$status" -eq 0 ]
 }
 
 @test "runtask: examples/nested_tasks" {

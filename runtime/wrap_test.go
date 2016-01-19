@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fsouza/go-dockerclient"
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/fsouza/go-dockerclient"
 )
 
 func TestRandomFileName(t *testing.T) {
@@ -149,7 +150,7 @@ func ExamplePreparePathForTarHeader() {
 }
 
 func TestWrapTaskDefinition(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 
 	if err := inv.RunString(`inv.task('w').wrap("dist").inImage("p").at("/data").as("test/one")`); err != nil {
 		t.Fatal("Unable to run code", err)

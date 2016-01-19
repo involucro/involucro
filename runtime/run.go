@@ -4,16 +4,17 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
-	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/runtime/translator"
 	"io"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/Shopify/go-lua"
+	log "github.com/Sirupsen/logrus"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/runtime/translator"
 )
 
 // executeImage executes the given config and host config, similar to "docker
@@ -27,25 +28,24 @@ type executeImage struct {
 	ActualCode            int
 }
 
-func (img executeImage) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
-	if !path.IsAbs(remoteWorkDir) {
-		remoteWorkDir = path.Join("/", remoteWorkDir)
-	}
-	return img.withAbsolutizedWorkDir(c, remoteWorkDir)
-}
+func (img executeImage) Take(i *Runtime) error {
+	remoteWorkDir := i.workDir
 
-func (img executeImage) WithDockerClient(c *docker.Client, remoteWorkDir string) error {
 	if !path.IsAbs(remoteWorkDir) {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return err
+		base := "/"
+		if !i.isUsingRemoteInstance() {
+			cwd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			base = cwd
 		}
-		remoteWorkDir = path.Join(cwd, remoteWorkDir)
-	}
-	return img.withAbsolutizedWorkDir(c, remoteWorkDir)
-}
 
-func (img executeImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir string) error {
+		remoteWorkDir = path.Join(base, remoteWorkDir)
+	}
+
+	c := i.client
+
 	var err error
 	img.HostConfig, err = absolutizeBinds(img.HostConfig, remoteWorkDir)
 	if err != nil {
@@ -65,8 +65,7 @@ func (img executeImage) withAbsolutizedWorkDir(c *docker.Client, remoteWorkDir s
 	}
 	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
 
-	err = img.loadAndProcessLogs(c, container.ID)
-	if err != nil {
+	if err := img.loadAndProcessLogs(c, container.ID); err != nil {
 		return err
 	}
 
