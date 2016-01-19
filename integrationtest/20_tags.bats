@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "tag: wraps with correct name" {
   $INV -e "inv.task('package').wrap('.').inImage('busybox').at('/data').as('inttest/20:v1')" package

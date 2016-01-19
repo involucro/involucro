@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "parameters: accepts inline script" {
   $INV -e "inv.task('touch').using('busybox').run('touch', '/source/__asd')" touch

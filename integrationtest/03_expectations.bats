@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "expectation: successful matching of stdout" {
   $INV -e "inv.task('test').using('busybox').withExpectation({stdout = 'Hello, World!'}).run('echo', 'Hello, World!')" test

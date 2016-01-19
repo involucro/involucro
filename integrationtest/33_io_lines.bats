@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV="$(pwd)/../involucro -v"
+load find_inv
 
 setup() {
   FILE=$(mktemp)
@@ -16,15 +16,15 @@ for line in io.lines('$FILE') do
 end
 EOS
 
-  RUN="$INV -f $SCRIPTFILE"
+  RUN="$INV -f $SCRIPTFILE -v"
 }
 
 @test "io.lines: can run task ASD" {
-  $RUN doASD 2>&1 | grep "TESTOK"
+  $RUN doASD 2>&1 | grep "stdout: TESTOK"
 }
 
 @test "io.lines: can run task DSA" {
-  $RUN doDSA 2>&1| grep "TESTOK"
+  $RUN doDSA 2>&1| grep "stdout: TESTOK"
 }
 
 teardown() {

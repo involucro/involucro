@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "output task list when using -T and directly supplying script" {
   TASKS=$($INV -e "inv.task('a').using('busybox').run('x'); inv.task('b').using('busybox').run('z')" -T | sort | base64)

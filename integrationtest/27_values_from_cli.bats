@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "variables: with -s k=asd" {
   $INV -v -e "inv.task('test').using('busybox').run('/bin/echo', VAR['k'])" -s k=asd test 2>&1| grep "stdout: asd"

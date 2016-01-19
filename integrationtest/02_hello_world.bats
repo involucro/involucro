@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "examples/hello_world" {
-  cd ../examples/hello_world
+  cd $(dirname $INV)/examples/hello_world
   $INV greet
 }

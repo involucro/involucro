@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "runtask: other task present" {
   $INV -v -e "inv.task('blah').runTask('test'); inv.task('test').using('busybox').run('echo', 'TEST8102')" blah 2>&1 | grep "stdout: TEST8102"
@@ -12,6 +12,6 @@ INV=$(pwd)/../involucro
 }
 
 @test "runtask: examples/nested_tasks" {
-  cd ../examples/nested_tasks
+  cd $(dirname $INV)/examples/nested_tasks
   $INV all
 }

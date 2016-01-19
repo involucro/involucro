@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 TASK="inv.task('wrap').wrap('fixture_09').at('/blah').inImage('busybox').as('inttest/9')"
 

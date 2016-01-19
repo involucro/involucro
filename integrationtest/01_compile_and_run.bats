@@ -1,9 +1,9 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "examples/compile_and_run" {
-  cd ../examples/compile_and_run
+  cd $(dirname $INV)/examples/compile_and_run
   rm -f dist/*
   $INV -v compile package run
 

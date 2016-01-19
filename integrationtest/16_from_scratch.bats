@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "from scratch: wrap without parent image" {
   $INV -e "inv.task('package').wrap('.').at('/').as('inttest/16')" package
