@@ -1,11 +1,11 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "examples/compile_and_run" {
-  cd ../examples/compile_and_run
+  cd $(dirname $INV)/examples/compile_and_run
   rm -f dist/*
-  $INV -vv compile package run
+  $INV -v compile package run
 
   OUTPUT=$(docker run -i --rm test/showaddition:v1 /usr/local/bin/add)
 

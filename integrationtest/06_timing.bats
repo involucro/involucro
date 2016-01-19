@@ -1,13 +1,13 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 teardown() {
   docker rmi test/inttesting
 }
 
 @test "timing: creation date within seconds of now" {
-  $INV -e "inv.task('package').wrap('../integrationtest').inImage('busybox').at('/data').as('test/inttesting')" package
+  $INV -e "inv.task('package').wrap('"$(dirname $INV)"/integrationtest').inImage('busybox').at('/data').as('test/inttesting')" package
   docker images | grep test/inttesting
   docker images | grep test/inttesting | grep "second"
 }

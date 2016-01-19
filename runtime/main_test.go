@@ -2,9 +2,10 @@ package runtime
 
 import (
 	"flag"
-	log "github.com/Sirupsen/logrus"
 	"os"
 	"testing"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type NullWriter struct {
@@ -19,4 +20,9 @@ func TestMain(m *testing.M) {
 	nw := NullWriter{}
 	log.SetOutput(nw)
 	os.Exit(m.Run())
+}
+
+func newEmpty() *Runtime {
+	r := New(make(map[string]string), nil, ".")
+	return &r
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 @test "runoptions: can set environment variables" {
-  $INV -vv -e "inv.task('a').using('busybox').withConfig({Env = { 'FOO=bar' }}).run('/bin/sh', '-c', 'echo \$FOO')" a 2>&1 | grep "stdout: bar"
+  $INV -v -e "inv.task('a').using('busybox').withConfig({Env = { 'FOO=bar' }}).run('/bin/sh', '-c', 'echo \$FOO')" a 2>&1 | grep "stdout: bar"
 }

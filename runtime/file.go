@@ -1,28 +1,33 @@
 package runtime
 
 import (
-	"errors"
+	"os"
+	"strings"
+
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
-	"os"
 )
 
 // Runtime encapsulates the state of the tool
 type Runtime struct {
-	lua    *lua.State
-	tasks  map[string][]Step
-	Values map[string]string
+	lua     *lua.State
+	tasks   map[string][]Step
+	Values  map[string]string
+	client  *docker.Client
+	workDir string
 }
 
 // New creates a new Runtime and returns it. This new context uses the
 // working dir that is passed as a parameter.  After instantiation, the context
 // will be ready to load additional files.
-func New(values map[string]string) Runtime {
+func New(values map[string]string, c *docker.Client, workDir string) Runtime {
 	m := Runtime{
-		lua:    lua.NewStateEx(),
-		tasks:  make(map[string][]Step),
-		Values: values,
+		lua:     lua.NewStateEx(),
+		tasks:   make(map[string][]Step),
+		Values:  values,
+		client:  c,
+		workDir: workDir,
 	}
 
 	tableWith(m.lua, fm{"task": m.task})
@@ -45,6 +50,10 @@ func New(values map[string]string) Runtime {
 	return m
 }
 
+func (inv *Runtime) isUsingRemoteInstance() bool {
+	return strings.HasPrefix(inv.client.Endpoint(), "tcp:")
+}
+
 // HasTask tells whether the receiver has a task with
 // the given task ID, i.e. whether any steps have been
 // registered for that name.
@@ -53,34 +62,11 @@ func (inv *Runtime) HasTask(taskID string) bool {
 	return ok
 }
 
-// RunLocallyTaskWith retrieves the steps for the given task ID
-// and calls f once with each step. If any error occurs
-// during an invocation, this error is returned and
-// the loop is interrupted.
-func (inv *Runtime) RunLocallyTaskWith(taskID string, client *docker.Client, remoteWorkDir string) error {
-	if !inv.HasTask(taskID) {
-		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
-		return errors.New("No steps defined for task")
-	}
-
-	for _, step := range inv.tasks[taskID] {
+func (inv *Runtime) RunTask(taskID string) error {
+	steps := inv.tasks[taskID]
+	for _, step := range steps {
 		step.ShowStartInfo()
-		if err := step.WithDockerClient(client, remoteWorkDir); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (inv *Runtime) RunTaskOnRemoteSystemWith(taskID string, client *docker.Client, remoteWorkDir string) error {
-	if !inv.HasTask(taskID) {
-		log.WithFields(log.Fields{"task": taskID}).Warn("No steps defined for task")
-		return errors.New("No steps defined for task")
-	}
-
-	for _, step := range inv.tasks[taskID] {
-		step.ShowStartInfo()
-		if err := step.WithRemoteDockerClient(client, remoteWorkDir); err != nil {
+		if err := step.Take(inv); err != nil {
 			return err
 		}
 	}
@@ -123,7 +109,7 @@ func (inv *Runtime) task(l *lua.State) int {
 
 	subbuilders["using"] = newRunSubBuilder(subbuilders, registerStep)
 	subbuilders["wrap"] = newWrapSubBuilder(subbuilders, registerStep)
-	subbuilders["runTask"] = newRuntaskSubBuilder(subbuilders, registerStep, inv)
+	subbuilders["runTask"] = newRuntaskSubBuilder(subbuilders, registerStep)
 	subbuilders["tag"] = newTagSubBuilder(subbuilders, registerStep)
 
 	return tableWith(l, subbuilders)

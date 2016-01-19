@@ -2,44 +2,45 @@ package runtime
 
 import (
 	"fmt"
-	"github.com/Shopify/go-lua"
-	"github.com/fsouza/go-dockerclient"
 	"io"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/Shopify/go-lua"
+	"github.com/fsouza/go-dockerclient"
 )
 
 func TestDefineTaskWithTableAsIdPanics(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`inv.task({})`); err == nil {
 		t.Fatal("Didn't return error")
 	}
 }
 
 func TestUsingWithoutParameterPanics(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`inv.task('test').using()`); err == nil {
 		t.Fatal("Didn't return error")
 	}
 }
 
 func TestRunWithoutParameterWorks(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`inv.task('test').using('asd').run()`); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestUsingRunWithParameterWorks(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`inv.task('test').using('asd').run('test')`); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestDefiningRunTask(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`inv.task('test').using('blah').run('test', '123')`); err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +68,7 @@ func TestDefiningRunTask(t *testing.T) {
 }
 
 func testWithParameters(t *testing.T, params ...string) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	paramsQ := make([]string, len(params))
 	for i, el := range params {
 		paramsQ[i] = "'" + el + "'"
@@ -92,7 +93,7 @@ func TestRunTaskDefinitionMultipleParameterLengths(t *testing.T) {
 }
 
 func TestRunTaskDefinitionMultipleSteps(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`inv.task('test').using('blah').run('test').run('test2').using('asd').run('2')`); err != nil {
 		t.Fatal("Unable to run code", err)
 	}
@@ -123,7 +124,7 @@ func TestRunTaskDefinitionMultipleSteps(t *testing.T) {
 }
 
 func TestRunTaskDefinitionWithOptions(t *testing.T) {
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 
 	if err := inv.RunString(`inv.task('test').using('blah').withConfig({ENV = {"FOO=bar"}}).run('test')`); err != nil {
 		t.Fatal("Unable to run code", err)

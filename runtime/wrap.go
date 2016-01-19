@@ -11,10 +11,6 @@ package runtime
 import (
 	"archive/tar"
 	"encoding/json"
-	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
-	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/runtime/translator"
 	"io"
 	"os"
 	"path"
@@ -22,6 +18,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Shopify/go-lua"
+	log "github.com/Sirupsen/logrus"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/runtime/translator"
 )
 
 // ## The Builder
@@ -99,7 +100,17 @@ type asImage struct {
 	Config            docker.Config
 }
 
-func (img asImage) WithDockerClient(c *docker.Client, remoteWorkDir string) error {
+func (img asImage) Take(i *Runtime) error {
+	if i.isUsingRemoteInstance() {
+		return img.executeRemotelyIn(i)
+	} else {
+		return img.executeLocallyIn(i)
+	}
+
+}
+
+func (img asImage) executeLocallyIn(i *Runtime) error {
+	c := i.client
 	imageID := randomIdentifierOfLength(64)
 
 	parentImageID, err := img.enforceParentImagePresenceAndGetId(c, img.ParentImage)
@@ -122,10 +133,9 @@ func (img asImage) WithDockerClient(c *docker.Client, remoteWorkDir string) erro
 
 	sourceDir := img.SourceDir
 	if !path.IsAbs(sourceDir) {
-		sourceDir = path.Join(remoteWorkDir, sourceDir)
+		sourceDir = path.Join(i.workDir, sourceDir)
 	}
-	err = packItUp(sourceDir, layerFile, img.TargetDir)
-	if err != nil {
+	if err := packItUp(sourceDir, layerFile, img.TargetDir); err != nil {
 		return err
 	}
 	layerFile.Close()
@@ -363,23 +373,21 @@ func rebaseFilename(oldprefix, newprefix string, filename string) string {
 	return path.Join(newprefix, withoutOld)
 }
 
-func init() {
-	RegisterEncodeableType(asImage{})
-}
-
 func (img asImage) forRemoteExecution() Step {
 	dockerSocket := "/var/run/docker.sock"
 
 	origSourceDir := img.SourceDir
 	img.SourceDir = "/source"
 
-	steps := []Step{img}
+	encoded, err := json.Marshal(img)
+	if err != nil {
+		panic(err)
+	}
 
 	return executeImage{
 		Config: docker.Config{
 			Image: "involucro/tool:latest",
-			Env:   []string{"STATE=" + EncodeState(steps)},
-			Cmd:   []string{"--encoded-state", "--socket", "/sock"},
+			Cmd:   []string{"--wrap", string(encoded)},
 		},
 		HostConfig: docker.HostConfig{
 			Binds: []string{
@@ -390,6 +398,14 @@ func (img asImage) forRemoteExecution() Step {
 	}
 }
 
-func (img asImage) WithRemoteDockerClient(c *docker.Client, remoteWorkDir string) error {
-	return img.forRemoteExecution().WithRemoteDockerClient(c, remoteWorkDir)
+func DecodeWrapStep(in string) Step {
+	img := asImage{}
+	if err := json.Unmarshal([]byte(in), &img); err != nil {
+		panic(err)
+	}
+	return img
+}
+
+func (img asImage) executeRemotelyIn(i *Runtime) error {
+	return img.forRemoteExecution().Take(i)
 }

@@ -7,7 +7,7 @@ import (
 func TestReuseReturnValuesStoreTaskTest(t *testing.T) {
 	t.Parallel()
 
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`test = inv.task('test'); inv.task('build').using('asd').run('asd'); test.using('dsa').run('dsa')`); err != nil {
 		t.Fatal("Err not nil", err)
 	}
@@ -45,7 +45,7 @@ func TestReuseReturnValuesStoreTaskTest(t *testing.T) {
 func TestReuseReturnValuesStoreTaskDsa(t *testing.T) {
 	t.Parallel()
 
-	inv := New(make(map[string]string))
+	inv := newEmpty()
 	if err := inv.RunString(`dsa = inv.task('test').using('dsa'); inv.task('build').using('asd').run('asd'); dsa.run('dsa')`); err != nil {
 		t.Fatal("err not nil", nil)
 	}

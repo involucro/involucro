@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 setup() {
   mkdir -p /tmp/involucro_test_26/p

@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-INV=$(pwd)/../involucro
+load find_inv
 
 teardown() {
   docker rmi inttest/14
