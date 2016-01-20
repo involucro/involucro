@@ -17,7 +17,13 @@ We can also define tasks:
 
 Altough, interrupted!
 
-> .using('busybox').run('/bin/echo', 'Test OK')
+
+I can also use four spaces:
+
+    .using('busybox').run('/bin/echo', 'Test OK')
+
+But it needs to be have an empty row before the code.
+    This doesn't crash even though it's illegal Lua.
 
 That's all
 EOF

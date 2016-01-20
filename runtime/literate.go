@@ -11,19 +11,14 @@ package runtime
 // This file provides the possibility for the invfile's to be written in such
 // way. This is useful since they often are the result of long and
 // time-consuming development efforts.
-//
-// However, to keep things simple, this file only supports one particular style
-// of Markdown code, namely the relevant portions have to be written in
-// Bird-track style, as such:
-//
-//     > inv.task()
 
 import (
 	"bufio"
 	"bytes"
-	"github.com/Shopify/go-lua"
 	"os"
 	"strings"
+
+	"github.com/Shopify/go-lua"
 )
 
 // RunLiterateFile interprets the given file as literate Markdown with
@@ -47,6 +42,12 @@ func (inv *Runtime) RunLiterateFile(filename string) error {
 
 	lines := bytes.Buffer{}
 
+	// Space-prefixed rows need an empty row directly before them. We record if
+	// the preceeding row was empty, and set this variable at the end of every
+	// loop. If the file just starts, we also have to assume the line before tat
+	// was empty.
+	preceedingRowEmtpy := true
+
 	// the Scan() method returns a boolean indicating whether a next line is
 	// available.
 	for scanner.Scan() {
@@ -54,16 +55,28 @@ func (inv *Runtime) RunLiterateFile(filename string) error {
 		// ending character.
 		line := scanner.Text()
 
-		// This check tests whether this line starts with a bird track prefix: ">
-		// ". If it does, the rest of the lines is stored in the lines buffer.
-		if strings.HasPrefix(line, "> ") {
-			trimmed := strings.TrimPrefix(line, "> ")
-			// Add the chopped line ending character.
-			trimmed += "\n"
-
-			// Write the result into the buffer
-			lines.Write([]byte(trimmed))
+		var trimmed string
+		// This check tests whether this line starts with a bird track prefix: "> "
+		// or with four spaces. If it does, the rest of the lines is stored in the
+		// lines buffer.
+		switch {
+		case strings.HasPrefix(line, "> "):
+			trimmed = strings.TrimPrefix(line, "> ")
+		case strings.HasPrefix(line, "    ") && preceedingRowEmtpy:
+			trimmed = strings.TrimPrefix(line, "    ")
+		case line == "":
+			preceedingRowEmtpy = true
+			continue
+		default:
+			preceedingRowEmtpy = false
+			continue
 		}
+
+		// Add the chopped line ending character.
+		trimmed += "\n"
+
+		// Write the result into the buffer
+		lines.Write([]byte(trimmed))
 	}
 
 	// The scanner may have received an error, which we have to check.
