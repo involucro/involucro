@@ -64,6 +64,10 @@ func (inv *Runtime) HasTask(taskID string) bool {
 
 func (inv *Runtime) RunTask(taskID string) error {
 	steps := inv.tasks[taskID]
+	if len(steps) == 0 {
+		log.WithFields(log.Fields{"ID": taskID}).Warn("Invoked stepless task")
+		return nil
+	}
 	for _, step := range steps {
 		step.ShowStartInfo()
 		if err := step.Take(inv); err != nil {
