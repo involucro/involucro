@@ -10,8 +10,12 @@ go: 1.5
 before_install:
   - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get update -qq
+  - sudo service docker stop
 
 install:
+  - wget https://test.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O docker
+  - chmod +x docker
+  - sudo ./docker daemon &
   - sudo apt-get install -qq bats socat
   - make get-deps
 
@@ -37,6 +41,7 @@ deploy:
     on:
       tags: true
       repo: thriqon/involucro
+      condition: $DOCKER_VERSION=latest
   - provider: gcs
     skip_cleanup: true
     access_key_id: GOOGYBZJ4BN52Y3TLCUL
@@ -48,6 +53,15 @@ deploy:
     acl: public-read
     on:
       repo: thriqon/involucro
+      condition: $DOCKER_VERSION=latest
   - provider: script
     skip_cleanup: true
     script: ./push_to_docker.sh
+    on:
+      condition: $DOCKER_VERSION=latest
+
+env:
+  - DOCKER_VERSION=1.9.1
+  - DOCKER_VERSION=1.8.3
+  - DOCKER_VERSION=1.10.0-rc1
+  - DOCKER_VERSION=latest
