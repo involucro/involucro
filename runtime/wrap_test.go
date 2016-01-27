@@ -3,81 +3,13 @@ package runtime
 import (
 	"archive/tar"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
-	"time"
-
-	"github.com/fsouza/go-dockerclient"
 )
-
-func TestRandomFileName(t *testing.T) {
-	filename := randomTarballFileName()
-	if !strings.Contains(filename, "involucro") {
-		t.Errorf("Didn't contain involucro: %s", filename)
-	}
-	otherFilename := randomTarballFileName()
-	if otherFilename == filename {
-		t.Errorf("Other filename is not different from the original: %s == %s", otherFilename, filename)
-	}
-
-	if _, err := os.Stat(filename); err == nil {
-		t.Errorf("Stat succeeded, file shouldn't exist: %s", filename)
-	}
-
-	if info, err := os.Stat(filepath.Dir(filename)); err != nil {
-		t.Errorf("Parent failed to stat: %s", err)
-	} else {
-		if !info.IsDir() {
-			t.Errorf("Parent should be a directory")
-		}
-	}
-}
-
-func TestImageConfigFileIsGeneratedWithDateWithinTenSeconds(t *testing.T) {
-	imageid, parentid := "123", "456"
-	_, buf := imageConfigFile(parentid, imageid, docker.Config{})
-	var conf docker.Image
-	json.Unmarshal(buf, &conf)
-
-	duration := time.Since(conf.Created).Seconds()
-	if duration < 0 {
-		duration *= -1
-	}
-	if duration > 10 {
-		t.Errorf("Created was more than 10 seconds ago/in more than 10 seconds")
-	}
-}
-
-func ExampleImageConfigFile_Contents() {
-	imageid, parentid := "123", "456"
-	_, buf := imageConfigFile(parentid, imageid, docker.Config{})
-
-	var conf docker.Image
-	json.Unmarshal(buf, &conf)
-
-	fmt.Println(conf.ID, conf.Parent)
-	// Output: 123 456
-}
-
-func ExampleImageConfigFile_TarHeader() {
-	imageid, parentid := "123", "456"
-	header, _ := imageConfigFile(parentid, imageid, docker.Config{})
-
-	fmt.Println(header.Name)
-	// Output: 123/json
-}
-
-func ExampleRepositoriesFile() {
-	_, buf := repositoriesFile("test/gcc:latest", "283028")
-	fmt.Printf("%s\n", buf)
-	// Output: {"test/gcc":{"latest":"283028"}}
-}
 
 func TestPackItUpPrepared(t *testing.T) {
 	dir, err := ioutil.TempDir("", "involucro-test-wrap-packitup")

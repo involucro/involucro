@@ -12,3 +12,9 @@ teardown() {
   docker run -it --rm inttest/14 | grep "Hello_Options"
 }
 
+@test "wrap options: set entrypoint without base image" {
+  $INV -e "inv.task('wrap').wrap('.').at('/data').withConfig({Entrypoint = {'/bin/echo', 'Hello_Options'}}).as('inttest/14')" wrap
+
+  docker inspect -f "{{.Config.Entrypoint}}" inttest/14 | grep '/bin/echo Hello_Options'
+}
+

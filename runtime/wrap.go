@@ -16,8 +16,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/Shopify/go-lua"
 	log "github.com/Sirupsen/logrus"
@@ -101,211 +99,102 @@ type asImage struct {
 }
 
 func (img asImage) Take(i *Runtime) error {
-	if i.isUsingRemoteInstance() {
+	switch {
+	case i.isUsingRemoteInstance():
 		return img.executeRemotelyIn(i)
-	} else {
-		return img.executeLocallyIn(i)
+	case img.ParentImage == "":
+		return img.wrapWithoutBaseImageLocally(i)
+	default:
+		return img.wrapWithBaseImageLocally(i)
 	}
-
 }
 
-func (img asImage) executeLocallyIn(i *Runtime) error {
-	c := i.client
-	imageID := randomIdentifierOfLength(64)
-
-	parentImageID, err := img.enforceParentImagePresenceAndGetId(c, img.ParentImage)
-	if err != nil {
-		return err
-	}
-
+func packInto(sourceDir, prefix string) io.Reader {
 	uploadReader, uploadWriter := io.Pipe()
 
-	layerBallName := randomTarballFileName()
+	go func() {
+		defer uploadWriter.Close()
+		if err := packItUp(sourceDir, uploadWriter, prefix); err != nil {
+			log.WithFields(log.Fields{"error": err}).Warn("Packing failed")
+		} else {
+			log.Info("Packing succeeded")
+		}
+	}()
 
-	layerFile, err := os.Create(layerBallName)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(layerBallName)
-	defer layerFile.Close()
+	return uploadReader
+}
 
-	log.WithFields(log.Fields{"layerBallName": layerBallName}).Debug("Packing")
+func (img asImage) wrapWithoutBaseImageLocally(i *Runtime) error {
+	c := i.client
+	intermediateImageRepo := "image-" + randomIdentifier()
 
 	sourceDir := img.SourceDir
 	if !path.IsAbs(sourceDir) {
 		sourceDir = path.Join(i.workDir, sourceDir)
 	}
-	if err := packItUp(sourceDir, layerFile, img.TargetDir); err != nil {
+
+	if err := c.ImportImage(docker.ImportImageOptions{
+		Repository:  intermediateImageRepo,
+		Tag:         "latest",
+		Source:      "-",
+		InputStream: packInto(sourceDir, img.TargetDir),
+	}); err != nil {
 		return err
 	}
-	layerFile.Close()
 
-	var uploadErr error
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	log.WithFields(log.Fields{"image_id": imageID, "repository": img.NewRepositoryName}).Debug("Wrapping up")
-
-	go func() {
-		defer wg.Done()
-		defer uploadWriter.Close()
-		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageID, imageID, img.Config)
-		return
+	defer func() {
+		c.RemoveImage(intermediateImageRepo)
 	}()
 
-	go func(r io.Reader) {
-		defer wg.Done()
-		err := c.LoadImage(docker.LoadImageOptions{InputStream: r})
-		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Warn("Failed loading image into Docker")
-			uploadErr = err
-		} else {
-			log.Debug("Upload finished")
-		}
-	}(uploadReader)
-
-	wg.Wait()
-
-	return uploadErr
-}
-
-// enforceParentImagePresenceAndGetId gets the ID of the image with the given
-// name, and pulls the image first, if neccessary.
-func (img asImage) enforceParentImagePresenceAndGetId(c *docker.Client, parentName string) (string, error) {
-	// If there is no image name present, we are done. This happens if the user
-	// wants to pack the data into a parent-less image.
-	if parentName == "" {
-		return "", nil
-	}
-
-	// Fetch the config from Docker. If it works, we can return the ID.
-	// If anything goes wrong, we go on.
-	if parentImageConfig, err := c.InspectImage(parentName); err == nil {
-		return parentImageConfig.ID, nil
-	}
-
-	log.WithFields(log.Fields{"image": parentName}).Debug("Parent image not found, pulling it")
-
-	if err := pull(c, parentName); err != nil {
-		log.WithFields(log.Fields{"image": parentName, "error": err}).Error("Pulling failed")
-		return "", err
-	}
-
-	parentImageConfig, err := c.InspectImage(parentName)
-	if err != nil {
-		log.WithFields(log.Fields{"image": parentName, "error": err}).Error("Image still not found after pulling, bailing")
-		return "", err
-	}
-	return parentImageConfig.ID, nil
-}
-
-func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageID string, imageID string, config docker.Config) error {
-	uploadBall := tar.NewWriter(w)
-	defer uploadBall.Close()
-
-	repositoriesFileHeader, repoFile := repositoriesFile(newRepositoryName, imageID)
-	uploadBall.WriteHeader(&repositoriesFileHeader)
-	uploadBall.Write(repoFile)
-
-	imageDirHeader := imageDir(imageID)
-	uploadBall.WriteHeader(&imageDirHeader)
-
-	versionFileHeader, versionFileContents := versionFile(imageID)
-	uploadBall.WriteHeader(&versionFileHeader)
-	uploadBall.Write(versionFileContents)
-
-	configFileHeader, configFileContents := imageConfigFile(parentImageID, imageID, config)
-	uploadBall.WriteHeader(&configFileHeader)
-	uploadBall.Write(configFileContents)
-
-	info, err := os.Stat(layerBallName)
+	container, err := createContainer(c, docker.Config{Image: intermediateImageRepo, Cmd: []string{"/bin/sh"}}, docker.HostConfig{})
 	if err != nil {
 		return err
 	}
-	layerBallHeader := tar.Header{
-		Name:     path.Join(imageID, "layer.tar"),
-		Typeflag: tar.TypeReg,
-		Size:     info.Size(),
+
+	var opts docker.CommitContainerOptions
+	opts.Repository, _, opts.Tag = repoNameAndTagFrom(img.NewRepositoryName)
+	opts.Container = container.ID
+	opts.Message = "Created with Involucro"
+	opts.Run = &img.Config
+
+	if _, err := c.CommitContainer(opts); err != nil {
+		return err
 	}
-	uploadBall.WriteHeader(&layerBallHeader)
-	layerBallFile, err := os.Open(layerBallName)
+	return c.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
+}
+
+func (img asImage) wrapWithBaseImageLocally(i *Runtime) error {
+	c := i.client
+
+	container, err := createContainer(c, docker.Config{Image: img.ParentImage}, docker.HostConfig{})
 	if err != nil {
 		return err
 	}
-	defer layerBallFile.Close()
 
-	_, err = io.Copy(uploadBall, layerBallFile)
+	sourceDir := img.SourceDir
+	if !path.IsAbs(sourceDir) {
+		sourceDir = path.Join(i.workDir, sourceDir)
+	}
 
-	log.Debug("Pipe finished")
+	if err := c.UploadToContainer(container.ID, docker.UploadToContainerOptions{packInto(sourceDir, img.TargetDir), "/", false}); err != nil {
+		log.Warn("Error during upload, container not removed")
+		return err
+	}
 
-	return err
-}
+	var opts docker.CommitContainerOptions
+	opts.Repository, _, opts.Tag = repoNameAndTagFrom(img.NewRepositoryName)
+	opts.Container = container.ID
+	opts.Message = "Created with Involucro"
+	opts.Run = &img.Config
 
-func randomTarballFileName() string {
-	dir := os.TempDir()
-	tarid := randomIdentifier()
-	return filepath.Join(dir, "involucro-volume-"+tarid+".tar")
+	if _, err := c.CommitContainer(opts); err != nil {
+		return err
+	}
+	return c.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
 }
 
 func (img asImage) ShowStartInfo() {
 	log.WithFields(log.Fields{"as": img.NewRepositoryName}).Info("wrap")
-}
-
-func imageConfigFile(parentID, imageID string, containerConfig docker.Config) (tar.Header, []byte) {
-	imageConfig, err := json.Marshal(docker.Image{
-		ID:      imageID,
-		Parent:  parentID,
-		Comment: "Create with involucro 0.1",
-		Created: time.Now(),
-		Config:  &containerConfig,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	imageConfigHeader := tar.Header{
-		Name:     path.Join(imageID, "json"),
-		Typeflag: tar.TypeReg,
-		Size:     int64(len(imageConfig)),
-	}
-
-	return imageConfigHeader, imageConfig
-}
-
-func repositoriesFile(newRepositoryName, id string) (tar.Header, []byte) {
-	topMap := make(map[string]map[string]string)
-
-	repo, _, tag := repoNameAndTagFrom(newRepositoryName)
-
-	topMap[repo] = make(map[string]string)
-	topMap[repo][tag] = id
-	val, _ := json.Marshal(topMap)
-
-	repositoriesFileHeader := tar.Header{
-		Name:     "repositories",
-		Typeflag: tar.TypeReg,
-		Size:     int64(len(val)),
-	}
-
-	return repositoriesFileHeader, val
-}
-
-func versionFile(imageID string) (versionHeader tar.Header, contents []byte) {
-	contents = []byte("1.0")
-
-	versionHeader = tar.Header{
-		Name:     path.Join(imageID, "VERSION"),
-		Typeflag: tar.TypeReg,
-		Size:     int64(len(contents)),
-	}
-	return
-}
-
-func imageDir(imageID string) tar.Header {
-	return tar.Header{
-		Name:     imageID + "/",
-		Typeflag: tar.TypeDir,
-	}
 }
 
 func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {

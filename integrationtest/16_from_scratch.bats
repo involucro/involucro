@@ -5,8 +5,8 @@ load find_inv
 @test "from scratch: wrap without parent image" {
   $INV -e "inv.task('package').wrap('.').at('/').as('inttest/16')" package
 
-  PARENT=$(docker inspect -f "{{.Parent}}" inttest/16)
-  test "x$PARENT" = "x"
+  # currently a limitation of the wrap algorithm
+  test $(docker history --quiet inttest/16 | wc -l) = 2
 }
 
 teardown() {

@@ -115,19 +115,23 @@ func (img executeImage) ShowStartInfo() {
 }
 
 func (img executeImage) createContainer(c *docker.Client) (container *docker.Container, err error) {
+	return createContainer(c, img.Config, img.HostConfig)
+}
+
+func createContainer(c *docker.Client, config docker.Config, hostConfig docker.HostConfig) (container *docker.Container, err error) {
 	containerName := "step-" + randomIdentifier()
 
 	opts := docker.CreateContainerOptions{
 		Name:       containerName,
-		Config:     &img.Config,
-		HostConfig: &img.HostConfig,
+		Config:     &config,
+		HostConfig: &hostConfig,
 	}
 
 	log.WithFields(log.Fields{"containerName": containerName}).Debug("Create Container")
 	container, err = c.CreateContainer(opts)
 
 	if err == docker.ErrNoSuchImage {
-		if err = pull(c, img.Config.Image); err != nil {
+		if err = pull(c, config.Image); err != nil {
 			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
 			return
 		}
@@ -137,7 +141,7 @@ func (img executeImage) createContainer(c *docker.Client) (container *docker.Con
 	}
 
 	if err != nil {
-		log.WithFields(log.Fields{"image": img.Config.Image, "err": err}).Warn("create container failed")
+		log.WithFields(log.Fields{"image": config.Image, "err": err}).Warn("create container failed")
 	}
 	return
 }
