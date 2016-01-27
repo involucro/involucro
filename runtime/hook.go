@@ -1,9 +1,6 @@
 package runtime
 
-import (
-	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
-)
+import "github.com/Shopify/go-lua"
 
 type hookStep struct {
 	internalHookId string
@@ -11,7 +8,7 @@ type hookStep struct {
 
 // ShowStartInfo displays logging information including the executed task.
 func (s hookStep) ShowStartInfo() {
-	log.Info("Run Hook")
+	logTask.Logf("Run Hook")
 }
 
 type hookStepBuilder struct {

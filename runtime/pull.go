@@ -2,11 +2,11 @@ package runtime
 
 import (
 	"encoding/json"
-	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/fsouza/go-dockerclient"
 	"io"
 	"sync"
+
+	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/ilog"
 )
 
 type pullimager interface {
@@ -43,9 +43,9 @@ func pull(c pullimager, repositoryName string) error {
 			case err == io.EOF:
 				return
 			case err != nil:
-				log.WithFields(log.Fields{"error": err}).Warn("Decode log message error")
-			case log.GetLevel() == log.DebugLevel:
-				fmt.Printf("Pull Progress: %#v\r", m)
+				ilog.Warn.Logf("Decode log message error: %s", err)
+			default:
+				logProgress.Logf("%v", m)
 			}
 		}
 	}()
@@ -55,6 +55,6 @@ func pull(c pullimager, repositoryName string) error {
 		OutputStream:  pipeWriter,
 		RawJSONStream: true,
 	}
-	log.WithFields(log.Fields{"repository": repositoryName}).Debug("Pull Image")
+	ilog.Debug.Logf("Pull Image [%s]", repositoryName)
 	return c.PullImage(pio, docker.AuthConfiguration{})
 }

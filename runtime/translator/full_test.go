@@ -1,10 +1,11 @@
 package translator
 
 import (
-	"github.com/Shopify/go-lua"
-	"github.com/fsouza/go-dockerclient"
 	"reflect"
 	"testing"
+
+	"github.com/Shopify/go-lua"
+	"github.com/fsouza/go-dockerclient"
 )
 
 func TestAllPropertiesConfig(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAllPropertiesConfig(t *testing.T) {
 		networkdisabled = true,
 
 		portspecs = {"2", "3"},
-		env = {"FOO=bar"},
+		env = {"FOO=bar", "BAR=baz"},
 		cmd = {"a", "b", "c"},
 		dns = {"8.8.8.8"},
 		entrypoint = {"/bin/sh"},
@@ -75,7 +76,7 @@ func TestAllPropertiesConfig(t *testing.T) {
 		NetworkDisabled: true,
 
 		PortSpecs:    []string{"2", "3"},
-		Env:          []string{"FOO=bar"},
+		Env:          []string{"FOO=bar", "BAR=baz"},
 		Cmd:          []string{"a", "b", "c"},
 		DNS:          []string{"8.8.8.8"},
 		Entrypoint:   []string{"/bin/sh"},

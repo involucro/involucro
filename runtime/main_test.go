@@ -5,20 +5,12 @@ import (
 	"os"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/thriqon/involucro/ilog"
 )
-
-type NullWriter struct {
-}
-
-func (nw NullWriter) Write(p []byte) (n int, err error) {
-	return len(p), nil
-}
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	nw := NullWriter{}
-	log.SetOutput(nw)
+	ilog.StdLogger.SetPrintFunc(func(_ ilog.Bough) {})
 	os.Exit(m.Run())
 }
 

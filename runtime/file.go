@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/ilog"
 )
 
 // Runtime encapsulates the state of the tool
@@ -65,7 +65,7 @@ func (inv *Runtime) HasTask(taskID string) bool {
 func (inv *Runtime) RunTask(taskID string) error {
 	steps := inv.tasks[taskID]
 	if len(steps) == 0 {
-		log.WithFields(log.Fields{"ID": taskID}).Warn("Invoked stepless task")
+		ilog.Warn.Logf("Invoked Stepless Task [%s]", taskID)
 		return nil
 	}
 	for _, step := range steps {
@@ -79,13 +79,13 @@ func (inv *Runtime) RunTask(taskID string) error {
 
 // RunFile runs the file with the given filename in this context
 func (inv *Runtime) RunFile(fileName string) error {
-	log.WithFields(log.Fields{"fileName": fileName}).Debug("Run file")
+	ilog.Debug.Logf("Run file [%s]", fileName)
 	return lua.DoFile(inv.lua, fileName)
 }
 
 // RunString runs the given parameter directly
 func (inv *Runtime) RunString(script string) error {
-	log.WithFields(log.Fields{"script": script}).Debug("Run script")
+	ilog.Debug.Logf("Run script [%s]", script)
 	return lua.DoString(inv.lua, script)
 }
 

@@ -1,12 +1,13 @@
 package runtime
 
 import (
-	"github.com/Shopify/go-lua"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/Shopify/go-lua"
 )
 
 func TestReadLinesFromFile(t *testing.T) {
@@ -45,7 +46,7 @@ func TestReadLinesFromFile(t *testing.T) {
 		return 0
 	})
 
-	if err := lua.DoString(l, `for l in io.lines("`+filename+`") do push_result("LINE:" .. l) end`); err != nil {
+	if err := lua.DoString(l, `for l in io.lines('`+strings.Replace(filename, "\\", "\\\\", -1)+`') do push_result("LINE:" .. l) end`); err != nil {
 		t.Error(err)
 	}
 }
@@ -61,7 +62,7 @@ func TestReadLinesFromNonExistingFile(t *testing.T) {
 		t.Error("result function called")
 		panic("unreachable")
 	})
-	if err := lua.DoString(l, `for l in io.lines("`+filename+`") do push_result("LINE:" .. l) end`); err == nil {
+	if err := lua.DoString(l, `for l in io.lines('`+strings.Replace(filename, "\\", "\\\\", -1)+`') do push_result("LINE:" .. l) end`); err == nil {
 		t.Error("Missing error for non existing file")
 		panic("unreachable")
 	}
@@ -85,7 +86,7 @@ func TestReadLinesFromEmptyFile(t *testing.T) {
 		t.Error("result function called")
 		panic("unreachable")
 	})
-	if err := lua.DoString(l, `for l in io.lines("`+filename+`") do push_result("LINE:" .. l) end`); err != nil {
+	if err := lua.DoString(l, `for l in io.lines('`+strings.Replace(filename, "\\", "\\\\", -1)+`') do push_result("LINE:" .. l) end`); err != nil {
 		t.Error("Error during reading empty file", err)
 	}
 }

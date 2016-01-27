@@ -18,8 +18,8 @@ import (
 	"strings"
 
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/ilog"
 	"github.com/thriqon/involucro/runtime/translator"
 )
 
@@ -96,6 +96,7 @@ type asImage struct {
 	ParentImage       string
 	NewRepositoryName string
 	Config            docker.Config
+	ForbidRemoteRetry bool
 }
 
 func (img asImage) Take(i *Runtime) error {
@@ -113,27 +114,33 @@ func (img asImage) Take(i *Runtime) error {
 	}
 
 	if err := taker(i); err != nil {
+		if img.ForbidRemoteRetry {
+			return err
+		}
 		// Retry using "remote" execution this fixes some permission problems, but
 		// is generally less efficient
-		log.WithFields(log.Fields{"error": err}).Warn("Local execution errored, retrying with remote execution")
+		ilog.Warn.Logf("Local execution errorred with error [%s], retrying with remote execution", err)
 		return img.executeRemotelyIn(i)
 	}
 	return nil
 }
 
-func packInto(sourceDir, prefix string) io.Reader {
+func packInto(sourceDir, prefix string) (io.Reader, chan error) {
 	uploadReader, uploadWriter := io.Pipe()
+	errchan := make(chan error, 1)
 
 	go func() {
 		defer uploadWriter.Close()
+		defer close(errchan)
 		if err := packItUp(sourceDir, uploadWriter, prefix); err != nil {
-			log.WithFields(log.Fields{"error": err}).Warn("Packing failed")
+			ilog.Debug.Logf("Packing failed due to %s", err)
+			errchan <- err
 		} else {
-			log.Info("Packing succeeded")
+			ilog.Debug.Logf("Packing succeeded")
 		}
 	}()
 
-	return uploadReader
+	return uploadReader, errchan
 }
 
 func (img asImage) wrapWithoutBaseImageLocally(i *Runtime) error {
@@ -145,18 +152,24 @@ func (img asImage) wrapWithoutBaseImageLocally(i *Runtime) error {
 		sourceDir = path.Join(i.workDir, sourceDir)
 	}
 
-	if err := c.ImportImage(docker.ImportImageOptions{
+	packStream, errChan := packInto(sourceDir, img.TargetDir)
+
+	importErr := c.ImportImage(docker.ImportImageOptions{
 		Repository:  intermediateImageRepo,
 		Tag:         "latest",
 		Source:      "-",
-		InputStream: packInto(sourceDir, img.TargetDir),
-	}); err != nil {
-		return err
-	}
+		InputStream: packStream,
+	})
+	defer c.RemoveImage(intermediateImageRepo)
 
-	defer func() {
-		c.RemoveImage(intermediateImageRepo)
-	}()
+	// If there is an error during packing, report that as main error.  A packing
+	// error always causes an import error as well.
+	for el := range errChan {
+		return el
+	}
+	if importErr != nil {
+		return importErr
+	}
 
 	container, err := createContainer(c, docker.Config{Image: intermediateImageRepo, Cmd: []string{"/bin/sh"}}, docker.HostConfig{})
 	if err != nil {
@@ -188,9 +201,16 @@ func (img asImage) wrapWithBaseImageLocally(i *Runtime) error {
 		sourceDir = path.Join(i.workDir, sourceDir)
 	}
 
-	if err := c.UploadToContainer(container.ID, docker.UploadToContainerOptions{packInto(sourceDir, img.TargetDir), "/", false}); err != nil {
-		log.Warn("Error during upload, container not removed")
-		return err
+	packStream, errChan := packInto(sourceDir, img.TargetDir)
+
+	uploadErr := c.UploadToContainer(container.ID, docker.UploadToContainerOptions{packStream, "/", false})
+	// Treat pack error as 'main' error (a packing error always triggers an upload
+	// error)
+	for el := range errChan {
+		return el
+	}
+	if uploadErr != nil {
+		return uploadErr
 	}
 
 	var opts docker.CommitContainerOptions
@@ -206,7 +226,7 @@ func (img asImage) wrapWithBaseImageLocally(i *Runtime) error {
 }
 
 func (img asImage) ShowStartInfo() {
-	log.WithFields(log.Fields{"as": img.NewRepositoryName}).Info("wrap")
+	logTask.Logf("Wrap [%s] as [%s]", img.SourceDir, img.NewRepositoryName)
 }
 
 func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
@@ -261,6 +281,7 @@ func preparePathForTarHeader(filename string, sourceDir, prefix string) string {
 	prefixWithoutLeadingSlash := strings.TrimPrefix(prefix, "/")
 
 	slashed := filepath.ToSlash(filename)
+	sourceDir = filepath.ToSlash(sourceDir)
 
 	return rebaseFilename(sourceDir, prefixWithoutLeadingSlash, slashed)
 }
@@ -308,5 +329,6 @@ func DecodeWrapStep(in string) Step {
 }
 
 func (img asImage) executeRemotelyIn(i *Runtime) error {
+	img.ForbidRemoteRetry = true
 	return img.forRemoteExecution().Take(i)
 }

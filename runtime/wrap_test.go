@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 )
@@ -18,8 +19,8 @@ func TestPackItUpPrepared(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	os.MkdirAll(filepath.Join(dir, "a", "b", "c", "d"), 0777)
-	ioutil.WriteFile(filepath.Join(dir, "a", "b", "asd"), []byte("ASD"), 0777)
+	os.MkdirAll(path.Join(dir, "a", "b", "c", "d"), 0777)
+	ioutil.WriteFile(path.Join(dir, "a", "b", "asd"), []byte("ASD"), 0777)
 
 	var buf bytes.Buffer
 	if err := packItUp(dir, &buf, "blubb"); err != nil {
@@ -71,9 +72,16 @@ func TestPackItUpNotPreparedDir(t *testing.T) {
 func ExampleRebaseFilename() {
 	fmt.Println(rebaseFilename("p", "x", "p/a/b/c"))
 	fmt.Println(rebaseFilename("y", "x", "p/a/b/c"))
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(preparePathForTarHeader(filepath.Join(wd, "dir", "2.txt"), wd, "o"))
 	// Output:
 	// x/a/b/c
 	// p/a/b/c
+	// o/dir/2.txt
 }
 
 func ExamplePreparePathForTarHeader() {
