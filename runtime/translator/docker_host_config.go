@@ -1,10 +1,11 @@
 package translator
 
 import (
-	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
-	"github.com/fsouza/go-dockerclient"
 	"strings"
+
+	"github.com/Shopify/go-lua"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/ilog"
 )
 
 // ParseHostConfigFromLuaTable reads all keys in the currently top-most
@@ -86,8 +87,7 @@ func ParseHostConfigFromLuaTable(l *lua.State) docker.HostConfig {
 		case "oomkilldisable":
 			conf.OOMKillDisable = checkBoolean(l, -1)
 		default:
-			log.WithFields(log.Fields{"key": lua.CheckString(l, -2)}).Warn("Unrecognized setting in config, ignoring")
-
+			ilog.Warn.Logf("Unrecognized setting [%s] in config, ignoring", lua.CheckString(l, -2))
 		}
 		l.Pop(1)
 	}

@@ -8,22 +8,19 @@ services:
 go: 1.5
 
 before_install:
-  - sudo add-apt-repository ppa:duggan/bats --yes
-  - sudo apt-get update -qq
   - sudo service docker stop
 
 install:
   - wget https://test.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O docker
   - chmod +x docker
   - sudo ./docker daemon &
-  - sudo apt-get install -qq bats socat
-  - make get-deps
+  - go get ./...
 
 script:
   - make -j3 build build-win64 build-win32
-  - make test
   - ./involucro --set REPO=involucro/tool --set TAG=latest wrap-yourself
-  - make -C integrationtest
+  - go test -v ./runtime
+  - go test -v ./integrationtest
 
 before_deploy:
   - mkdir -p /tmp/depl/
