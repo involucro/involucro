@@ -166,7 +166,7 @@ func (img asImage) wrapWithoutBaseImageLocally(i *Runtime) error {
 func (img asImage) wrapWithBaseImageLocally(i *Runtime) error {
 	c := i.client
 
-	container, err := createContainer(c, docker.Config{Image: img.ParentImage}, docker.HostConfig{})
+	container, err := createContainer(c, docker.Config{Image: img.ParentImage, Cmd: []string{"/bin/sh"}}, docker.HostConfig{})
 	if err != nil {
 		return err
 	}

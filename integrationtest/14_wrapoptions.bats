@@ -18,3 +18,8 @@ teardown() {
   docker inspect -f "{{.Config.Entrypoint}}" inttest/14 | grep '/bin/echo Hello_Options'
 }
 
+@test "wrap: wrap in image without command set" {
+  $INV -e "inv.task('wrap').wrap('.').inImage('alpine').at('/data').withConfig({Entrypoint = {'/bin/echo', 'Hello_Options'}}).as('inttest/14')" wrap
+
+  docker inspect -f "{{.Config.Entrypoint}}" inttest/14 | grep '/bin/echo Hello_Options'
+}
