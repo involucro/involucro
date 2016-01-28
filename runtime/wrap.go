@@ -99,14 +99,26 @@ type asImage struct {
 }
 
 func (img asImage) Take(i *Runtime) error {
-	switch {
-	case i.isUsingRemoteInstance():
+	if i.isUsingRemoteInstance() {
 		return img.executeRemotelyIn(i)
-	case img.ParentImage == "":
-		return img.wrapWithoutBaseImageLocally(i)
-	default:
-		return img.wrapWithBaseImageLocally(i)
 	}
+
+	var taker func(*Runtime) error
+
+	switch img.ParentImage {
+	case "":
+		taker = img.wrapWithoutBaseImageLocally
+	default:
+		taker = img.wrapWithBaseImageLocally
+	}
+
+	if err := taker(i); err != nil {
+		// Retry using "remote" execution this fixes some permission problems, but
+		// is generally less efficient
+		log.WithFields(log.Fields{"error": err}).Warn("Local execution errored, retrying with remote execution")
+		return img.executeRemotelyIn(i)
+	}
+	return nil
 }
 
 func packInto(sourceDir, prefix string) io.Reader {
