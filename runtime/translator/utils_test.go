@@ -1,30 +1,26 @@
 package translator
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Shopify/go-lua"
 )
 
-func ExampleCheckBoolean() {
+func TestCheckBoolean(t *testing.T) {
 	l := lua.NewState()
 	l.PushBoolean(true)
-	fmt.Printf("%t\n", checkBoolean(l, -1))
-	// Output: true
-}
+	if !checkBoolean(l, -1) {
+		t.Error("expected true")
+	}
 
-func ExampleCheckBoolean_Failing() {
-	l := lua.NewState()
 	l.PushNumber(42)
 	defer func() {
 		err := recover()
-		if err != nil {
-			fmt.Println("error occurred")
+		if err == nil {
+			t.Error("expected panic")
 		}
 	}()
 	checkBoolean(l, -1)
-	// Output: error occurred
 }
 
 func TestCheckStringSet(t *testing.T) {

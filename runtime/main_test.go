@@ -10,7 +10,7 @@ import (
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	ilog.StdLogger.SetPrintFunc(func(_ ilog.Bough) {})
+	ilog.StdLog.SetPrintFunc(func(_ ilog.Bough) {})
 	os.Exit(m.Run())
 }
 

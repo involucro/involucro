@@ -62,6 +62,9 @@ func (inv *Runtime) HasTask(taskID string) bool {
 	return ok
 }
 
+// RunTask executes the task with the given ID.  It is perfectly fine to
+// execute a task without any steps, but a warning will be shown. Any error
+// that occurs during task processing is returned.
 func (inv *Runtime) RunTask(taskID string) error {
 	steps := inv.tasks[taskID]
 	if len(steps) == 0 {

@@ -41,7 +41,11 @@ func (tsb tagStepBuilder) tag(l *lua.State) int {
 func (tsb tagStepBuilder) as(l *lua.State) int {
 	repo, _, tag := repoNameAndTagFrom(lua.CheckString(l, -1))
 	// true: force
-	tsb.tagImageOptions = docker.TagImageOptions{repo, tag, true}
+	tsb.tagImageOptions = docker.TagImageOptions{
+		Repo:  repo,
+		Tag:   tag,
+		Force: true,
+	}
 	tsb.registerStep(tsb.tagStep)
 	return tableWith(l, tsb.upper)
 }

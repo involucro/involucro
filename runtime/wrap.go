@@ -203,7 +203,11 @@ func (img asImage) wrapWithBaseImageLocally(i *Runtime) error {
 
 	packStream, errChan := packInto(sourceDir, img.TargetDir)
 
-	uploadErr := c.UploadToContainer(container.ID, docker.UploadToContainerOptions{packStream, "/", false})
+	uploadErr := c.UploadToContainer(container.ID, docker.UploadToContainerOptions{
+		InputStream:          packStream,
+		Path:                 "/",
+		NoOverwriteDirNonDir: false,
+	})
 	// Treat pack error as 'main' error (a packing error always triggers an upload
 	// error)
 	for el := range errChan {
@@ -320,6 +324,8 @@ func (img asImage) forRemoteExecution() Step {
 	}
 }
 
+// DecodeWrapStep unmarshals the wrap step encoded in in (in JSON), and gives
+// it back. This function panics if there are errors during decoding.
 func DecodeWrapStep(in string) Step {
 	img := asImage{}
 	if err := json.Unmarshal([]byte(in), &img); err != nil {

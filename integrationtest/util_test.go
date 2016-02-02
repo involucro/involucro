@@ -9,13 +9,13 @@ import (
 )
 
 func assertStdoutContainsFlag(args []string, lineFlag string, t *testing.T) {
-	oldPrint := ilog.StdLogger.PrintFunc()
-	defer ilog.StdLogger.SetPrintFunc(oldPrint)
+	oldPrint := ilog.StdLog.PrintFunc()
+	defer ilog.StdLog.SetPrintFunc(oldPrint)
 
 	args = append([]string{"involucro", "-l=-2"}, args...)
 
 	var found bool
-	ilog.StdLogger.SetPrintFunc(func(b ilog.Bough) {
+	ilog.StdLog.SetPrintFunc(func(b ilog.Bough) {
 		if testing.Verbose() && oldPrint != nil {
 			oldPrint(b)
 		}
