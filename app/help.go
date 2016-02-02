@@ -3,7 +3,7 @@ package app
 import "flag"
 
 var (
-	dockerUrl       string
+	dockerURL       string
 	controlFile     string
 	controlScript   string
 	logLevel        int
@@ -15,7 +15,7 @@ var (
 )
 
 const (
-	defaultDockerUrl   = "unix:///var/run/docker.sock"
+	defaultDockerURL   = "unix:///var/run/docker.sock"
 	defaultControlFile = "invfile.lua"
 )
 
@@ -24,8 +24,8 @@ var flags *flag.FlagSet
 func initializeFlagSet() {
 	flags = flag.NewFlagSet("involucro", flag.ExitOnError)
 
-	flags.StringVar(&dockerUrl, "H", defaultDockerUrl, "Set the URL of the Docker instance")
-	flags.StringVar(&dockerUrl, "host", defaultDockerUrl, "Long form for -H")
+	flags.StringVar(&dockerURL, "H", defaultDockerURL, "Set the URL of the Docker instance")
+	flags.StringVar(&dockerURL, "host", defaultDockerURL, "Long form for -H")
 
 	flags.StringVar(&controlFile, "f", defaultControlFile, "Set the control file")
 	flags.StringVar(&controlScript, "e", "", "Evaluate the given script directly, not evaluating the control file")

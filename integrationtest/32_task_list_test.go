@@ -1,29 +1,67 @@
 package integrationtest
 
-import "github.com/thriqon/involucro/app"
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"os"
+	"testing"
 
-func ExampleTaskListWithTAndDirectScript() {
-	if err := app.Main([]string{
-		"involucro", "-e",
-		"inv.task('a').using('busybox').run('x'); inv.task('b').using('busybox').run('z')",
-		"-T",
-	}); err != nil {
-		panic(err)
+	"github.com/thriqon/involucro/app"
+)
+
+func testStdoutOf(f func() error, expected string, t *testing.T) {
+	stdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
 	}
-	// Output:
-	// a
-	// b
+	defer func() {
+		os.Stdout = stdout
+	}()
+
+	os.Stdout = w
+
+	outC := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		_, err := io.Copy(&buf, r)
+		r.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "testing: copying pipe: %v\n", err)
+			os.Exit(1)
+		}
+		outC <- buf.String()
+	}()
+
+	if err := f(); err != nil {
+		t.Fatal(err)
+	}
+
+	w.Close()
+	out := <-outC
+	os.Stdout = stdout
+
+	if out != "a\nb\n" {
+		t.Errorf("unexpected output %v", out)
+	}
 }
 
-func ExampleTaskListWithTasksAndDirectScript() {
-	if err := app.Main([]string{
-		"involucro", "-e",
-		"inv.task('a').using('busybox').run('x'); inv.task('b').using('busybox').run('z')",
-		"--tasks",
-	}); err != nil {
-		panic(err)
-	}
-	// Output:
-	// a
-	// b
+func TestTaskListWithTAndDirectScript(t *testing.T) {
+	testStdoutOf(func() error {
+		return app.Main([]string{
+			"involucro", "-e",
+			"inv.task('a').using('busybox').run('x'); inv.task('b').using('busybox').run('z')",
+			"-T",
+		})
+	}, "a\nb\n", t)
+}
+func TestTaskListWithTasksAndDirectScript(t *testing.T) {
+	testStdoutOf(func() error {
+		return app.Main([]string{
+			"involucro", "-e",
+			"inv.task('a').using('busybox').run('x'); inv.task('b').using('busybox').run('z')",
+			"--tasks",
+		})
+	}, "a\nb\n", t)
 }

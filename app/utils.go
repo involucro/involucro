@@ -8,16 +8,16 @@ import (
 type variablesValue map[string]string
 
 func (v *variablesValue) String() string {
-	items := make([]string, 0)
+	var items []string
 	for k, v := range *v {
 		items = append(items, fmt.Sprintf("%s=%s", k, v))
 	}
 	return fmt.Sprintf("[%s]", strings.Join(items, " "))
 }
 
-type ErrInvalidFormatForVariableAssignment string
+type errInvalidFormatForVariableAssignment string
 
-func (e ErrInvalidFormatForVariableAssignment) Error() string {
+func (e errInvalidFormatForVariableAssignment) Error() string {
 	return fmt.Sprintf("Invalid value [%s], expected value of the form: KEY=VALUE", string(e))
 }
 
@@ -27,7 +27,7 @@ func (v *variablesValue) Set(s string) error {
 	}
 	ss := strings.SplitN(s, "=", 2)
 	if len(ss) < 2 {
-		return ErrInvalidFormatForVariableAssignment(s)
+		return errInvalidFormatForVariableAssignment(s)
 	}
 	(*v)[ss[0]] = ss[1]
 	return nil

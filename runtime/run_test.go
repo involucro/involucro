@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"fmt"
 	"io"
 	"reflect"
 	"strings"
@@ -150,7 +149,7 @@ func TestRunTaskDefinitionWithOptions(t *testing.T) {
 	}
 }
 
-func ExampleAbsolutizeBinds() {
+func TestAbsolutizeBinds(t *testing.T) {
 	h, _ := absolutizeBinds(docker.HostConfig{
 		Binds: []string{
 			"./:/source",
@@ -159,16 +158,18 @@ func ExampleAbsolutizeBinds() {
 		},
 	}, "/projects/alpha")
 
-	for _, el := range h.Binds {
-		fmt.Println(el)
+	expected := []string{
+		"/projects/alpha:/source",
+		"/data:/data",
+		"/projects/alpha/dist:/dist",
 	}
-	// Output:
-	// /projects/alpha:/source
-	// /data:/data
-	// /projects/alpha/dist:/dist
-}
 
-func TestAbsolutizeBinds(t *testing.T) {
+	for index, el := range h.Binds {
+		if expected[index] != el {
+			t.Errorf("absolutized bind to %s, but expected to absolutize to %s", el, expected[index])
+		}
+	}
+
 	_, err := absolutizeBinds(docker.HostConfig{
 		Binds: []string{
 			"test",
@@ -179,13 +180,16 @@ func TestAbsolutizeBinds(t *testing.T) {
 	}
 }
 
-func ExampleArgumentsToStringArray() {
+func TestArgumentsToStringArray(t *testing.T) {
 	l := lua.NewState()
 	l.PushString("a")
 	l.PushString("s")
 	l.PushString("d")
-	fmt.Println(argumentsToStringArray(l))
-	// Output: [a s d]
+
+	actual := argumentsToStringArray(l)
+	if actual[0] != "a" || actual[1] != "s" || actual[2] != "d" {
+		t.Errorf("expected [a s d], got %v", actual)
+	}
 }
 
 type mockDockerLogsProvider struct {

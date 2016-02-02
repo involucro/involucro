@@ -42,7 +42,7 @@ func TestReadLinesFromFile(t *testing.T) {
 		if "LINE:"+strings.TrimSuffix(expected[pos], "\r") != line {
 			t.Errorf("Unexpected %s, expected %s", line, expected[pos])
 		}
-		pos += 1
+		pos++
 		return 0
 	})
 

@@ -69,24 +69,33 @@ func TestPackItUpNotPreparedDir(t *testing.T) {
 	}
 }
 
-func ExampleRebaseFilename() {
-	fmt.Println(rebaseFilename("p", "x", "p/a/b/c"))
-	fmt.Println(rebaseFilename("y", "x", "p/a/b/c"))
+func TestTarHeaderPrepare(t *testing.T) {
 	wd, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
-	fmt.Println(preparePathForTarHeader(filepath.Join(wd, "dir", "2.txt"), wd, "o"))
-	// Output:
-	// x/a/b/c
-	// p/a/b/c
-	// o/dir/2.txt
+	cases := []struct {
+		oldbase, newbase, path, expected string
+	}{
+		{"p", "x", "p/a/b/c", "x/a/b/c"},
+		{"y", "x", "p/a/b/c", "p/a/b/c"},
+		{wd, "o", filepath.Join(wd, "dir", "2.txt"), "o/dir/2.txt"},
+	}
+
+	for _, el := range cases {
+		if actual := preparePathForTarHeader(el.path, el.oldbase, el.newbase); actual != el.expected {
+			t.Errorf("expected %s to be rebased to %s, but was to %s", el.path, el.expected, actual)
+		}
+	}
 }
 
-func ExamplePreparePathForTarHeader() {
-	fmt.Println(preparePathForTarHeader("/target/compiled/dist/a", "/target/", "/asd"))
-	// Output: asd/compiled/dist/a
+func TestPreparePathForTarHeader(t *testing.T) {
+	expected := "asd/compiled/dist/a"
+	actual := preparePathForTarHeader("/target/compiled/dist/a", "/target/", "/asd")
+	if expected != actual {
+		t.Errorf("[%s] is not equal to expected [%s]", actual, expected)
+	}
 }
 
 func TestWrapTaskDefinition(t *testing.T) {

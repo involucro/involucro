@@ -1,18 +1,18 @@
 package runtime
 
-import (
-	"fmt"
-)
+import "testing"
 
-func ExampleRandomIdentifier_AreDifferent() {
+func TestRandomIdentifier(t *testing.T) {
 	a := randomIdentifier()
 	b := randomIdentifier()
-	fmt.Println(a == b)
-	// Output: false
+	if a == b {
+		t.Error("Same identifiers for a and b")
+	}
 }
 
-func ExampleRandomIdentifierOfLength() {
+func TestRandomIdentifierOfLength(t *testing.T) {
 	s := randomIdentifierOfLength(64)
-	fmt.Println(len(s))
-	// Output: 64
+	if len(s) != 64 {
+		t.Errorf("unexpected length: %v", len(s))
+	}
 }

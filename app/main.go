@@ -29,7 +29,7 @@ func Main(args []string) error {
 	}
 
 	if remoteWrapTask != "" {
-		ilog.StdLogger.SetMinPrintLevel(-2)
+		ilog.StdLog.SetMinPrintLevel(-2)
 		step := runtime.DecodeWrapStep(remoteWrapTask)
 		client, err := docker.NewClient("unix:///sock")
 		if err != nil {
@@ -43,12 +43,12 @@ func Main(args []string) error {
 		return nil
 	}
 
-	ilog.StdLogger.SetMinPrintLevel(logLevel)
+	ilog.StdLog.SetMinPrintLevel(logLevel)
 
 	var client *docker.Client
 	var err error
-	if dockerUrl != defaultDockerUrl {
-		client, err = docker.NewClient(dockerUrl)
+	if dockerURL != defaultDockerURL {
+		client, err = docker.NewClient(dockerURL)
 	} else {
 		client, err = docker.NewClientFromEnv()
 	}
