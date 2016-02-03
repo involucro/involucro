@@ -75,7 +75,7 @@ A run step executes a Docker container. By default, the current working
 directory is mounted as `/source` into the container, which is also configured
 to be the working directory of the process running in the container. It is
 mainly used to transform source code using external processes such as compilers
-into a different form. 
+into a different form.
 
 **task.using**`('<IMAGE_ID>')` (*introductory*) starts off a run step by
 specifying the repository name (optionally with tag) or the image ID of the
@@ -153,33 +153,40 @@ tagged with the given name, which may include a registry designation. Example:
 
 ### Runtask Step
 
-As a convenience, it is possible to run another task as part of a task. This emulates the conventional `all` task
-from `Makefile`s. Exceptionally, the introductory method for this step is also the registration method.
+As a convenience, it is possible to run another task as part of a task. This
+emulates the conventional `all` task from `Makefile`s. Exceptionally, the
+introductory method for this step is also the registration method.
 
-**task.runTask**(`<ID>`) (*introductory registration*) registers a step that executes the task with the given ID
-as part of the steps in this task. Example: `inv.task('all').runTask('compile').runTask('package')`.
+**task.runTask**(`<ID>`) (*introductory registration*) registers a step that
+executes the task with the given ID as part of the steps in this task. Example:
+`inv.task('all').runTask('compile').runTask('package')`.
 
 ### Tag Step
 
-Sometimes, there should be two versions of the same image sharing the same image ID, for example to have the `latest`
-tag equivalent to version `v2`. The tag step helps in this case.
+Sometimes, there should be two versions of the same image sharing the same
+image ID, for example to have the `latest` tag equivalent to version `v2`. The
+tag step helps in this case.
 
-**task.tag**(`<NAME>`) (*introductory*) starts a tagging by setting the name of the original image. This can be anything
-Docker accepts, including `test/asd:v2`, but also actual image IDs. Example: `task.tag('test/asd')`.
+**task.tag**(`<NAME>`) (*introductory*) starts a tagging by setting the name of
+the original image. This can be anything Docker accepts, including
+`test/asd:v2`, but also actual image IDs. Example: `task.tag('test/asd')`.
 
-**tagstep.as**(`<NAME>`) (*registration*) registers a step that tags the image named in introductory method to the name given
-as parameter. Example: `tagstep.as('test/asd')`.
+**tagstep.as**(`<NAME>`) (*registration*) registers a step that tags the image
+named in introductory method to the name given as parameter. Example:
+`tagstep.as('test/asd')`.
 
 ### Hook Step
 
-Control files can change their behaviour during tasks with hooks, for example to use the results of previous tasks
-with `io.lines`.
+Control files can change their behaviour during tasks with hooks, for example
+to use the results of previous tasks with `io.lines`.
 
-**task.hook**(`<FUNCTION>`) (*introductory registration*) registers a step that, when taken, runs the given function. No
-arguments are passed, and any return values are ignored. Example: `task.hook(function () print('in step') end)`.
+**task.hook**(`<FUNCTION>`) (*introductory registration*) registers a step
+that, when taken, runs the given function. No arguments are passed, and any
+return values are ignored. Example: `task.hook(function () print('in step')
+end)`.
+
 
 ## Trademarks
 
 Docker® is a registered trademark of Docker, Inc.
-
 
