@@ -7,7 +7,7 @@ package runtime
 
 import (
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
+	"github.com/thriqon/involucro/ilog"
 )
 
 // ## The Step
@@ -24,7 +24,7 @@ func (s runtaskStep) Take(i *Runtime) error {
 
 // ShowStartInfo displays logging information including the executed task.
 func (s runtaskStep) ShowStartInfo() {
-	log.WithFields(log.Fields{"ID": s.taskID}).Info("Invoke Task")
+	ilog.Info.Logf("Invoke Task [%s]", s.taskID)
 }
 
 // ## The Builder

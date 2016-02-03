@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,8 +11,8 @@ import (
 	"sync"
 
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/ilog"
 	"github.com/thriqon/involucro/runtime/translator"
 )
 
@@ -56,14 +55,15 @@ func (img executeImage) Take(i *Runtime) error {
 	if err != nil {
 		return err
 	}
+	shortenedContainerID := container.ID[0:12]
 
-	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container created, starting it")
+	ilog.Debug.Logf("Created container [%s %s], starting it", shortenedContainerID, container.Name)
 
 	if err = c.StartContainer(container.ID, nil); err != nil {
-		log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not started and not removed")
+		ilog.Warn.Logf("Failed container [%s %s] not removed", shortenedContainerID, container.Name)
 		return err
 	}
-	log.WithFields(log.Fields{"ID": container.ID}).Debug("Container started, await completion")
+	ilog.Debug.Logf("Container [%s %s] started, waiting for completion", shortenedContainerID, container.Name)
 
 	if err := img.loadAndProcessLogs(c, container.ID); err != nil {
 		return err
@@ -71,36 +71,32 @@ func (img executeImage) Take(i *Runtime) error {
 
 	img.ActualCode, err = c.WaitContainer(container.ID)
 
+	if err != nil {
+		return err
+	}
+
 	if img.ActualCode != img.ExpectedCode {
-		log.WithFields(log.Fields{"ID": container.ID, "expected": img.ExpectedCode, "actual": img.ActualCode}).Error("Unexpected exit code, container not removed")
-		return errors.New("Unexpected exit code")
+		return fmt.Errorf("Unexpected exit code [%v] of container [%s %s], container preserved", img.ActualCode, shortenedContainerID, container.Name)
 	}
 
-	log.WithFields(log.Fields{"Status": img.ActualCode, "ID": container.ID}).Debug("Execution complete")
+	ilog.Debug.Logf("Container [%s %s] completed with exit code [%v] as expected", shortenedContainerID, container.Name, img.ActualCode)
 
-	if err == nil && img.ActualCode == 0 {
-		err := c.RemoveContainer(docker.RemoveContainerOptions{
-			ID:    container.ID,
-			Force: true,
-		})
-		if err != nil {
-			log.WithFields(log.Fields{"ID": container.ID, "err": err}).Warn("Container not removed")
-		} else {
-			log.WithFields(log.Fields{"ID": container.ID}).Debug("Container removed")
-		}
-	} else {
-		log.Debug("There was an error in execution or creation, container not removed")
+	if err := c.RemoveContainer(docker.RemoveContainerOptions{
+		ID:    container.ID,
+		Force: true,
+	}); err != nil {
+		return err
 	}
+	ilog.Debug.Logf("Container [%s %s] removed", shortenedContainerID, container.Name)
 
-	return err
+	return nil
 }
 
 func absolutizeBinds(h docker.HostConfig, workDir string) (docker.HostConfig, error) {
 	for ind, el := range h.Binds {
 		parts := strings.Split(el, ":")
 		if len(parts) != 2 {
-			log.WithFields(log.Fields{"bind": el}).Error("Invalid bind, has to be of the form: source:dest")
-			return h, errors.New("Invalid bind specification")
+			return h, fmt.Errorf("Invalid bind specification [%s], has to be of the form: source:dest", el)
 		}
 
 		if !path.IsAbs(parts[0]) {
@@ -111,35 +107,39 @@ func absolutizeBinds(h docker.HostConfig, workDir string) (docker.HostConfig, er
 }
 
 func (img executeImage) ShowStartInfo() {
-	log.WithFields(log.Fields{"Image": img.Config.Image, "Cmd": img.Config.Cmd}).Info("run image")
+	logTask.Logf("Run image [%s] with command [%s]", img.Config.Image, img.Config.Cmd)
 }
 
 func (img executeImage) createContainer(c *docker.Client) (container *docker.Container, err error) {
+	return createContainer(c, img.Config, img.HostConfig)
+}
+
+func createContainer(c *docker.Client, config docker.Config, hostConfig docker.HostConfig) (*docker.Container, error) {
 	containerName := "step-" + randomIdentifier()
 
 	opts := docker.CreateContainerOptions{
 		Name:       containerName,
-		Config:     &img.Config,
-		HostConfig: &img.HostConfig,
+		Config:     &config,
+		HostConfig: &hostConfig,
 	}
 
-	log.WithFields(log.Fields{"containerName": containerName}).Debug("Create Container")
-	container, err = c.CreateContainer(opts)
+	ilog.Debug.Logf("Creating container [%s]", containerName)
 
-	if err == docker.ErrNoSuchImage {
-		if err = pull(c, img.Config.Image); err != nil {
-			log.WithFields(log.Fields{"err": err}).Warn("pull failed")
-			return
-		}
-
-		log.WithFields(log.Fields{"containerName": containerName}).Debug("Retry: Create Container")
-		container, err = c.CreateContainer(opts)
+	container, err := c.CreateContainer(opts)
+	if err == nil {
+		return container, nil
 	}
 
-	if err != nil {
-		log.WithFields(log.Fields{"image": img.Config.Image, "err": err}).Warn("create container failed")
+	if err != docker.ErrNoSuchImage {
+		return nil, err
 	}
-	return
+
+	ilog.Debug.Logf("Image [%s] not present, pulling it", config.Image)
+	if err := pull(c, config.Image); err != nil {
+		return nil, err
+	}
+
+	return c.CreateContainer(opts)
 }
 
 type usingBuilderState struct {
@@ -198,7 +198,6 @@ func (ubs usingBuilderState) usingWithExpectation(l *lua.State) int {
 	l.Field(-1, "code")
 	if !l.IsNil(-1) {
 		ubs.ExpectedCode = lua.CheckInteger(l, -1)
-		log.WithFields(log.Fields{"code": ubs.ExpectedCode}).Debug("Expecting code")
 	}
 	l.Pop(1)
 
@@ -233,7 +232,7 @@ func (ubs usingBuilderState) withConfig(l *lua.State) int {
 	oldImageID := ubs.Config.Image
 	ubs.Config = translator.ParseImageConfigFromLuaTable(l)
 	if ubs.Config.Image != "" {
-		log.Warn("Overwriting the used image in withConfig is discouraged")
+		ilog.Warn.Logf("Overwriting the image set in .using() in .withConfig() is discouraged")
 	} else {
 		ubs.Config.Image = oldImageID
 	}
@@ -252,15 +251,6 @@ func argumentsToStringArray(l *lua.State) (args []string) {
 		args[i-1] = lua.CheckString(l, i)
 	}
 	return
-}
-
-// ErrRegexNotMatched indicates that the given stream does not match the supplied regular expression.
-type ErrRegexNotMatched struct {
-	Channel string
-}
-
-func (e ErrRegexNotMatched) Error() string {
-	return fmt.Sprintf("Regex not matched for channel %s", e.Channel)
 }
 
 type dataAcceptorLineSender struct {
@@ -315,26 +305,22 @@ type dockerLogsProvider interface {
 }
 
 type logWriter struct {
-	input     chan string
-	logger    *log.Logger
-	channel   string
-	container string
+	input  chan string
+	logger ilog.Logger
 }
 
 func (lw logWriter) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for line := range lw.input {
-		lw.logger.WithFields(log.Fields{"container": lw.container}).Debug(lw.channel + ": " + line)
+		lw.logger.Logf("%s", line)
 	}
 }
 
-func newLogWriter(channel, container string, logger *log.Logger, wg *sync.WaitGroup) chan string {
+func newLogWriter(logger ilog.Logger, wg *sync.WaitGroup) chan string {
 	lw := logWriter{
-		input:     make(chan string),
-		logger:    logger,
-		channel:   channel,
-		container: container,
+		input:  make(chan string),
+		logger: logger,
 	}
 	go lw.run(wg)
 	return lw.input
@@ -353,12 +339,11 @@ func (rcw *regexpCheckWriter) run(wg *sync.WaitGroup) {
 
 	for line := range rcw.input {
 		if rcw.re.MatchString(line) {
-			log.WithFields(log.Fields{"regex": rcw.re.String(), "channel": rcw.channel, "container": rcw.container}).Debug("Regex matched")
+			ilog.Debug.Logf("Regex matched for %s", rcw.channel)
 			return
 		}
 	}
-	log.WithFields(log.Fields{"regex": rcw.re.String(), "channel": rcw.channel, "container": rcw.container}).Warn("Regex not matched")
-	rcw.err = ErrRegexNotMatched{rcw.channel}
+	rcw.err = fmt.Errorf("Regex [%s] for %s not mached", rcw.re.String(), rcw.channel)
 }
 
 func (img *executeImage) loadAndProcessLogs(c dockerLogsProvider, containerID string) error {
@@ -367,8 +352,8 @@ func (img *executeImage) loadAndProcessLogs(c dockerLogsProvider, containerID st
 
 	wg.Add(2)
 
-	stdoutChans := []chan string{newLogWriter("stdout", containerID, log.StandardLogger(), &wg)}
-	stderrChans := []chan string{newLogWriter("stderr", containerID, log.StandardLogger(), &wg)}
+	stdoutChans := []chan string{newLogWriter(logStdout, &wg)}
+	stderrChans := []chan string{newLogWriter(logStderr, &wg)}
 
 	stdoutMatcher := regexpCheckWriter{make(chan string), img.ExpectedStdoutMatcher, "stdout", containerID, nil}
 	stderrMatcher := regexpCheckWriter{make(chan string), img.ExpectedStderrMatcher, "stderr", containerID, nil}
@@ -397,7 +382,6 @@ func (img *executeImage) loadAndProcessLogs(c dockerLogsProvider, containerID st
 	}
 
 	if err := c.Logs(lOpt); err != nil {
-		log.WithFields(log.Fields{"error": err}).Warn("Log retrieval failed")
 		return err
 	}
 
@@ -413,6 +397,5 @@ func (img *executeImage) loadAndProcessLogs(c dockerLogsProvider, containerID st
 		return stderrMatcher.err
 	}
 
-	log.Debug("Logs processed.")
 	return nil
 }

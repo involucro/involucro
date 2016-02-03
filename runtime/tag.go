@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -23,7 +22,7 @@ func (s tagStep) Take(i *Runtime) error {
 
 // ShowStartInfo displays logging information including the executed task.
 func (s tagStep) ShowStartInfo() {
-	log.WithFields(log.Fields{"Name": s.originalName, "New": s.tagImageOptions.Repo + ":" + s.tagImageOptions.Tag}).Info("Tag Image")
+	logTask.Logf("Tag Image [%s] as [%s:%s]", s.originalName, s.tagImageOptions.Repo, s.tagImageOptions.Tag)
 }
 
 func newTagSubBuilder(upper fm, register func(Step)) lua.Function {
@@ -42,7 +41,11 @@ func (tsb tagStepBuilder) tag(l *lua.State) int {
 func (tsb tagStepBuilder) as(l *lua.State) int {
 	repo, _, tag := repoNameAndTagFrom(lua.CheckString(l, -1))
 	// true: force
-	tsb.tagImageOptions = docker.TagImageOptions{repo, tag, true}
+	tsb.tagImageOptions = docker.TagImageOptions{
+		Repo:  repo,
+		Tag:   tag,
+		Force: true,
+	}
 	tsb.registerStep(tsb.tagStep)
 	return tableWith(l, tsb.upper)
 }
