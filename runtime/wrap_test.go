@@ -3,81 +3,14 @@ package runtime
 import (
 	"archive/tar"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
-	"strings"
 	"testing"
-	"time"
-
-	"github.com/fsouza/go-dockerclient"
 )
-
-func TestRandomFileName(t *testing.T) {
-	filename := randomTarballFileName()
-	if !strings.Contains(filename, "involucro") {
-		t.Errorf("Didn't contain involucro: %s", filename)
-	}
-	otherFilename := randomTarballFileName()
-	if otherFilename == filename {
-		t.Errorf("Other filename is not different from the original: %s == %s", otherFilename, filename)
-	}
-
-	if _, err := os.Stat(filename); err == nil {
-		t.Errorf("Stat succeeded, file shouldn't exist: %s", filename)
-	}
-
-	if info, err := os.Stat(filepath.Dir(filename)); err != nil {
-		t.Errorf("Parent failed to stat: %s", err)
-	} else {
-		if !info.IsDir() {
-			t.Errorf("Parent should be a directory")
-		}
-	}
-}
-
-func TestImageConfigFileIsGeneratedWithDateWithinTenSeconds(t *testing.T) {
-	imageid, parentid := "123", "456"
-	_, buf := imageConfigFile(parentid, imageid, docker.Config{})
-	var conf docker.Image
-	json.Unmarshal(buf, &conf)
-
-	duration := time.Since(conf.Created).Seconds()
-	if duration < 0 {
-		duration *= -1
-	}
-	if duration > 10 {
-		t.Errorf("Created was more than 10 seconds ago/in more than 10 seconds")
-	}
-}
-
-func ExampleImageConfigFile_Contents() {
-	imageid, parentid := "123", "456"
-	_, buf := imageConfigFile(parentid, imageid, docker.Config{})
-
-	var conf docker.Image
-	json.Unmarshal(buf, &conf)
-
-	fmt.Println(conf.ID, conf.Parent)
-	// Output: 123 456
-}
-
-func ExampleImageConfigFile_TarHeader() {
-	imageid, parentid := "123", "456"
-	header, _ := imageConfigFile(parentid, imageid, docker.Config{})
-
-	fmt.Println(header.Name)
-	// Output: 123/json
-}
-
-func ExampleRepositoriesFile() {
-	_, buf := repositoriesFile("test/gcc:latest", "283028")
-	fmt.Printf("%s\n", buf)
-	// Output: {"test/gcc":{"latest":"283028"}}
-}
 
 func TestPackItUpPrepared(t *testing.T) {
 	dir, err := ioutil.TempDir("", "involucro-test-wrap-packitup")
@@ -86,8 +19,8 @@ func TestPackItUpPrepared(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	os.MkdirAll(filepath.Join(dir, "a", "b", "c", "d"), 0777)
-	ioutil.WriteFile(filepath.Join(dir, "a", "b", "asd"), []byte("ASD"), 0777)
+	os.MkdirAll(path.Join(dir, "a", "b", "c", "d"), 0777)
+	ioutil.WriteFile(path.Join(dir, "a", "b", "asd"), []byte("ASD"), 0777)
 
 	var buf bytes.Buffer
 	if err := packItUp(dir, &buf, "blubb"); err != nil {
@@ -136,17 +69,33 @@ func TestPackItUpNotPreparedDir(t *testing.T) {
 	}
 }
 
-func ExampleRebaseFilename() {
-	fmt.Println(rebaseFilename("p", "x", "p/a/b/c"))
-	fmt.Println(rebaseFilename("y", "x", "p/a/b/c"))
-	// Output:
-	// x/a/b/c
-	// p/a/b/c
+func TestTarHeaderPrepare(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		oldbase, newbase, path, expected string
+	}{
+		{"p", "x", "p/a/b/c", "x/a/b/c"},
+		{"y", "x", "p/a/b/c", "p/a/b/c"},
+		{wd, "o", filepath.Join(wd, "dir", "2.txt"), "o/dir/2.txt"},
+	}
+
+	for _, el := range cases {
+		if actual := preparePathForTarHeader(el.path, el.oldbase, el.newbase); actual != el.expected {
+			t.Errorf("expected %s to be rebased to %s, but was to %s", el.path, el.expected, actual)
+		}
+	}
 }
 
-func ExamplePreparePathForTarHeader() {
-	fmt.Println(preparePathForTarHeader("/target/compiled/dist/a", "/target/", "/asd"))
-	// Output: asd/compiled/dist/a
+func TestPreparePathForTarHeader(t *testing.T) {
+	expected := "asd/compiled/dist/a"
+	actual := preparePathForTarHeader("/target/compiled/dist/a", "/target/", "/asd")
+	if expected != actual {
+		t.Errorf("[%s] is not equal to expected [%s]", actual, expected)
+	}
 }
 
 func TestWrapTaskDefinition(t *testing.T) {

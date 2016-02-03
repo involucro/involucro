@@ -1,29 +1,26 @@
 package translator
 
 import (
-	"fmt"
-	"github.com/Shopify/go-lua"
 	"testing"
+
+	"github.com/Shopify/go-lua"
 )
 
-func ExampleCheckBoolean() {
+func TestCheckBoolean(t *testing.T) {
 	l := lua.NewState()
 	l.PushBoolean(true)
-	fmt.Printf("%t\n", checkBoolean(l, -1))
-	// Output: true
-}
+	if !checkBoolean(l, -1) {
+		t.Error("expected true")
+	}
 
-func ExampleCheckBoolean_Failing() {
-	l := lua.NewState()
 	l.PushNumber(42)
 	defer func() {
 		err := recover()
-		if err != nil {
-			fmt.Println("error occurred")
+		if err == nil {
+			t.Error("expected panic")
 		}
 	}()
 	checkBoolean(l, -1)
-	// Output: error occurred
 }
 
 func TestCheckStringSet(t *testing.T) {
@@ -54,4 +51,25 @@ func TestCheckStringSetWithInteger(t *testing.T) {
 		}
 	}()
 	checkStringSet(l, -1)
+}
+
+func TestCheckStringArray(t *testing.T) {
+	l := lua.NewState()
+	lua.DoString(l, `x = {"a=5", "b=6", "c=7"}`)
+	l.Global("x")
+
+	res := checkStringArray(l, -1)
+
+	if len(res) != 3 {
+		t.Fatal("Unexpected length of ", res)
+	}
+	if res[0] != "a=5" {
+		t.Error("First element has wrong value", res[0])
+	}
+	if res[1] != "b=6" {
+		t.Error("First element has wrong value", res[1])
+	}
+	if res[2] != "c=7" {
+		t.Error("First element has wrong value", res[2])
+	}
 }

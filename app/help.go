@@ -1,17 +1,12 @@
 package app
 
-import (
-	"flag"
-	"fmt"
-	"strings"
-)
+import "flag"
 
 var (
-	dockerUrl       string
+	dockerURL       string
 	controlFile     string
 	controlScript   string
-	verbose         bool
-	silent          bool
+	logLevel        int
 	relativeWorkDir string
 	variables       variablesValue
 	showTasks       bool
@@ -20,57 +15,32 @@ var (
 )
 
 const (
-	defaultDockerUrl   = "unix:///var/run/docker.sock"
+	defaultDockerURL   = "unix:///var/run/docker.sock"
 	defaultControlFile = "invfile.lua"
 )
 
-func init() {
-	flag.StringVar(&dockerUrl, "H", defaultDockerUrl, "Set the URL of the Docker instance")
-	flag.StringVar(&dockerUrl, "host", defaultDockerUrl, "Long form for -H")
+var flags *flag.FlagSet
 
-	flag.StringVar(&controlFile, "f", defaultControlFile, "Set the control file")
-	flag.StringVar(&controlScript, "e", "", "Evaluate the given script directly, not evaluating the control file")
+func initializeFlagSet() {
+	flags = flag.NewFlagSet("involucro", flag.ExitOnError)
 
-	flag.BoolVar(&silent, "silent", false, "Descrease verbosity, only shows errors")
-	flag.BoolVar(&verbose, "v", false, "Log debug output messages")
+	flags.StringVar(&dockerURL, "H", defaultDockerURL, "Set the URL of the Docker instance")
+	flags.StringVar(&dockerURL, "host", defaultDockerURL, "Long form for -H")
 
-	flag.StringVar(&relativeWorkDir, "w", ".", "Set working dir, being the base for all operations")
+	flags.StringVar(&controlFile, "f", defaultControlFile, "Set the control file")
+	flags.StringVar(&controlScript, "e", "", "Evaluate the given script directly, not evaluating the control file")
 
-	flag.Var(&variables, "set", "Used as KEY=VALUE, makes VAR[KEY] available with value VALUE in Lua script")
-	flag.Var(&variables, "s", "Shorthand for --set")
+	flags.IntVar(&logLevel, "l", -1, "Set minimum log level, -3 logs everything.")
 
-	flag.BoolVar(&showTasks, "tasks", false, "Show available tasks and then exit")
-	flag.BoolVar(&showTasks, "T", false, "Shorthand for --tasks")
+	flags.StringVar(&relativeWorkDir, "w", ".", "Set working dir, being the base for all operations. Also settable via environment variable $INVOLUCRO_WORKDIR")
 
-	flag.StringVar(&remoteWrapTask, "wrap", "", "Execute encoded wrap task")
-}
+	flags.Var(&variables, "set", "Used as KEY=VALUE, makes VAR[KEY] available with value VALUE in Lua script")
+	flags.Var(&variables, "s", "Shorthand for --set")
 
-type variablesValue map[string]string
+	flags.BoolVar(&showTasks, "tasks", false, "Show available tasks and then exit")
+	flags.BoolVar(&showTasks, "T", false, "Shorthand for --tasks")
 
-func (v *variablesValue) String() string {
-	items := make([]string, 0)
-	for k, v := range *v {
-		items = append(items, fmt.Sprintf("%s=%s", k, v))
-	}
-	return fmt.Sprintf("[%s]", strings.Join(items, " "))
-}
-
-type ErrInvalidFormatForVariableAssignment string
-
-func (e ErrInvalidFormatForVariableAssignment) Error() string {
-	return fmt.Sprintf("Invalid value [%s], expected value of the form: KEY=VALUE", string(e))
-}
-
-func (v *variablesValue) Set(s string) error {
-	if *v == nil {
-		*v = make(map[string]string)
-	}
-	ss := strings.SplitN(s, "=", 2)
-	if len(ss) < 2 {
-		return ErrInvalidFormatForVariableAssignment(s)
-	}
-	(*v)[ss[0]] = ss[1]
-	return nil
+	flags.StringVar(&remoteWrapTask, "wrap", "", "Execute encoded wrap task")
 }
 
 func isControlFileOverriden() bool {

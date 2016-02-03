@@ -16,12 +16,10 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/Shopify/go-lua"
-	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/ilog"
 	"github.com/thriqon/involucro/runtime/translator"
 )
 
@@ -98,214 +96,141 @@ type asImage struct {
 	ParentImage       string
 	NewRepositoryName string
 	Config            docker.Config
+	ForbidRemoteRetry bool
 }
 
 func (img asImage) Take(i *Runtime) error {
 	if i.isUsingRemoteInstance() {
 		return img.executeRemotelyIn(i)
-	} else {
-		return img.executeLocallyIn(i)
 	}
 
+	var taker func(*Runtime) error
+
+	switch img.ParentImage {
+	case "":
+		taker = img.wrapWithoutBaseImageLocally
+	default:
+		taker = img.wrapWithBaseImageLocally
+	}
+
+	if err := taker(i); err != nil {
+		if img.ForbidRemoteRetry {
+			return err
+		}
+		// Retry using "remote" execution this fixes some permission problems, but
+		// is generally less efficient
+		ilog.Warn.Logf("Local execution errorred with error [%s], retrying with remote execution", err)
+		return img.executeRemotelyIn(i)
+	}
+	return nil
 }
 
-func (img asImage) executeLocallyIn(i *Runtime) error {
-	c := i.client
-	imageID := randomIdentifierOfLength(64)
-
-	parentImageID, err := img.enforceParentImagePresenceAndGetId(c, img.ParentImage)
-	if err != nil {
-		return err
-	}
-
+func packInto(sourceDir, prefix string) (io.Reader, chan error) {
 	uploadReader, uploadWriter := io.Pipe()
+	errchan := make(chan error, 1)
 
-	layerBallName := randomTarballFileName()
+	go func() {
+		defer uploadWriter.Close()
+		defer close(errchan)
+		if err := packItUp(sourceDir, uploadWriter, prefix); err != nil {
+			ilog.Debug.Logf("Packing failed due to %s", err)
+			errchan <- err
+		} else {
+			ilog.Debug.Logf("Packing succeeded")
+		}
+	}()
 
-	layerFile, err := os.Create(layerBallName)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(layerBallName)
-	defer layerFile.Close()
+	return uploadReader, errchan
+}
 
-	log.WithFields(log.Fields{"layerBallName": layerBallName}).Debug("Packing")
+func (img asImage) wrapWithoutBaseImageLocally(i *Runtime) error {
+	c := i.client
+	intermediateImageRepo := "image-" + randomIdentifier()
 
 	sourceDir := img.SourceDir
 	if !path.IsAbs(sourceDir) {
 		sourceDir = path.Join(i.workDir, sourceDir)
 	}
-	if err := packItUp(sourceDir, layerFile, img.TargetDir); err != nil {
-		return err
+
+	packStream, errChan := packInto(sourceDir, img.TargetDir)
+
+	importErr := c.ImportImage(docker.ImportImageOptions{
+		Repository:  intermediateImageRepo,
+		Tag:         "latest",
+		Source:      "-",
+		InputStream: packStream,
+	})
+	defer c.RemoveImage(intermediateImageRepo)
+
+	// If there is an error during packing, report that as main error.  A packing
+	// error always causes an import error as well.
+	for el := range errChan {
+		return el
 	}
-	layerFile.Close()
-
-	var uploadErr error
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	log.WithFields(log.Fields{"image_id": imageID, "repository": img.NewRepositoryName}).Debug("Wrapping up")
-
-	go func() {
-		defer wg.Done()
-		defer uploadWriter.Close()
-		writeUploadBallInto(uploadWriter, layerBallName, img.NewRepositoryName, parentImageID, imageID, img.Config)
-		return
-	}()
-
-	go func(r io.Reader) {
-		defer wg.Done()
-		err := c.LoadImage(docker.LoadImageOptions{InputStream: r})
-		if err != nil {
-			log.WithFields(log.Fields{"error": err}).Warn("Failed loading image into Docker")
-			uploadErr = err
-		} else {
-			log.Debug("Upload finished")
-		}
-	}(uploadReader)
-
-	wg.Wait()
-
-	return uploadErr
-}
-
-// enforceParentImagePresenceAndGetId gets the ID of the image with the given
-// name, and pulls the image first, if neccessary.
-func (img asImage) enforceParentImagePresenceAndGetId(c *docker.Client, parentName string) (string, error) {
-	// If there is no image name present, we are done. This happens if the user
-	// wants to pack the data into a parent-less image.
-	if parentName == "" {
-		return "", nil
+	if importErr != nil {
+		return importErr
 	}
 
-	// Fetch the config from Docker. If it works, we can return the ID.
-	// If anything goes wrong, we go on.
-	if parentImageConfig, err := c.InspectImage(parentName); err == nil {
-		return parentImageConfig.ID, nil
-	}
-
-	log.WithFields(log.Fields{"image": parentName}).Debug("Parent image not found, pulling it")
-
-	if err := pull(c, parentName); err != nil {
-		log.WithFields(log.Fields{"image": parentName, "error": err}).Error("Pulling failed")
-		return "", err
-	}
-
-	parentImageConfig, err := c.InspectImage(parentName)
-	if err != nil {
-		log.WithFields(log.Fields{"image": parentName, "error": err}).Error("Image still not found after pulling, bailing")
-		return "", err
-	}
-	return parentImageConfig.ID, nil
-}
-
-func writeUploadBallInto(w io.Writer, layerBallName string, newRepositoryName string, parentImageID string, imageID string, config docker.Config) error {
-	uploadBall := tar.NewWriter(w)
-	defer uploadBall.Close()
-
-	repositoriesFileHeader, repoFile := repositoriesFile(newRepositoryName, imageID)
-	uploadBall.WriteHeader(&repositoriesFileHeader)
-	uploadBall.Write(repoFile)
-
-	imageDirHeader := imageDir(imageID)
-	uploadBall.WriteHeader(&imageDirHeader)
-
-	versionFileHeader, versionFileContents := versionFile(imageID)
-	uploadBall.WriteHeader(&versionFileHeader)
-	uploadBall.Write(versionFileContents)
-
-	configFileHeader, configFileContents := imageConfigFile(parentImageID, imageID, config)
-	uploadBall.WriteHeader(&configFileHeader)
-	uploadBall.Write(configFileContents)
-
-	info, err := os.Stat(layerBallName)
+	container, err := createContainer(c, docker.Config{Image: intermediateImageRepo, Cmd: []string{"/bin/sh"}}, docker.HostConfig{})
 	if err != nil {
 		return err
 	}
-	layerBallHeader := tar.Header{
-		Name:     path.Join(imageID, "layer.tar"),
-		Typeflag: tar.TypeReg,
-		Size:     info.Size(),
+
+	var opts docker.CommitContainerOptions
+	opts.Repository, _, opts.Tag = repoNameAndTagFrom(img.NewRepositoryName)
+	opts.Container = container.ID
+	opts.Message = "Created with Involucro"
+	opts.Run = &img.Config
+
+	if _, err := c.CommitContainer(opts); err != nil {
+		return err
 	}
-	uploadBall.WriteHeader(&layerBallHeader)
-	layerBallFile, err := os.Open(layerBallName)
+	return c.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
+}
+
+func (img asImage) wrapWithBaseImageLocally(i *Runtime) error {
+	c := i.client
+
+	container, err := createContainer(c, docker.Config{Image: img.ParentImage, Cmd: []string{"/bin/sh"}}, docker.HostConfig{})
 	if err != nil {
 		return err
 	}
-	defer layerBallFile.Close()
 
-	_, err = io.Copy(uploadBall, layerBallFile)
+	sourceDir := img.SourceDir
+	if !path.IsAbs(sourceDir) {
+		sourceDir = path.Join(i.workDir, sourceDir)
+	}
 
-	log.Debug("Pipe finished")
+	packStream, errChan := packInto(sourceDir, img.TargetDir)
 
-	return err
-}
+	uploadErr := c.UploadToContainer(container.ID, docker.UploadToContainerOptions{
+		InputStream:          packStream,
+		Path:                 "/",
+		NoOverwriteDirNonDir: false,
+	})
+	// Treat pack error as 'main' error (a packing error always triggers an upload
+	// error)
+	for el := range errChan {
+		return el
+	}
+	if uploadErr != nil {
+		return uploadErr
+	}
 
-func randomTarballFileName() string {
-	dir := os.TempDir()
-	tarid := randomIdentifier()
-	return filepath.Join(dir, "involucro-volume-"+tarid+".tar")
+	var opts docker.CommitContainerOptions
+	opts.Repository, _, opts.Tag = repoNameAndTagFrom(img.NewRepositoryName)
+	opts.Container = container.ID
+	opts.Message = "Created with Involucro"
+	opts.Run = &img.Config
+
+	if _, err := c.CommitContainer(opts); err != nil {
+		return err
+	}
+	return c.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
 }
 
 func (img asImage) ShowStartInfo() {
-	log.WithFields(log.Fields{"as": img.NewRepositoryName}).Info("wrap")
-}
-
-func imageConfigFile(parentID, imageID string, containerConfig docker.Config) (tar.Header, []byte) {
-	imageConfig, err := json.Marshal(docker.Image{
-		ID:      imageID,
-		Parent:  parentID,
-		Comment: "Create with involucro 0.1",
-		Created: time.Now(),
-		Config:  &containerConfig,
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	imageConfigHeader := tar.Header{
-		Name:     path.Join(imageID, "json"),
-		Typeflag: tar.TypeReg,
-		Size:     int64(len(imageConfig)),
-	}
-
-	return imageConfigHeader, imageConfig
-}
-
-func repositoriesFile(newRepositoryName, id string) (tar.Header, []byte) {
-	topMap := make(map[string]map[string]string)
-
-	repo, _, tag := repoNameAndTagFrom(newRepositoryName)
-
-	topMap[repo] = make(map[string]string)
-	topMap[repo][tag] = id
-	val, _ := json.Marshal(topMap)
-
-	repositoriesFileHeader := tar.Header{
-		Name:     "repositories",
-		Typeflag: tar.TypeReg,
-		Size:     int64(len(val)),
-	}
-
-	return repositoriesFileHeader, val
-}
-
-func versionFile(imageID string) (versionHeader tar.Header, contents []byte) {
-	contents = []byte("1.0")
-
-	versionHeader = tar.Header{
-		Name:     path.Join(imageID, "VERSION"),
-		Typeflag: tar.TypeReg,
-		Size:     int64(len(contents)),
-	}
-	return
-}
-
-func imageDir(imageID string) tar.Header {
-	return tar.Header{
-		Name:     imageID + "/",
-		Typeflag: tar.TypeDir,
-	}
+	logTask.Logf("Wrap [%s] as [%s]", img.SourceDir, img.NewRepositoryName)
 }
 
 func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
@@ -360,6 +285,7 @@ func preparePathForTarHeader(filename string, sourceDir, prefix string) string {
 	prefixWithoutLeadingSlash := strings.TrimPrefix(prefix, "/")
 
 	slashed := filepath.ToSlash(filename)
+	sourceDir = filepath.ToSlash(sourceDir)
 
 	return rebaseFilename(sourceDir, prefixWithoutLeadingSlash, slashed)
 }
@@ -398,6 +324,8 @@ func (img asImage) forRemoteExecution() Step {
 	}
 }
 
+// DecodeWrapStep unmarshals the wrap step encoded in in (in JSON), and gives
+// it back. This function panics if there are errors during decoding.
 func DecodeWrapStep(in string) Step {
 	img := asImage{}
 	if err := json.Unmarshal([]byte(in), &img); err != nil {
@@ -407,5 +335,6 @@ func DecodeWrapStep(in string) Step {
 }
 
 func (img asImage) executeRemotelyIn(i *Runtime) error {
+	img.ForbidRemoteRetry = true
 	return img.forRemoteExecution().Take(i)
 }
