@@ -185,6 +185,16 @@ that, when taken, runs the given function. No arguments are passed, and any
 return values are ignored. Example: `task.hook(function () print('in step')
 end)`.
 
+### Push Step
+
+Tagged images can be pushed to repositories, where they can be pulled by other
+users. This step may involve authentication, see below for details.
+
+**task.push(`<NAME>`) (*introductory registration*) registers a step that, when
+taken, pushes the image with the given name to a remote repository.  Note that
+the default Docker rules apply with regard to names: If a name starts with a
+server address, the image is pushed there, and if not, Docker Hub is selected.
+Example: `task.push('image:latest')`
 
 ## Authentication
 
