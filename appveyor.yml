@@ -18,9 +18,10 @@ install:
 
 build_script:
   - go get ./...
-  - if [%PLATFORM%]==[x86] ( set FILENAME=involucro32.exe )
-  - if [%PLATFORM%]==[x64] ( set FILENAME=involucro.exe )
-  - go build -o %FILENAME% -ldflags "-s -w" ./.
+  - ps: |
+        go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./. ;
+        If ($Env:PLATFORM -eq "x86") { $FILENAME = "involucro32.exe" } Else { $FILENAME = "involucro.exe" };
+        mv involucro.exe $FILENAME
 
 test_script:
   - go test ./runtime/... -v | %GOPATH%\bin\go-junit-report > unit.xml

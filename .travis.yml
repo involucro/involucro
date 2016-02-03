@@ -22,7 +22,8 @@ install:
 script:
   - go vet ./...
   - $GOPATH/bin/golint ./...
-  - CGO_ENABLED=0 go build -ldflags "-s -w" ./.
+  - CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+  - ./involucro --version
   - ./involucro --set REPO=involucro/tool --set TAG=latest wrap-yourself
   - go test -v ./runtime
   - go test -v ./integrationtest

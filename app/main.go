@@ -17,9 +17,14 @@ import (
 // to testing using go utils.
 func Main(args []string) error {
 	initializeFlagSet()
-	flags.Init("involucro", flag.ContinueOnError)
+	flags.Init("involucro "+version, flag.ContinueOnError)
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
+	}
+
+	if showVersion {
+		fmt.Printf("involucro %s\n", version)
+		return nil
 	}
 
 	if relativeWorkDir == "." {
