@@ -10,9 +10,12 @@ var (
 	relativeWorkDir string
 	variables       variablesValue
 	showTasks       bool
+	showVersion     bool
 
 	remoteWrapTask string
 )
+
+var version = "vDev"
 
 const (
 	defaultDockerURL   = "unix:///var/run/docker.sock"
@@ -41,6 +44,8 @@ func initializeFlagSet() {
 	flags.BoolVar(&showTasks, "T", false, "Shorthand for --tasks")
 
 	flags.StringVar(&remoteWrapTask, "wrap", "", "Execute encoded wrap task")
+
+	flags.BoolVar(&showVersion, "version", false, "Show version and the exit")
 }
 
 func isControlFileOverriden() bool {
