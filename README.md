@@ -186,6 +186,41 @@ return values are ignored. Example: `task.hook(function () print('in step')
 end)`.
 
 
+## Authentication
+
+Pushes and pulls to a remote registry or to Docker Hub may be neccessary to be
+authenticated.  Involucro solves this by reading a JSON file in the home
+directory of the current user called `.involucro`.  This file (currently) only
+contains information about authentication, but more uses may be introduced
+later.
+
+To configure username, password and email place a file of the following form
+into `$HOME/.involucro`:
+
+```json
+{
+  "auths": [
+    // multiple entries are possible, but only one per server
+    "https://USERNAME:PASSWORD@SERVER.COM/?email=EMAIL@EXAMPLE.COM"
+  ]
+}
+```
+
+By definition, the address for Docker Hub is `index.docker.io/v1/`, so the
+configuration for a user *alice* with password *b0b* and email address
+*alice@devs.io* on Docker Hub is:
+
+```json
+{
+  "auths": [
+    "https://alice:b0b@index.docker.io/v1/?email=alice@devs.io"
+  ]
+}
+```
+
+Please keep this file hidden from any user except you, as it contains the
+password in plaintext!
+
 ## Trademarks
 
 Docker® is a registered trademark of Docker, Inc.
