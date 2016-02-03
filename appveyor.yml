@@ -13,18 +13,31 @@ clone_folder: C:\gopath\src\github.com\thriqon\involucro
 
 install:
   - go get -u github.com/jstemmer/go-junit-report
-  - go version
+  - go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+  - ps: C:\gopath\bin\goversioninfo "-product-version=$(git describe)"
 
 build_script:
   - go get ./...
-  - go build -ldflags "-s -w" ./.
+  - if [%PLATFORM%]==[x86] ( set FILENAME=involucro32.exe )
+  - if [%PLATFORM%]==[x64] ( set FILENAME=involucro.exe )
+  - go build -o %FILENAME% -ldflags "-s -w" ./.
 
 test_script:
   - go test ./runtime/... -v | %GOPATH%\bin\go-junit-report > unit.xml
   - ps: $wc = New-Object 'System.Net.WebClient'; $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\unit.xml))
 
-deploy: off
+deploy:
+  release: involucro-v$(appveyor_build_version)
+  description: Release v$(appveyor_build_version)
+  provider: GitHub
+  auth_token:
+    secure: q/44SE2s7xQVazTw2lHE+4BTO8rK1AvTpyUu+My7GH+Dv9nKDrgas8w+e6JBs0Me
+  artifact: /.*\.exe/
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true
 
 artifacts:
-  - path: involucro.exe
+  - path: '*.exe'
     name: Binary
