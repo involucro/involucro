@@ -21,6 +21,7 @@ build_script:
   - ps: |
         go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./. ;
         If ($Env:PLATFORM -eq "x86") { $FILENAME = "involucro32.exe" } Else { $FILENAME = "involucro.exe" };
+        ./involucro.exe --version
         mv involucro.exe $FILENAME
 
 test_script:

@@ -1,36 +1,68 @@
 
 language: go
-sudo: required
 
-services:
-  - docker
+git:
+  depth: 99999
+
+sudo: false
+env: MODE=unit FILENAME=involucro
+
+matrix:
+  include:
+    - os: osx
+      env: MODE=unit FILENAME=involucro.darwin
+    - os: linux
+      sudo: required
+      env: MODE=integration DOCKER_VERSION=1.9.1 FILENAME=involucro
+      services: [docker]
+    - os: linux
+      sudo: required
+      env: MODE=integration DOCKER_VERSION=1.8.3 FILENAME=involucro
+      services: [docker]
+    - os: linux
+      sudo: required
+      env: MODE=integration DOCKER_VERSION=latest FILENAME=involucro
+      services: [docker]
 
 go: 1.5
 
-before_install:
-  - sudo service docker stop
-
 install:
   # Replace existing Docker with specific version
-  - wget https://test.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O docker
-  - chmod +x docker
-  - sudo ./docker daemon --log-level=fatal &
-  # Fetch golint and other deps
-  - go get github.com/golang/lint/golint
+  - |
+    if [[ "$MODE" == "integration" ]]; then
+      sudo service docker stop
+      wget https://test.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O docker
+      chmod +x docker
+      sudo ./docker daemon --log-level=fatal &
+    fi
+  # Fetch golint
+  - |
+    if [[ "$MODE" == "unit" ]]; then
+      go get github.com/golang/lint/golint
+    fi
+  # Fetch other deps
   - go get ./...
 
 before_script:
   - |
-    if [ "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" ]; then echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro ; fi
+    if [ "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" ]; then
+      echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
+    fi
 
 script:
-  - go vet ./...
-  - $GOPATH/bin/golint ./...
-  - CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
-  - ./involucro --version
-  - ./involucro wrap-yourself
-  - go test -v ./runtime
-  - go test -v ./integrationtest
+  - |
+    if [[ "$MODE" == "unit" ]]; then
+      go vet ./...
+      $GOPATH/bin/golint ./...
+      go test -v ./runtime
+    fi
+  - CGO_ENABLED=0 go build -o $FILENAME -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+  - ./$FILENAME --version
+  - |
+    if [[ "$MODE" == "integration" ]]; then
+      ./$FILENAME wrap-yourself
+      go test -v ./integrationtest
+    fi
 
 deploy:
   - provider: releases
@@ -42,18 +74,13 @@ deploy:
     on:
       tags: true
       repo: thriqon/involucro
-      condition: $DOCKER_VERSION = latest
+      condition: $MODE = integration && $DOCKER = latest
 
   - provider: script
     skip_cleanup: true
     script: ./involucro upload-to-hub
     on:
-      condition: $DOCKER_VERSION = latest
+      condition: $MODE = integration && $DOCKER = latest
 
 notifications:
   irc: "chat.freenode.net#involucro"
-
-env:
-  - DOCKER_VERSION=1.9.1
-  - DOCKER_VERSION=1.8.3
-  - DOCKER_VERSION=latest
