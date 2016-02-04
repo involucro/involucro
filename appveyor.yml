@@ -20,26 +20,9 @@ build_script:
   - go get ./...
   - ps: |
         go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./. ;
-        If ($Env:PLATFORM -eq "x86") { $FILENAME = "involucro32.exe" } Else { $FILENAME = "involucro.exe" };
         ./involucro.exe --version
-        mv involucro.exe $FILENAME
 
 test_script:
   - go test ./runtime/... -v | %GOPATH%\bin\go-junit-report > unit.xml
   - ps: $wc = New-Object 'System.Net.WebClient'; $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\unit.xml))
 
-deploy:
-  release: involucro-v$(appveyor_build_version)
-  description: Release v$(appveyor_build_version)
-  provider: GitHub
-  auth_token:
-    secure: q/44SE2s7xQVazTw2lHE+4BTO8rK1AvTpyUu+My7GH+Dv9nKDrgas8w+e6JBs0Me
-  artifact: /.*\.exe/
-  draft: false
-  prerelease: false
-  on:
-    appveyor_repo_tag: true
-
-artifacts:
-  - path: '*.exe'
-    name: Binary

@@ -23,6 +23,8 @@ matrix:
       sudo: required
       env: MODE=integration DOCKER_VERSION=latest FILENAME=involucro
       services: [docker]
+    - os: linux
+      env: MODE=windows-build
 
 go: 1.5
 
@@ -56,8 +58,17 @@ script:
       $GOPATH/bin/golint ./...
       go test -v -short ./...
     fi
-  - CGO_ENABLED=0 go build -o $FILENAME -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
-  - ./$FILENAME --version
+  - |
+    if [[ "$MODE" == "windows-build" ]]; then
+      go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+      $GOPATH/bin/goversioninfo "-product-version=$(git describe)"
+      CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+      CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o involucro32.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+      file involucro.exe involucro32.exe
+    else
+      CGO_ENABLED=0 go build -o $FILENAME -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+      ./$FILENAME --version
+    fi
   - |
     if [[ "$MODE" == "integration" ]]; then
       ./$FILENAME wrap-yourself
@@ -74,13 +85,36 @@ deploy:
     on:
       tags: true
       repo: thriqon/involucro
-      condition: $MODE = integration && $DOCKER = latest
+      condition: $MODE = unit && $TRAVIS_OS_NAME = linux
+
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: ZdT+SuvSTE1iz9Y5mudZIREGz5HYoJjIPanz0h2YrfhUdB4Rgu0hqkjIE9R5gf9mozN0a59xl1FxpeHVGa5K/Qodt3V2owau+OyiuTrdEvcaKvz/BmmfldwNJsqEgttbataDroRw/fwSB2X+tiW0um6D6SUHDkVQt7PIJPxvpwWJJcjXJSHxDru1fm5eASWiCKKB9uj+JPYz0R9smW//kp2S3/7MFTQjg2vU+IwQRxMaMIrcST0DEW33mEW+4zbwA1Bt/rspCFx9ZkdXVjIhIrNmqo7CCJODyvbhJ/WtJ+yfWF+LWEvaznIc+rM4WAkBn+Y+os6wGhGBnDsFi5FfSt6nOxWv+maNfLY7KQiNaWtGCI90PHQce6EGJUefxB1rbIi6LQmGODdCITwrIcrsFOTe8IRKrmOze7VTsJ4QVNHACy6+tDXLzPE64Dvnapx66bElAJ8QPC8JW0KYDaCQmZUp2ygBFhmmzK+TqwZTX3D/ZQul6tzDuCk9f0K+LCL7loLLI866LL7te+3Y3f19nwDAhqkrxB2ExAv6EVBSQQFdcVBGuzlnL4PzQHp9lqEEPHO2qJqYhBIH40hwaIl+F7wXSZIohQRTJbMGljIP71wq55rk94fRfX55Wj7se2I9eBWHQJWZ2S/BNMYlo9St4P/4RukA/dWevGiuy4xYl+o=
+    file:
+      - involucro.darwin
+    on:
+      tags: true
+      repo: thriqon/involucro
+      condition: $MODE = unit && $TRAVIS_OS_NAME = osx
+
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: ZdT+SuvSTE1iz9Y5mudZIREGz5HYoJjIPanz0h2YrfhUdB4Rgu0hqkjIE9R5gf9mozN0a59xl1FxpeHVGa5K/Qodt3V2owau+OyiuTrdEvcaKvz/BmmfldwNJsqEgttbataDroRw/fwSB2X+tiW0um6D6SUHDkVQt7PIJPxvpwWJJcjXJSHxDru1fm5eASWiCKKB9uj+JPYz0R9smW//kp2S3/7MFTQjg2vU+IwQRxMaMIrcST0DEW33mEW+4zbwA1Bt/rspCFx9ZkdXVjIhIrNmqo7CCJODyvbhJ/WtJ+yfWF+LWEvaznIc+rM4WAkBn+Y+os6wGhGBnDsFi5FfSt6nOxWv+maNfLY7KQiNaWtGCI90PHQce6EGJUefxB1rbIi6LQmGODdCITwrIcrsFOTe8IRKrmOze7VTsJ4QVNHACy6+tDXLzPE64Dvnapx66bElAJ8QPC8JW0KYDaCQmZUp2ygBFhmmzK+TqwZTX3D/ZQul6tzDuCk9f0K+LCL7loLLI866LL7te+3Y3f19nwDAhqkrxB2ExAv6EVBSQQFdcVBGuzlnL4PzQHp9lqEEPHO2qJqYhBIH40hwaIl+F7wXSZIohQRTJbMGljIP71wq55rk94fRfX55Wj7se2I9eBWHQJWZ2S/BNMYlo9St4P/4RukA/dWevGiuy4xYl+o=
+    file:
+      - involucro32.exe
+      - involucro.exe
+    on:
+      tags: true
+      repo: thriqon/involucro
+      condition: $MODE = windows-build
 
   - provider: script
     skip_cleanup: true
     script: ./involucro upload-to-hub
     on:
-      condition: $MODE = integration && $DOCKER = latest
+      condition: $MODE = integration && $DOCKER_VERSION = latest
 
 notifications:
   irc: "chat.freenode.net#involucro"
