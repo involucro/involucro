@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/fsouza/go-dockerclient"
+	"github.com/thriqon/involucro/auth"
 	"github.com/thriqon/involucro/ilog"
 )
 
@@ -50,11 +51,22 @@ func pull(c pullimager, repositoryName string) error {
 		}
 	}()
 
+	ac, foundAuthentication, err := auth.ForServer(serverOfRepo(repositoryName))
+	if err != nil {
+		return err
+	}
+
 	pio := docker.PullImageOptions{
 		Repository:    repositoryName,
 		OutputStream:  pipeWriter,
 		RawJSONStream: true,
 	}
 	ilog.Debug.Logf("Pull Image [%s]", repositoryName)
-	return c.PullImage(pio, docker.AuthConfiguration{})
+	if err := c.PullImage(pio, ac); err != nil {
+		if !foundAuthentication {
+			ilog.Warn.Logf("Pull may have failed due to missing authentication information in ~/.involucro")
+		}
+		return err
+	}
+	return nil
 }

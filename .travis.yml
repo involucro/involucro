@@ -19,12 +19,16 @@ install:
   - go get github.com/golang/lint/golint
   - go get ./...
 
+before_script:
+  - |
+    if [ "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" ]; then echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro ; fi
+
 script:
   - go vet ./...
   - $GOPATH/bin/golint ./...
   - CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
   - ./involucro --version
-  - ./involucro --set REPO=involucro/tool --set TAG=latest wrap-yourself
+  - ./involucro wrap-yourself
   - go test -v ./runtime
   - go test -v ./integrationtest
 
@@ -42,7 +46,7 @@ deploy:
 
   - provider: script
     skip_cleanup: true
-    script: ./push_to_docker.sh
+    script: ./involucro upload-to-hub
     on:
       condition: $DOCKER_VERSION=latest
 
@@ -52,5 +56,4 @@ notifications:
 env:
   - DOCKER_VERSION=1.9.1
   - DOCKER_VERSION=1.8.3
-  - DOCKER_VERSION=1.10.0-rc3
   - DOCKER_VERSION=latest
