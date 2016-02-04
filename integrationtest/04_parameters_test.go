@@ -6,7 +6,7 @@ import "github.com/thriqon/involucro/app"
 
 func TestParametersAcceptsInlineScript(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	assertStdoutContainsFlag([]string{
@@ -18,7 +18,7 @@ func TestParametersAcceptsInlineScript(t *testing.T) {
 
 func TestParametersRejectBothInlineScriptAndFilename(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	if err := app.Main([]string{

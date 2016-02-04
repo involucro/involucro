@@ -7,7 +7,7 @@ import (
 
 func TestEnvironmentVariables(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	os.Setenv("INV_MESSAGE", "inv_message")

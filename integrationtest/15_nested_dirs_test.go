@@ -12,7 +12,7 @@ import (
 
 func TestWrapNestedDirsCorrectly(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	dir, err := ioutil.TempDir("", "inttest-15")
 	if err != nil {

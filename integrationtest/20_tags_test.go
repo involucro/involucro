@@ -9,7 +9,7 @@ import (
 
 func TestTagging(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	c, err := docker.NewClientFromEnv()
 	if err != nil {

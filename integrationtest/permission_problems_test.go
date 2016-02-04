@@ -12,7 +12,7 @@ import (
 
 func TestCanWrapFilesOnlyReadableForRoot(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	if err := os.MkdirAll("test", 0755); err != nil {

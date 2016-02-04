@@ -31,7 +31,7 @@ That's all
 
 func TestLiterateModeGivenFilename(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	dir, err := ioutil.TempDir("", "inttest-31")
 	if err != nil {
@@ -54,7 +54,7 @@ func TestLiterateModeGivenFilename(t *testing.T) {
 
 func TestLiterateModeAutomaticFilename(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	filename := "invfile.lua.md"

@@ -12,7 +12,7 @@ import (
 
 func TestFileHandlingSymlinks(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	dir, err := ioutil.TempDir("", "inttest-26")
 	if err != nil {

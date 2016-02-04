@@ -54,14 +54,14 @@ script:
     if [[ "$MODE" == "unit" ]]; then
       go vet ./...
       $GOPATH/bin/golint ./...
-      go test -v ./runtime
+      go test -v -short ./...
     fi
   - CGO_ENABLED=0 go build -o $FILENAME -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
   - ./$FILENAME --version
   - |
     if [[ "$MODE" == "integration" ]]; then
       ./$FILENAME wrap-yourself
-      go test -v ./integrationtest
+      go test -v ./...
     fi
 
 deploy:

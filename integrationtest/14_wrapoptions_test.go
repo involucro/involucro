@@ -9,7 +9,7 @@ import (
 
 func TestWrapOptionSetEntrypoint(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	c, err := docker.NewClientFromEnv()

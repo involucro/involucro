@@ -14,6 +14,9 @@ import (
 )
 
 func TestRemoteWrappableViaTcp(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
 	if err := os.MkdirAll("fixture_09", 0755); err != nil {
 		t.Fatal(err)
 	}

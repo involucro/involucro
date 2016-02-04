@@ -7,6 +7,9 @@ import (
 )
 
 func TestIoLines(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
 	if err := ioutil.WriteFile("iolines_test.txt", []byte("ASD\nDSA"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -29,6 +32,9 @@ end`
 }
 
 func TestHooksWithIoLines(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
 	ioutil.WriteFile("37_lines.txt", []byte{}, 0755)
 
 	defer func() {

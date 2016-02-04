@@ -4,7 +4,7 @@ import "testing"
 
 func TestVariablesWithS(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	assertStdoutContainsFlag([]string{
 		"-e",
@@ -16,7 +16,7 @@ func TestVariablesWithS(t *testing.T) {
 
 func TestVariablesWithSet(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	assertStdoutContainsFlag([]string{
 		"-e",
@@ -28,7 +28,7 @@ func TestVariablesWithSet(t *testing.T) {
 
 func TestVariablesWithSetAndAdditionalEqualSign(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	assertStdoutContainsFlag([]string{
 		"-e",

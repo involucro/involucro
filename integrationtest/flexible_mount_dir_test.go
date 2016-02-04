@@ -11,7 +11,7 @@ import (
 
 func TestFlexibleMountDirs(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	pwd, err := filepath.Abs(".")
 	if err != nil {

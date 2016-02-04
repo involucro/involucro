@@ -48,6 +48,9 @@ func testStdoutOf(f func() error, expected string, t *testing.T) {
 }
 
 func TestTaskListWithTAndDirectScript(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
 	testStdoutOf(func() error {
 		return app.Main([]string{
 			"involucro", "-e",
@@ -57,6 +60,9 @@ func TestTaskListWithTAndDirectScript(t *testing.T) {
 	}, "a\nb\n", t)
 }
 func TestTaskListWithTasksAndDirectScript(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
 	testStdoutOf(func() error {
 		return app.Main([]string{
 			"involucro", "-e",

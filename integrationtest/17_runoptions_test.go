@@ -4,7 +4,7 @@ import "testing"
 
 func TestRunOptionsCanSetEnvironmentVariables(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	assertStdoutContainsFlag([]string{
 		"-e",

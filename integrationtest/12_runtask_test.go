@@ -8,7 +8,7 @@ import (
 
 func TestRuntaskOtherTaskPresent(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	assertStdoutContainsFlag([]string{
@@ -20,7 +20,7 @@ func TestRuntaskOtherTaskPresent(t *testing.T) {
 
 func TestRuntaskOtherTaskNotPresent(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	if err := app.Main([]string{

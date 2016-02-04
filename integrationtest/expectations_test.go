@@ -8,7 +8,7 @@ import (
 
 func TestExpectationMatchStdout(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	if err := app.Main([]string{
 		"involucro", "-e",
@@ -21,7 +21,7 @@ func TestExpectationMatchStdout(t *testing.T) {
 
 func TestExpectationsCrashesWhenStdoutNotMet(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	if err := app.Main([]string{
@@ -36,7 +36,7 @@ func TestExpectationsCrashesWhenStdoutNotMet(t *testing.T) {
 
 func TestExpectationMatchStderr(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	if err := app.Main([]string{
 		"involucro", "-e",
@@ -49,7 +49,7 @@ func TestExpectationMatchStderr(t *testing.T) {
 
 func TestExpectationsCrashesWhenStderrNotMet(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	if err := app.Main([]string{
@@ -63,7 +63,7 @@ func TestExpectationsCrashesWhenStderrNotMet(t *testing.T) {
 
 func TestExpectationMatchExitCode(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 	if err := app.Main([]string{
 		"involucro", "-e",
@@ -76,7 +76,7 @@ func TestExpectationMatchExitCode(t *testing.T) {
 
 func TestExpectationsCrashesWhenExitCodeNotMet(t *testing.T) {
 	if testing.Short() {
-		return
+		t.SkipNow()
 	}
 
 	if err := app.Main([]string{
