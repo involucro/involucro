@@ -42,13 +42,13 @@ deploy:
     on:
       tags: true
       repo: thriqon/involucro
-      condition: $DOCKER_VERSION=latest
+      condition: $DOCKER_VERSION = latest
 
   - provider: script
     skip_cleanup: true
     script: ./involucro upload-to-hub
     on:
-      condition: $DOCKER_VERSION=latest
+      condition: $DOCKER_VERSION = latest
 
 notifications:
   irc: "chat.freenode.net#involucro"
