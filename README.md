@@ -210,15 +210,15 @@ into `$HOME/.involucro`:
 ```json
 {
   "auths": [
-    // multiple entries are possible, but only one per server
     "https://USERNAME:PASSWORD@SERVER.COM/?email=EMAIL@EXAMPLE.COM"
   ]
 }
 ```
 
-By definition, the address for Docker Hub is `index.docker.io/v1/`, so the
-configuration for a user *alice* with password *b0b* and email address
-*alice@devs.io* on Docker Hub is:
+Multiple entries are possible, but only one per server.  By definition, the
+address for Docker Hub is `index.docker.io/v1/`, so the configuration for a
+user *alice* with password *b0b* and email address *alice@devs.io* on Docker
+Hub is:
 
 ```json
 {
