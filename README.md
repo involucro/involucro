@@ -1,9 +1,9 @@
 
 # Involucro - Build and Deliver Software with Containers
 
-[![Travis CI](https://travis-ci.com/thriqon/involucro.svg?token=43LaxsfrMzmC1LqNeQwa)](https://travis-ci.com/thriqon/involucro)
-[![Appveyor](https://ci.appveyor.com/api/projects/status/w0dst521wm7rs8vl/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
-
+[![Build Status](https://travis-ci.org/thriqon/involucro.svg?branch=master)](https://travis-ci.org/thriqon/involucro)
+[![Build Status](https://semaphoreci.com/api/v1/thriqon/involucro/branches/master/badge.svg)](https://semaphoreci.com/thriqon/involucro)
+[![Build status](https://ci.appveyor.com/api/projects/status/qbx83hqe33n7375o/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
 
 ## Introduction
 
