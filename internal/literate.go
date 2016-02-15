@@ -43,7 +43,7 @@ func (inv *Runtime) RunLiterateFile(filename string) error {
 	lines := bytes.Buffer{}
 
 	// Space-prefixed rows need an empty row directly before them. We record if
-	// the preceeding row was empty, and set this variable at the end of every
+	// the precedeing row was empty, and set this variable at the end of every
 	// loop. If the file just starts, we also have to assume the line before tat
 	// was empty.
 	preceedingRowEmtpy := true
