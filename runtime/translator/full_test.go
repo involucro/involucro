@@ -86,10 +86,10 @@ func TestAllPropertiesConfig(t *testing.T) {
 			"example": "asd",
 		},
 		ExposedPorts: map[docker.Port]struct{}{
-			docker.Port("80/tcp"): struct{}{},
+			docker.Port("80/tcp"): {},
 		},
 		Volumes: map[string]struct{}{
-			"/data": struct{}{},
+			"/data": {},
 		},
 	}
 

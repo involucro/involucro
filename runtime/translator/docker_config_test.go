@@ -1,8 +1,9 @@
 package translator
 
 import (
-	"github.com/Shopify/go-lua"
 	"testing"
+
+	"github.com/Shopify/go-lua"
 )
 
 func assertPanic(t *testing.T, f func()) {
