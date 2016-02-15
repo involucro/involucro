@@ -23,7 +23,7 @@ func Main(args []string) error {
 	}
 
 	if showVersion {
-		fmt.Printf("involucro %s\n", version)
+		fmt.Printf("involucro %s\n", versionNotice)
 		return nil
 	}
 
