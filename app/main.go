@@ -9,7 +9,7 @@ import (
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/ilog"
-	"github.com/thriqon/involucro/runtime"
+	runtime "github.com/thriqon/involucro/internal"
 )
 
 // Main represents the usual main method of the
