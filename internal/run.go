@@ -13,7 +13,7 @@ import (
 	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/thriqon/involucro/ilog"
-	"github.com/thriqon/involucro/runtime/translator"
+	"github.com/thriqon/involucro/internal/translator"
 )
 
 // executeImage executes the given config and host config, similar to "docker

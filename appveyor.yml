@@ -19,7 +19,7 @@ install:
 build_script:
   - go get ./...
   - ps: |
-        go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./. ;
+        go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro ;
         ./involucro.exe --version
 
 test_script:
