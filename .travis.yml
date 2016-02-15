@@ -62,11 +62,11 @@ script:
     if [[ "$MODE" == "windows-build" ]]; then
       go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
       $GOPATH/bin/goversioninfo "-product-version=$(git describe)"
-      CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
-      CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o involucro32.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+      CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro
+      CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o involucro32.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro
       file involucro.exe involucro32.exe
     else
-      CGO_ENABLED=0 go build -o $FILENAME -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./.
+      CGO_ENABLED=0 go build -o $FILENAME -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro
       ./$FILENAME --version
     fi
   - |
