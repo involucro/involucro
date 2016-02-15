@@ -13,7 +13,7 @@ import (
 	"github.com/fatih/color"
 )
 
-// StdLog is the default logger that is availabe in the global space.
+// StdLog is the default logger that is available in the global space.
 var StdLog = New()
 
 // Logger provides functionality to log strings. It provides a ln variant which
