@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/thriqon/involucro.svg?branch=master)](https://travis-ci.org/thriqon/involucro)
 [![Build Status](https://semaphoreci.com/api/v1/thriqon/involucro/branches/master/badge.svg)](https://semaphoreci.com/thriqon/involucro)
 [![Build status](https://ci.appveyor.com/api/projects/status/qbx83hqe33n7375o/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thriqon/involucro)](https://goreportcard.com/report/github.com/thriqon/involucro)
 
 ## Introduction
 
