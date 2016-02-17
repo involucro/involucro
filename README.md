@@ -23,7 +23,7 @@ structural disadvantages:
 * No support for slimmed containers
 * Unnecessary layers
 
-Involucro [from Latin: envelope] detaches the build process from the
+Involucro [from Latin for 'envelope'] detaches the build process from the
 deliverable container and re-establishes proper encapsulation in containers:
 One Process, One Container.
 
@@ -34,14 +34,15 @@ From source:
     $ go get github.com/thriqon/involucro
     $ $GOPATH/bin/involucro -v
 
-As binary:
+As binary for Linux:
+[involucro](https://github.com/thriqon/involucro/releases/download/latest/involucro)
 
-    $ wget https://storage.googleapis.com/involucro-1149.appspot.com/involucro
+Or, for Windows:
+[involucro.exe](https://github.com/thriqon/involucro/releases/download/latest/involucro.exe)
+[involucro32.exe](https://github.com/thriqon/involucro/releases/download/latest/involucro32.exe)
 
-Or, for windows:
-
-    https://storage.googleapis.com/involucro-1149.appspot.com/involucro.exe
-    https://storage.googleapis.com/involucro-1149.appspot.com/involucro32.exe
+And for Mac OSX:
+[involucro.darwin](https://github.com/thriqon/involucro/releases/download/latest/involucro.darwin)
 
 ## Usage
 
