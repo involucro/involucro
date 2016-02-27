@@ -6,6 +6,12 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/qbx83hqe33n7375o/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thriqon/involucro)](https://goreportcard.com/report/github.com/thriqon/involucro)
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/37622.png)](https://asciinema.org/a/37622)
+
+The code for the example is in `examples/hello_world_server/`.
+
 ## Introduction
 
 Building and delivering software is a complex task that can be made easier
