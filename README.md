@@ -8,9 +8,9 @@
 
 ## Introduction
 
-Building and delivering software is a complex task, that can be made easier
+Building and delivering software is a complex task that can be made easier
 with proper encapsulation: Containers. They are able to pack all required
-dependencies (bitwise version controlled), so that you can release code with the
+dependencies (bitwise version controlled) so that you can release code with the
 confidence that everything works the same way it worked on the developers machine.
 
 The current default for building and packing software into containers is using
@@ -49,8 +49,8 @@ And for Mac OSX:
 Involucro is configured by a Lua script file. By default, it is looking for
 `invfile.lua` in the current directory, but this can be overridden (see below).
 
-A configuration file contains a set of tasks, identified by a unique name.
-These names can be specified when invoking `involucro`, and are executed in the
+A configuration file contains a set of tasks identified by a unique name.
+These names can be specified when invoking `involucro` and are executed in the
 order they are given.  For example, `$ involucro build package` will run the
 `build` and afterwards the `package` task.  A task can be created by invoking
 `inv.task('<ID>')` in the configuration file.
@@ -68,13 +68,13 @@ in the file. There are different types of steps. Each step has one
 *introductory* method made available from the task, a set of *modifying*
 methods setting different properties of the step, and a final *registration*
 method that registers these settings for execution. The current status can be
-stored at any point into a variable, and reused later. However, the steps are
+stored at any point into a variable and reused later. However, the steps are
 strictly run in the order their registration method was called.
 
 ### Run Step
 
 A run step executes a Docker container. By default, the current working
-directory is mounted as `/source` into the container, which is also configured
+directory is mounted as `/source` into the container which is also configured
 to be the working directory of the process running in the container. It is
 mainly used to transform source code using external processes such as compilers
 into a different form.
@@ -99,8 +99,8 @@ are documented here:
 Example: `runStep.withConfig({links = {"redis"}})`.
 
 NOTE: By default, `involucro` binds the current directory as `/source`. If the
-`Binds` key is set in the given table, it overwrites this binding. `Involucro`
-however interprets the given bindings, and changes all relative source bindings
+`Binds` key is set in the given table it overwrites this binding. `Involucro`
+however interprets the given bindings and changes all relative source bindings
 to absolute paths. This enables bindings such as `{binds = {"./dist:/data",
 "/tmp:/tmp"}}`.
 
@@ -140,7 +140,7 @@ directory doesn't need to exist yet. Example: `wrapstep.at('/data')`.
 
 **wrapstep.inImage**`('<PARENT_IMAGE>')` (*modifying*) causes the resulting image
 to be a child of the image identified by the parameter. If this modification is
-omitted, the resulting image is parent-less. Example:
+omitted the resulting image is parent-less. Example:
 `wrapstep.inImage('nginx')`.
 
 **wrapstep.withConfig**`(<TABLE>)` (*modifying*) sets configuration values similar
@@ -189,13 +189,13 @@ end)`.
 
 ### Push Step
 
-Tagged images can be pushed to repositories, where they can be pulled by other
+Tagged images can be pushed to repositories where they can be pulled by other
 users. This step may involve authentication, see below for details.
 
 **task.push(`<NAME>`) (*introductory registration*) registers a step that, when
 taken, pushes the image with the given name to a remote repository.  Note that
 the default Docker rules apply with regard to names: If a name starts with a
-server address, the image is pushed there, and if not, Docker Hub is selected.
+server address the image is pushed there, and if not Docker Hub is selected.
 Example: `task.push('image:latest')`
 
 ## Authentication
@@ -206,7 +206,7 @@ directory of the current user called `.involucro`.  This file (currently) only
 contains information about authentication, but more uses may be introduced
 later.
 
-To configure username, password and email place a file of the following form
+To configure username, password, and email place a file of the following form
 into `$HOME/.involucro`:
 
 ```json
@@ -230,7 +230,7 @@ Hub is:
 }
 ```
 
-Please keep this file hidden from any user except you, as it contains the
+Please keep this file hidden from any user except you as it contains the
 password in plaintext!
 
 ## Trademarks
