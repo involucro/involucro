@@ -1,0 +1,298 @@
+.TH INVOLUCRO 1 "2016-01-21" "1.0"
+.SH NAME
+involucro \- build and deliver software with containers
+.SH SYNOPSIS
+.B involucro
+[\fB-H\fR \fIURL\fR | \fB-host\fR \fIURL\fR]
+[\fB-f\fR] \fIFILE\fR | \fB-e\fR \fISCRIPT\fR]
+[\fB-v\fR \fIVERBOSITY\fR]
+[\fB-set\fR \fIKEY\fR=\fIVALUE\fR | \fB-s\fR \fIKEY\fR=\fIVALUE\fR]...
+[\fB-w\fR \fIWORKDIR\fR]
+(\fB-T\fR | \fB-tasks\fR | \fITASK\fR...)
+.LP
+.B involucro -version
+.SH OPTIONS
+.TP
+.BR \-H ", " \-\-host " " \fIURL\fR
+The socket to connect to when contacting Docker. May be a UNIX socket
+of the form \fIunix:///var/run/docker.sock\fR or a TCP socket of the form
+\fItcp://localhost:2375\fR.
+.TP
+.BR \-f " " \fIFILE\fR
+Set the file to execute instead of the default \fIinvfile.lua\fR (or
+\fIinvfile.lua.md\fR in literate mode). See FILE for more information.
+.TP
+.BR \-e " " \fISCRIPT\fR
+Execute the script directly. The script is expected to be a non-literate file,
+but otherwise conforming to the same constraints imposed on files.
+.TP
+.BR \-v " " \fIVERBOSITY\fR
+Sets the verbosity to the given level.
+.RS
+.TP
+.BR -1
+Only error messages are shown
+.TP
+.BR 0
+Warnings and error messages.
+.TP
+.BR 1
+Warnings, errors and a \fISTEP\fR message for each step.
+.TP
+.BR 2
+All of the above plus standard output and standard error of each executed command.
+.TP
+.BR 3
+All of the above plus status messages during each step.
+.RE
+.TP
+.BR \-s ", " \-\-set " " \fIKEY\fR=\fIVALUE\fR
+Makes \fIVALUE\fR available in the script file under the name \fIVAR.KEY\fR,
+for example: \fB--set\fR \fIMESSAGE\fR=\fIHello\fR and script \fIprint(VAR.MESSAGE)\fR will
+print \fBHello\fR. May be used multiple times to set multiple values.
+.TP
+.BR \-w " " \fIWORKDIR\fR
+Set the directory that is the base for all operations. By default, this
+directory will be made available to Docker containers as \fI/source\fR. This is
+important to set if the current directory is not on the same filesystem
+instance as the Docker instance, for example when working on Windows etc.
+.TP
+.BR \-T ", " \-\-tasks
+Instead of executing any task print the defined tasks instead. Each task will
+occupy one line.
+.TP
+\fITASK\fR
+Matches one of the tasks defined in the control file. If given multiple times
+the tasks will be executed in order.
+.SH CONTROL FILE
+Involucro is configured by a Lua script file. By default, it is looking for
+\fIinvfile.lua\fR in the current directory, but this can be overridden with
+\fB-f\fR.
+.LP
+A configuration file contains a set of tasks identified by a unique name.
+These names can be specified when invoking \fBinvolucro\fR and are executed in
+the order they are given.  For example, \fI$\fR \fBinvolucro build package\fR
+will run the \fIbuild\fR and afterwards the \fIpackage\fR task.  A task can be
+created by invoking \fIinv.task(\fB'ID'\fI)\fR in the configuration file.
+.LP
+For easy readability, the configuration file uses a fluent syntax to build the
+tasks. The available methods are either modifying the next registered step, or
+are registering a step. This type distinction is documented below for each
+method.
+.LP
+\fIinv.task(\fB'ID'\fI)\fR (\fImodifier\fR) sets the task of the next
+registered step to \fB'ID'\fR. It makes the methods \fBusing\fR, \fBrunTask\fR,
+and \fBwrap\fR available.
+.LP
+Each task consists of a list of steps that are run in the order they are given
+in the file. There are different types of steps. Each step has one
+\fIintroductory\fR method made available from the task, a set of
+\fImodifying\fR methods setting different properties of the step, and a final
+\fIregistration\fR method that registers these settings for execution. The
+current status can be stored at any point into a variable and reused later.
+However, the steps are strictly run in the order their registration method was
+called.
+.SS Run Step
+A run step executes a Docker container. By default, the current working
+directory is mounted as \fI/source\fR into the container which is also
+configured to be the working directory of the process running in the container.
+It is mainly used to transform source code using external processes such as
+compilers into a different form.
+.LP
+\fItask.using(\fB'IMAGE_ID'\fI)\fR (\fIintroductory\fR) starts off a run step by
+specifying the repository name (optionally with tag) or the image ID of the
+image to be run. Example: \fItask.using('gcc:4.9')\fR.
+.LP
+\fIrunstep.withConfig(\fBTABLE\fI)\fR (\fImodifying\fR) sets the values in
+the Lua table as configuration values for the Docker container. The values that
+can be set here are only affecting the container itself, not how is connected
+with the host. See \fIwithHostConfig\fR for this. The available options are
+documented at \fIConfig\fR (see \fBSEE ALSO\fR).  The keys are interpreted case
+insensitive. Example: \fIrunstep.withConfig({Cmd = {"/bin/echo", "Hello,
+World!"}})\fR.
+.LP
+\fIrunstep.withHostConfig(\fBTABLE\fI)\fR (\fImodifying\fR) sets the values
+in the Lua table as host configuration values. These values control the exact
+execution semantics of the container from the hosts point of view. The
+available options are documented here at \fIHostConfig\fR (see \fBSEE ALSO\fR).
+Example: \fIrunStep.withConfig({links = {"redis"}})\fR.
+.LP
+\fBNOTE\fR: By default, \fBinvolucro\fR binds the current directory as
+\fI/source\fR. If the \fIBinds\fR key is set in the given table it overwrites
+this binding. \fBInvolucro\fR interprets the given bindings and changes all
+relative source bindings to absolute paths. This enables bindings such as
+\fI{binds = {"./dist:/data", "/tmp:/tmp"}}\fR.
+.LP
+\fIrunstep.withExpectation(\fB<TABLE>\fI)\fR (\fImodifying\fR) registers expectations
+towards the output and exit code of the process. By default, \fBinvolucro\fR
+expects the process to exit cleanly with exit code \fB0\fR. Tests of executables
+however may require expecting a process to fail. This can be set with the expectation
+\fIcode = runstep.withExpectation({code = 1})\fR.  Similarly, an expectation
+towards the output of the process on stdout and/or stderr can be registered
+with regular expressions conforming to Re2 syntax (see \fBSEE ALSO\fR).
+Example: \fIrunstep.withExpectation({stdout = "Hello, World!\\n"})\fR.
+.LP
+\fIrunstep.run(\fR'<CMD>'...\fI)\fR (\fIregistration\fR) registers the run
+step. The arguments are used as the command-line arguments of the process being
+run. It directly follows Docker semantics regarding process execution. Each
+argument is used as a single argument for the process. Example:
+\fIrunstep.run('/bin/echo', 'Hello, World!')\fR.  Note that there is no
+wildcard expansion or variable replacement if the arguments are not given to a
+shell such as \fI/bin/sh\fR.  Example: \fIrunstep.run('/bin/sh', '-c', 'echo *')\fR.
+.SS Wrap Step
+A wrap step takes the contents of a directory and creates an image layer out of
+it, optionally with a parent image layer and meta data. The resulting image can
+be tagged into a repository with a tag name (or `latest`, if none is set).
+.LP
+\fItask.wrap(\fB'<SOURCE_DIR>'\fI)\fR (\fIintroductory\fR) starts off a wrap step by
+specifying the directory containing the files that are to be wrapped into an
+image. It is also possible to use the current directory (.).  Example:
+\fItask.wrap('dist')\fR.
+.LP
+\fIwrapstep.at(\fB`('<TARGET_DIR>'\fI)\fR (\fImodifying\fR) sets the directory in the resulting
+image into which the files are copied.  This can be used to put HTML files into
+the location the web server in the parent image expects them to be. This
+directory doesn't need to exist yet. Example: \fIwrapstep.at('/data')\fR.
+.LP
+\fIwrapstep.inImage(\fB`('<PARENT_IMAGE>'\fI)\fR (\fImodifying\fR) causes the resulting image
+to be a child of the image identified by the parameter. If this modification is
+omitted the resulting image is parent-less. Example:
+\fIwrapstep.inImage('nginx')\fR.
+.LP
+\fIwrapstep.withConfig(\fB<TABLE>\fI)\fR (\fImodifying\fR) sets configuration values similar
+to the \fIwithConfig\fR method of the run step above. This can be used to pre-set
+an entrypoint or exposed ports. Example: \fIwrapstep.withConfig({exposedports =
+{"80/tcp"}})\fR.
+.LP
+\fIwrapstep.as(\fB'<IMAGE_NAME>'\fI)\fR (\fIregistration\fR) registers the step for
+execution. The image constructed by the previous modifications is built and
+tagged with the given name, which may include a registry designation. Example:
+\fIwrapstep.as('app:latest')\fR.
+.LP
+.SS Runtask Step
+As a convenience, it is possible to run another task as part of a task. This
+emulates the conventional \fRall\fI task from Makefiles. Exceptionally, the
+introductory method for this step is also the registration method.
+.LP
+\fItask.runTask(\fB'<ID>'\fI)\fR (\fIintroductory registration\fR) registers a
+step that executes the task with the given ID as part of the steps in this
+task. Example: \fIinv.task('all').runTask('compile').runTask('package')\fR.
+.LP
+.SS Tag Step
+.LP
+Sometimes, there should be two versions of the same image sharing the same
+image ID, for example to have the \fIlatest\fR tag equivalent to version
+\fIv2\fR. The tag step helps in this case.
+.LP
+\fItask.tag(\fB'<NAME>'\fI)\fR (\fIintroductory\fR) starts a tagging by setting
+the name of the original image. This can be anything Docker accepts, including
+\fItest/asd:v2\fR, but also actual image IDs. Example:
+\fItask.tag('test/asd')\fR.
+.LP
+\fItagstep.as(\fB'<NAME>'\fI)\fR (\fIregistration\fR) registers a step that
+tags the image named in introductory method to the name given as parameter.
+Example: \fItagstep.as('test/asd')\fR.
+.LP
+.SS Hook Step
+.LP
+Control files can change their behaviour during tasks with hooks, for example
+to use the results of previous tasks with \fIio.lines\fR.
+.LP
+\fItask.hook(\fB'<FUNCTION>'\fI)\fR (\fIintroductory registration\fR) registers
+a step that, when taken, runs the given function. No arguments are passed, and
+any return values are ignored. Example: \fItask.hook(function () print('in
+step') end)\fR.
+.LP
+.SS Push Step
+.LP
+Tagged images can be pushed to repositories where they can be pulled by other
+users. This step may involve authentication, see below for details.
+.LP
+\fItask.push(\fB'<NAME>'\fI)\fR (\fIintroductory registration\fR) registers a
+step that, when taken, pushes the image with the given name to a remote
+repository.  Note that the default Docker rules apply with regard to names: If
+a name starts with a server address the image is pushed there, and if not
+Docker Hub is selected.  Example: \fItask.push('image:latest')\fR.
+.SH AUTHENTICATION
+Pushes and pulls to a remote registry or to Docker Hub may be neccessary to be
+authenticated.  Involucro solves this by reading a JSON file in the home
+directory of the current user called \fI.involucro\fR.  This file (currently) only
+contains information about authentication, but more uses may be introduced
+later.
+.LP
+To configure username, password, and email place a file of the following form
+into \fI$HOME/.involucro\fR:
+.nf
+.RS
+{
+  "auths": [
+    "https://USERNAME:PASSWORD@SERVER.COM/?email=EMAIL@EXAMPLE.COM"
+  ]
+}
+.RE
+.fi
+Multiple entries are possible, but only one per server.  By definition, the
+address for Docker Hub is \fIindex.docker.io/v1/\fR, so the configuration for a
+user \fBalice\fR with password \fBb0b\fR and email address \fBalice@devs.io\fR
+on Docker Hub is:
+.nf
+.RS
+{
+  "auths": [
+    "https://alice:b0b@index.docker.io/v1/?email=alice@devs.io"
+  ]
+}
+.RE
+.fi
+\fBNOTE:\fR Please keep this file hidden from any user except you as it contains the
+password in plaintext!
+.SH EXAMPLES
+.nf
+.RS
+inv.task('all')
+  .runTask('compile')
+  .runTask('package')
+  .runTask('test')
+  .runTask('publish')
+
+inv.task('compile')
+	.using('gcc')
+    .run('gcc', '-o', 'dist/add', 'add.c', '-static')
+
+inv.task('package')
+	.wrap('dist').inImage('busybox').at('/usr/local/bin')
+  .withConfig({entrypoint = {"/usr/local/bin/add"}})
+  .as('test/showaddition:latest')
+
+inv.task('test')
+  .using('test/showaddition:latest')
+  .withExpectation({code = 0, stdout = "5 \\+ 10 = 15"})
+	.run()
+
+inv.task('publish')
+  .hook(function ()
+    local t = os.time()
+    inv.task('publish:tag')
+      .tag('test/showaddition:latest')
+        .as('test/showaddition:' .. t)
+    inv.task('publish:push ')
+      .push('test/showaddition:' .. t)
+  end)
+  .runTask('publish:tag')
+  .runTask('publish:push')
+.RE
+.fi
+.PP
+.SH TRADEMARKS
+Docker® is a registered trademark of Docker, Inc.
+.SH SEE ALSO
+.BR docker (1)
+.LP
+.B HostConfig:
+.I https://godoc.org/github.com/fsouza/go-dockerclient#HostConfig
+.LP
+.B Config:
+.I https://godoc.org/github.com/fsouza/go-dockerclient#Config
+.LP
+.B Re2 syntax
+.I https://github.com/google/re2/wiki/Syntax
