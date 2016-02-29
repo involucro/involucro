@@ -6,7 +6,7 @@ var (
 	dockerURL       string
 	controlFile     string
 	controlScript   string
-	logLevel        int
+	verbosity       int
 	relativeWorkDir string
 	variables       variablesValue
 	showTasks       bool
@@ -33,7 +33,7 @@ func initializeFlagSet() {
 	flags.StringVar(&controlFile, "f", defaultControlFile, "Set the control file")
 	flags.StringVar(&controlScript, "e", "", "Evaluate the given script directly, not evaluating the control file")
 
-	flags.IntVar(&logLevel, "l", -1, "Set minimum log level, -3 logs everything.")
+	flags.IntVar(&verbosity, "v", 1, "Set verbosity, 3 logs everything, 2 shows standard output")
 
 	flags.StringVar(&relativeWorkDir, "w", ".", "Set working dir, being the base for all operations. Also settable via environment variable $INVOLUCRO_WORKDIR")
 

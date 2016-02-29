@@ -48,7 +48,7 @@ func Main(args []string) error {
 		return nil
 	}
 
-	ilog.StdLog.SetMinPrintLevel(logLevel)
+	ilog.StdLog.SetMinPrintLevel(-verbosity)
 
 	var client *docker.Client
 	var err error
