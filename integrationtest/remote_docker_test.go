@@ -71,7 +71,7 @@ func TestRemoteWrappableViaTcp(t *testing.T) {
 	}
 
 	if err := app.Main([]string{
-		"involucro", "-H", "tcp://127.0.0.1:4243", "-l=-2",
+		"involucro", "-H", "tcp://127.0.0.1:4243", "-v=2",
 		"-w", pwd, "-e",
 		"inv.task('wrap').wrap('fixture_09').at('/blah').inImage('busybox').as('inttest/9')",
 		"wrap",

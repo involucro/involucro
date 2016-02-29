@@ -12,7 +12,7 @@ func assertStdoutContainsFlag(args []string, lineFlag string, t *testing.T) {
 	oldPrint := ilog.StdLog.PrintFunc()
 	defer ilog.StdLog.SetPrintFunc(oldPrint)
 
-	args = append([]string{"involucro", "-l=-2"}, args...)
+	args = append([]string{"involucro", "-v=2"}, args...)
 
 	var found bool
 	ilog.StdLog.SetPrintFunc(func(b ilog.Bough) {

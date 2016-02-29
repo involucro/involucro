@@ -38,7 +38,7 @@ One Process, One Container.
 From source:
 
     $ go get github.com/thriqon/involucro
-    $ $GOPATH/bin/involucro -v
+    $ $GOPATH/bin/involucro --version
 
 As binary for Linux:
 [involucro](https://github.com/thriqon/involucro/releases/download/latest/involucro)
