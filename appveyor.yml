@@ -4,6 +4,7 @@ environment:
   TIMEOUT: "5m"
   CGO_ENABLED: 0
   GOPATH: C:\gopath
+  GO15VENDOREXPERIMENT: 1
 
 platform:
   - x86
