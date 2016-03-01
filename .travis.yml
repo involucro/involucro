@@ -51,14 +51,16 @@ before_script:
 
 script:
   - |
+    PKGS="./internal/... ./auth"
     if [[ "$MODE" == "unit" ]]; then
-      go vet ./...
-      $GOPATH/bin/golint ./...
-      go test -v -short ./...
+      go vet $PKGS
+      $GOPATH/bin/golint $PKGS
+      go test -v -short $PKGS
     fi
   - |
     if [[ "$MODE" == "windows-build" ]]; then
       go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
+
       $GOPATH/bin/goversioninfo "-product-version=$(git describe)"
       CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro
       CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o involucro32.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro
@@ -68,9 +70,10 @@ script:
       ./$FILENAME --version
     fi
   - |
+    PKGS="./internal/... ./auth"
     if [[ "$MODE" == "integration" ]]; then
       ./$FILENAME wrap-yourself
-      go test -v ./...
+      go test -v $PKGS
     fi
 
 deploy:

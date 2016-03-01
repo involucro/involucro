@@ -1,4 +1,4 @@
-version: {build}
+version: "snapshot-#{build}"
 
 environment:
   TIMEOUT: "5m"
@@ -23,6 +23,6 @@ build_script:
         ./involucro.exe --version
 
 test_script:
-  - go test ./internal/... -v | %GOPATH%\bin\go-junit-report > unit.xml
+  - go test ./internal/... ./auth -v | %GOPATH%\bin\go-junit-report > unit.xml
   - ps: $wc = New-Object 'System.Net.WebClient'; $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\unit.xml))
 
