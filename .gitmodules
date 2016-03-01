@@ -1,0 +1,9 @@
+[submodule "vendor/github.com/fsouza/go-dockerclient"]
+	path = vendor/github.com/fsouza/go-dockerclient
+	url = https://github.com/fsouza/go-dockerclient
+[submodule "vendor/github.com/Shopify/go-lua"]
+	path = vendor/github.com/Shopify/go-lua
+	url = https://github.com/Shopify/go-lua
+[submodule "vendor/github.com/fatih/color"]
+	path = vendor/github.com/fatih/color
+	url = https://github.com/fatih/color

@@ -42,8 +42,6 @@ install:
     if [[ "$MODE" == "unit" ]]; then
       go get github.com/golang/lint/golint
     fi
-  # Fetch other deps
-  - go get ./...
 
 before_script:
   - |
