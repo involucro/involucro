@@ -1,9 +1,10 @@
-version: 1.0.0.{build}-beta
+version: "snapshot-#{build}"
 
 environment:
   TIMEOUT: "5m"
   CGO_ENABLED: 0
   GOPATH: C:\gopath
+  GO15VENDOREXPERIMENT: 1
 
 platform:
   - x86
@@ -12,17 +13,17 @@ platform:
 clone_folder: C:\gopath\src\github.com\thriqon\involucro
 
 install:
+  - git submodule update --init --recursive
   - go get -u github.com/jstemmer/go-junit-report
   - go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
   - ps: C:\gopath\bin\goversioninfo "-product-version=$(git describe)"
 
 build_script:
-  - go get ./...
   - ps: |
         go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro ;
         ./involucro.exe --version
 
 test_script:
-  - go test ./internal/... -v | %GOPATH%\bin\go-junit-report > unit.xml
+  - go test ./internal/... ./auth -v | %GOPATH%\bin\go-junit-report > unit.xml
   - ps: $wc = New-Object 'System.Net.WebClient'; $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\unit.xml))
 
