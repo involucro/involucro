@@ -9,12 +9,11 @@ import (
 )
 
 // ParseHostConfigFromLuaTable reads all keys in the currently top-most
-// table from the stack and applies everything it can to a docker.HostConfig.
+// table from the stack and applies everything it can to the given default
+// docker.HostConfig.
 // The comparison is case insensitive by design.
-func ParseHostConfigFromLuaTable(l *lua.State) docker.HostConfig {
+func ParseHostConfigFromLuaTable(l *lua.State, conf docker.HostConfig) docker.HostConfig {
 	lua.CheckType(l, -1, lua.TypeTable)
-
-	conf := docker.HostConfig{}
 
 	l.PushNil()
 	for l.Next(-2) {

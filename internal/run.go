@@ -240,7 +240,7 @@ func (ubs usingBuilderState) withConfig(l *lua.State) int {
 }
 
 func (ubs usingBuilderState) withHostConfig(l *lua.State) int {
-	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l)
+	ubs.HostConfig = translator.ParseHostConfigFromLuaTable(l, ubs.HostConfig)
 	return ubs.usingTable(l)
 }
 

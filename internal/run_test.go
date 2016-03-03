@@ -149,6 +149,52 @@ func TestRunTaskDefinitionWithOptions(t *testing.T) {
 	}
 }
 
+func TestRunTaskDefinitionWithHostConfig(t *testing.T) {
+	inv := newEmpty()
+	if err := inv.RunString(`inv.task('test').using('blah').run('test')`); err != nil {
+		t.Fatal("unable to run code")
+	}
+	if binds := inv.tasks["test"][0].(executeImage).HostConfig.Binds; !reflect.DeepEqual(binds, []string{"./:/source"}) {
+		t.Error("Binds has unexpected value without overwrite", binds)
+	}
+	if pap := inv.tasks["test"][0].(executeImage).HostConfig.PublishAllPorts; pap != false {
+		t.Error("PublishAllPorts is not false (without .HostConfig)")
+	}
+
+	inv = newEmpty()
+	if err := inv.RunString(`inv.task('test').using('blah').withHostConfig({}).run('test')`); err != nil {
+		t.Fatal("unable to run code")
+	}
+	if binds := inv.tasks["test"][0].(executeImage).HostConfig.Binds; !reflect.DeepEqual(binds, []string{"./:/source"}) {
+		t.Error("Binds has unexpected value with .HostConfig and empty table", binds)
+	}
+	if pap := inv.tasks["test"][0].(executeImage).HostConfig.PublishAllPorts; pap != false {
+		t.Error("PublishAllPorts is not false (while not set)")
+	}
+
+	inv = newEmpty()
+	if err := inv.RunString(`inv.task('test').using('blah').withHostConfig({publishallports = true}).run('test')`); err != nil {
+		t.Fatal("unable to run code")
+	}
+	if binds := inv.tasks["test"][0].(executeImage).HostConfig.Binds; !reflect.DeepEqual(binds, []string{"./:/source"}) {
+		t.Error("Binds has unexpected value with .HostConfig and unrelated table", binds)
+	}
+	if pap := inv.tasks["test"][0].(executeImage).HostConfig.PublishAllPorts; pap != true {
+		t.Error("PublishAllPorts is not true (while set)")
+	}
+
+	inv = newEmpty()
+	if err := inv.RunString(`inv.task('test').using('blah').withHostConfig({binds = {"./a:/b"}}).run('test')`); err != nil {
+		t.Fatal("unable to run code")
+	}
+	if binds := inv.tasks["test"][0].(executeImage).HostConfig.Binds; !reflect.DeepEqual(binds, []string{"./a:/b"}) {
+		t.Error("Binds has unexpected value with .HostConfig and empty table", binds)
+	}
+	if pap := inv.tasks["test"][0].(executeImage).HostConfig.PublishAllPorts; pap != false {
+		t.Error("PublishAllPorts is not false (while not set)")
+	}
+}
+
 func TestAbsolutizeBinds(t *testing.T) {
 	h, _ := absolutizeBinds(docker.HostConfig{
 		Binds: []string{
