@@ -186,7 +186,7 @@ func TestAllPropertiesHostConfig(t *testing.T) {
 	}
 	state.Global("x")
 
-	if actual := ParseHostConfigFromLuaTable(state); !reflect.DeepEqual(actual, expected) {
+	if actual := ParseHostConfigFromLuaTable(state, docker.HostConfig{}); !reflect.DeepEqual(actual, expected) {
 		t.Error("Actual is not equal to expected", actual, expected)
 	}
 }

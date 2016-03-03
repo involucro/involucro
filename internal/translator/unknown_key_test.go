@@ -1,10 +1,11 @@
 package translator
 
 import (
-	"github.com/Shopify/go-lua"
-	"github.com/fsouza/go-dockerclient"
 	"reflect"
 	"testing"
+
+	"github.com/Shopify/go-lua"
+	"github.com/fsouza/go-dockerclient"
 )
 
 func TestUnknownPropertiesConfig(t *testing.T) {
@@ -34,7 +35,7 @@ func TestUnknownPropertiesHostConfig(t *testing.T) {
 	}
 	state.Global("x")
 
-	if actual := ParseHostConfigFromLuaTable(state); !reflect.DeepEqual(actual, expected) {
+	if actual := ParseHostConfigFromLuaTable(state, docker.HostConfig{}); !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Wasn't unchanged: %v != %v", actual, expected)
 	}
 }
