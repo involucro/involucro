@@ -59,7 +59,7 @@ func ioLines(l *lua.State) int {
 	return 1
 }
 
-func (iof ioFile) readline(l *lua.State) int {
+func (iof *ioFile) readline(l *lua.State) int {
 	if !iof.sc.Scan() {
 		iof.Close()
 		l.PushNil()
