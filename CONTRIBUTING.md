@@ -9,7 +9,7 @@ If you have an idea for a feature to add or an approach for a bugfix,
 it is best to communicate with us early on. The most common venues for this are
 [GitHub issues](https://github.com/involucro/involucro/issues).
 Browse through existing GitHub issues and if one seems related,
-comment on it. We are generally available via [gitter](TODO).
+comment on it. We are generally available via [gitter](https://gitter.im/involucro/involucro).
 
 ## Reporting a new issue
 
