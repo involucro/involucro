@@ -10,7 +10,7 @@ platform:
   - x86
   - x64
 
-clone_folder: C:\gopath\src\github.com\thriqon\involucro
+clone_folder: C:\gopath\src\github.com\involucro\involucro
 
 install:
   - git submodule update --init --recursive
@@ -20,7 +20,7 @@ install:
 
 build_script:
   - ps: |
-        go build -o involucro.exe -ldflags "-s -w -X github.com/thriqon/involucro/app.version=$(git describe)" ./cmd/involucro ;
+        go build -o involucro.exe -ldflags "-s -w -X github.com/involucro/involucro/app.version=$(git describe)" ./cmd/involucro ;
         ./involucro.exe --version
 
 test_script:

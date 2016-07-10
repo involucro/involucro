@@ -1,6 +1,6 @@
 package runtime
 
-import "github.com/thriqon/involucro/ilog"
+import "github.com/involucro/involucro/ilog"
 
 var (
 	logProgress = ilog.ForLevelPrefix(-3, "PRGS")

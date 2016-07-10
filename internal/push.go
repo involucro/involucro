@@ -5,8 +5,8 @@ import (
 
 	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/auth"
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/auth"
+	"github.com/involucro/involucro/ilog"
 )
 
 type pushStepBuilderState struct {

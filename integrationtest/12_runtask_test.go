@@ -3,7 +3,7 @@ package integrationtest
 import (
 	"testing"
 
-	"github.com/thriqon/involucro/app"
+	"github.com/involucro/involucro/app"
 )
 
 func TestRuntaskOtherTaskPresent(t *testing.T) {

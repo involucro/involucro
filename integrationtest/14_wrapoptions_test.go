@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/app"
+	"github.com/involucro/involucro/app"
 )
 
 func TestWrapOptionSetEntrypoint(t *testing.T) {

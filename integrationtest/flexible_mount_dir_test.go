@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/thriqon/involucro/app"
+	"github.com/involucro/involucro/app"
 )
 
 func TestFlexibleMountDirs(t *testing.T) {

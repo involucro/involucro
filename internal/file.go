@@ -6,7 +6,7 @@ import (
 
 	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/ilog"
 )
 
 // Runtime encapsulates the state of the tool

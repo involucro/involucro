@@ -7,7 +7,7 @@ package runtime
 
 import (
 	"github.com/Shopify/go-lua"
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/ilog"
 )
 
 // ## The Step

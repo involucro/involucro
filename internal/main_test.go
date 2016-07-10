@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/ilog"
 )
 
 func TestMain(m *testing.M) {

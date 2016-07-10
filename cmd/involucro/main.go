@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"github.com/thriqon/involucro/app"
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/app"
+	"github.com/involucro/involucro/ilog"
 )
 
 func main() {

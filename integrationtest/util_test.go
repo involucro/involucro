@@ -4,8 +4,8 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/thriqon/involucro/app"
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/app"
+	"github.com/involucro/involucro/ilog"
 )
 
 func assertStdoutContainsFlag(args []string, lineFlag string, t *testing.T) {

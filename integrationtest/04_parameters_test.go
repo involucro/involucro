@@ -2,7 +2,7 @@ package integrationtest
 
 import "testing"
 
-import "github.com/thriqon/involucro/app"
+import "github.com/involucro/involucro/app"
 
 func TestParametersAcceptsInlineScript(t *testing.T) {
 	if testing.Short() {

@@ -1,10 +1,10 @@
 
 # Involucro - Build and Deliver Software with Containers
 
-[![Build Status](https://travis-ci.org/thriqon/involucro.svg?branch=master)](https://travis-ci.org/thriqon/involucro)
-[![Build Status](https://semaphoreci.com/api/v1/thriqon/involucro/branches/master/badge.svg)](https://semaphoreci.com/thriqon/involucro)
-[![Build status](https://ci.appveyor.com/api/projects/status/qbx83hqe33n7375o/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/thriqon/involucro)](https://goreportcard.com/report/github.com/thriqon/involucro)
+[![Build Status](https://travis-ci.org/involucro/involucro.svg?branch=master)](https://travis-ci.org/involucro/involucro)
+[![Build Status](https://semaphoreci.com/api/v1/involucro/involucro/branches/master/badge.svg)](https://semaphoreci.com/involucro/involucro)
+[![Build status](https://ci.appveyor.com/api/projects/status/ice63amutmub3qqr/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/involucro/involucro)](https://goreportcard.com/report/github.com/involucro/involucro)
 
 ## Demo
 
@@ -37,18 +37,18 @@ One Process, One Container.
 
 From source:
 
-    $ go get github.com/thriqon/involucro
+    $ go get github.com/involucro/involucro
     $ $GOPATH/bin/involucro --version
 
 As binary for Linux:
-[involucro](https://github.com/thriqon/involucro/releases/download/latest/involucro)
+[involucro](https://github.com/involucro/involucro/releases/download/latest/involucro)
 
 Or, for Windows:
-[involucro.exe](https://github.com/thriqon/involucro/releases/download/latest/involucro.exe)
-[involucro32.exe](https://github.com/thriqon/involucro/releases/download/latest/involucro32.exe)
+[involucro.exe](https://github.com/involucro/involucro/releases/download/latest/involucro.exe)
+[involucro32.exe](https://github.com/involucro/involucro/releases/download/latest/involucro32.exe)
 
 And for Mac OSX:
-[involucro.darwin](https://github.com/thriqon/involucro/releases/download/latest/involucro.darwin)
+[involucro.darwin](https://github.com/involucro/involucro/releases/download/latest/involucro.darwin)
 
 ## Usage
 

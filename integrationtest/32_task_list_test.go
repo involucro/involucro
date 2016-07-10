@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/thriqon/involucro/app"
+	"github.com/involucro/involucro/app"
 )
 
 func testStdoutOf(f func() error, expected string, t *testing.T) {

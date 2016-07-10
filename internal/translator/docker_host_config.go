@@ -5,7 +5,7 @@ import (
 
 	"github.com/Shopify/go-lua"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/ilog"
+	"github.com/involucro/involucro/ilog"
 )
 
 // ParseHostConfigFromLuaTable reads all keys in the currently top-most

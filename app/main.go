@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/thriqon/involucro/ilog"
-	runtime "github.com/thriqon/involucro/internal"
+	"github.com/involucro/involucro/ilog"
+	runtime "github.com/involucro/involucro/internal"
 )
 
 // Main represents the usual main method of the
