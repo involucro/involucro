@@ -14,6 +14,8 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
+const ENV_NAME = "INVOLUCRO_AUTH"
+
 type authenticationInfo struct {
 	docker.AuthConfiguration
 }
