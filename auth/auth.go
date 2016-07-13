@@ -20,11 +20,7 @@ type authenticationInfo struct {
 	docker.AuthConfiguration
 }
 
-func (a *authenticationInfo) UnmarshalJSON(in []byte) error {
-	var s string
-	if err := json.Unmarshal(in, &s); err != nil {
-		return err
-	}
+func (a *authenticationInfo) UnmarshalString(s string) error {
 	u, err := url.Parse(s)
 	if err != nil {
 		return err
@@ -37,6 +33,14 @@ func (a *authenticationInfo) UnmarshalJSON(in []byte) error {
 	a.ServerAddress = u.Host + u.Path
 	a.Email = u.Query().Get("email")
 	return nil
+}
+
+func (a *authenticationInfo) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	return a.UnmarshalString(s)
 }
 
 func getAllFrom(r io.Reader) ([]authenticationInfo, error) {
