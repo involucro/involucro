@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -74,6 +75,25 @@ func ForServer(server string) (docker.AuthConfiguration, bool, error) {
 }
 
 func forServerInFile(server string, file io.Reader) (docker.AuthConfiguration, bool, error) {
+	env := os.Getenv(ENV_NAME)
+	if env != "" {
+		as := strings.Split(env, " ")
+		ai := authenticationInfo{}
+
+		for _, a := range as {
+			err := ai.UnmarshalString(a)
+			if err != nil {
+				return docker.AuthConfiguration{}, false, err
+			}
+			if ai.ServerAddress == server {
+				if server == "index.docker.io/v1/" {
+					ai.ServerAddress = "https://index.docker.io/v1/"
+				}
+				return ai.AuthConfiguration, true, nil
+			}
+		}
+	}
+
 	if server == "" {
 		server = "index.docker.io/v1/"
 	}
