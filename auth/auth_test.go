@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 )
@@ -15,7 +16,15 @@ var source = `{
 		]
 	}`
 
+func unsetEnvVariable(t *testing.T) {
+	if err := os.Unsetenv(ENV_NAME); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParseUserInfo(t *testing.T) {
+	unsetEnvVariable(t)
+
 	u, _ := url.Parse("https://test+asd:pw@quay.io")
 	if u.User.Username() != "test+asd" {
 		t.Error("user is wrong", u.User.Username())
@@ -26,6 +35,8 @@ func TestParseUserInfo(t *testing.T) {
 }
 
 func TestGetAllFrom(t *testing.T) {
+	unsetEnvVariable(t)
+
 	expected := []string{
 		"[user/pw: @ blubb.de]",
 		"[alice/a11c3:test@example.com @ blah.de]",
@@ -52,6 +63,8 @@ func TestGetAllFrom(t *testing.T) {
 }
 
 func TestForServerInFile(t *testing.T) {
+	unsetEnvVariable(t)
+
 	cases := []struct {
 		server   string
 		expected string
@@ -84,6 +97,8 @@ func TestForServerInFile(t *testing.T) {
 }
 
 func TestWithFailingURLs(t *testing.T) {
+	unsetEnvVariable(t)
+
 	cases := []string{
 		"\"http://withoutuser.com\"",
 		"5",
