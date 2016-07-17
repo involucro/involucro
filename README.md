@@ -5,6 +5,7 @@
 [![Build Status](https://semaphoreci.com/api/v1/involucro/involucro/branches/master/badge.svg)](https://semaphoreci.com/involucro/involucro)
 [![Build status](https://ci.appveyor.com/api/projects/status/ice63amutmub3qqr/branch/master?svg=true)](https://ci.appveyor.com/project/JonasWeber/involucro/branch/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/involucro/involucro)](https://goreportcard.com/report/github.com/involucro/involucro)
+[![Gitter](https://badges.gitter.im/involucro/involucro.svg)](https://gitter.im/involucro/involucro?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## Demo
 
