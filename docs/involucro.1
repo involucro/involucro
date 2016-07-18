@@ -216,9 +216,10 @@ Docker Hub is selected.  Example: \fItask.push('image:latest')\fR.
 .SH AUTHENTICATION
 Pushes and pulls to a remote registry or to Docker Hub may be neccessary to be
 authenticated.  Involucro solves this by reading a JSON file in the home
-directory of the current user called \fI.involucro\fR.  This file (currently) only
-contains information about authentication, but more uses may be introduced
-later.
+directory of the current user called \fI.involucro\fR, or by reading an
+environment variable (see below).  The config file (currently) only contains
+information about authentication, but more uses may be introduced later.
+.SS Configuration File
 .LP
 To configure username, password, and email place a file of the following form
 into \fI$HOME/.involucro\fR:
@@ -246,6 +247,20 @@ on Docker Hub is:
 .fi
 \fBNOTE:\fR Please keep this file hidden from any user except you as it contains the
 password in plaintext!
+.SS Environment Variable
+.LP
+The environment variable \fBINVOLUCRO_AUTH\fR may contain a space-separated
+list of authentication URIs formatted as described above. If a registry name
+occurs in both the configuration file and the environment variable, the value
+from the environment variable is prioritized. The example from above can also
+be expressed like this:
+.LP
+.nf
+.RS
+export INVOLUCRO_AUTH="https://alice:b0b@index.docker.io/v1/?email=alice@devs.io"
+involucro push
+.RE
+.fi
 .SH EXAMPLES
 .nf
 .RS

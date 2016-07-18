@@ -10,19 +10,18 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
+
+const ENV_NAME = "INVOLUCRO_AUTH"
 
 type authenticationInfo struct {
 	docker.AuthConfiguration
 }
 
-func (a *authenticationInfo) UnmarshalJSON(in []byte) error {
-	var s string
-	if err := json.Unmarshal(in, &s); err != nil {
-		return err
-	}
+func (a *authenticationInfo) UnmarshalString(s string) error {
 	u, err := url.Parse(s)
 	if err != nil {
 		return err
@@ -35,6 +34,14 @@ func (a *authenticationInfo) UnmarshalJSON(in []byte) error {
 	a.ServerAddress = u.Host + u.Path
 	a.Email = u.Query().Get("email")
 	return nil
+}
+
+func (a *authenticationInfo) UnmarshalJSON(in []byte) error {
+	var s string
+	if err := json.Unmarshal(in, &s); err != nil {
+		return err
+	}
+	return a.UnmarshalString(s)
 }
 
 func getAllFrom(r io.Reader) ([]authenticationInfo, error) {
@@ -68,6 +75,25 @@ func ForServer(server string) (docker.AuthConfiguration, bool, error) {
 }
 
 func forServerInFile(server string, file io.Reader) (docker.AuthConfiguration, bool, error) {
+	env := os.Getenv(ENV_NAME)
+	if env != "" {
+		as := strings.Split(env, " ")
+		ai := authenticationInfo{}
+
+		for _, a := range as {
+			err := ai.UnmarshalString(a)
+			if err != nil {
+				return docker.AuthConfiguration{}, false, err
+			}
+			if ai.ServerAddress == server {
+				if server == "index.docker.io/v1/" {
+					ai.ServerAddress = "https://index.docker.io/v1/"
+				}
+				return ai.AuthConfiguration, true, nil
+			}
+		}
+	}
+
 	if server == "" {
 		server = "index.docker.io/v1/"
 	}
