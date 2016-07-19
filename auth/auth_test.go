@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -69,8 +70,17 @@ type authcase struct {
 }
 
 func runCases(cases []authcase, t *testing.T) {
+	tmpfile, err := ioutil.TempFile("", "inv-conf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+	if _, err := tmpfile.Write([]byte(source)); err != nil {
+		t.Fatal(err)
+	}
+
 	for i, el := range cases {
-		auth, foundAuthentication, err := forServerInFile(el.server, strings.NewReader(source))
+		auth, foundAuthentication, err := forServerWithFile(el.server, tmpfile.Name())
 		if err != nil {
 			t.Error("in case", i, err)
 			continue
@@ -143,4 +153,25 @@ func TestUseEnvironmentVariable(t *testing.T) {
 	}
 
 	runCases(cases, t)
+}
+
+func TestUseEnvironmentVariableWithoutFile(t *testing.T) {
+	unsetEnvVariable(t)
+
+	if err := os.Setenv(ENV_NAME, "https://a:b_override@index.docker.io/v1/ https://x:y@example_env.com https://user:p2@blubb.de"); err != nil {
+		t.Fatal(err)
+	}
+
+	ai, found, err := forServerWithFile("example_env.com", "/tmp/non_existent_file")
+	if !found {
+		t.Error("Did not find pw")
+	}
+
+	if err != nil {
+		t.Error("Error occurred", err)
+	}
+
+	if ai.Password != "y" {
+		t.Error("Wrong password")
+	}
 }
