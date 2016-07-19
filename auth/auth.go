@@ -64,7 +64,14 @@ func getAllFrom(r io.Reader) ([]authenticationInfo, error) {
 // However, if an error other than file not found occurs, this error will be
 // returned and the value of the other values is undefined.
 func ForServer(server string) (docker.AuthConfiguration, bool, error) {
-	filename := path.Join(userHomeDir(), ".involucro")
+	return forServerWithFile(server, path.Join(userHomeDir(), ".involucro"))
+}
+
+func forServerWithFile(server string, filename string) (docker.AuthConfiguration, bool, error) {
+	ai, found, err := fromEnv(server)
+	if err != nil || found {
+		return ai, found, err
+	}
 
 	file, err := os.Open(filename)
 	if err != nil {
@@ -74,7 +81,7 @@ func ForServer(server string) (docker.AuthConfiguration, bool, error) {
 	return forServerInFile(server, file)
 }
 
-func forServerInFile(server string, file io.Reader) (docker.AuthConfiguration, bool, error) {
+func fromEnv(server string) (docker.AuthConfiguration, bool, error) {
 	env := os.Getenv(ENV_NAME)
 	if env != "" {
 		as := strings.Split(env, " ")
@@ -93,7 +100,10 @@ func forServerInFile(server string, file io.Reader) (docker.AuthConfiguration, b
 			}
 		}
 	}
+	return docker.AuthConfiguration{}, false, nil
+}
 
+func forServerInFile(server string, file io.Reader) (docker.AuthConfiguration, bool, error) {
 	if server == "" {
 		server = "index.docker.io/v1/"
 	}
