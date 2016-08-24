@@ -43,7 +43,7 @@ install:
       sudo service docker stop && \
       wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION.tar.gz && \
       tar xvf --strip=3 docker-$DOCKER_VERSION.tar.gz && \
-      chmod +x docker && \
+      chmod +x docker || exit 2
       sudo ./docker daemon --log-level=fatal &
     fi
 
@@ -67,8 +67,7 @@ script:
     fi
   - |
     if [[ "$MODE" == "integration" ]]; then
-      ./$FILENAME wrap-yourself
-      go test -v $PKGS
+      ./$FILENAME wrap-yourself && go test -v $PKGS
     fi
 
 deploy:
