@@ -13,6 +13,10 @@ matrix:
       env: MODE=unit FILENAME=involucro.darwin
     - os: linux
       sudo: required
+      env: MODE=integration DOCKER_VERSION=1.12.1 FILENAME=involucro LATEST=1
+      services: [docker]
+    - os: linux
+      sudo: required
       env: MODE=integration DOCKER_VERSION=1.11.2 FILENAME=involucro
       services: [docker]
     - os: linux
@@ -28,10 +32,6 @@ matrix:
       env: MODE=integration DOCKER_VERSION=1.8.3 FILENAME=involucro
       services: [docker]
     - os: linux
-      sudo: required
-      env: MODE=integration DOCKER_VERSION=latest FILENAME=involucro
-      services: [docker]
-    - os: linux
       env: MODE=windows-build
 
 go: 1.6
@@ -40,21 +40,19 @@ install:
   # Replace existing Docker with specific version
   - |
     if [[ "$MODE" == "integration" ]]; then
-      sudo service docker stop
-      wget https://test.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION -O docker
-      chmod +x docker
+      sudo service docker stop && \
+      wget https://test.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION.tar.gz && \
+      tar xvf --strip=3 docker-$DOCKER_VERSION.tar.gz
+      chmod +x docker && \
       sudo ./docker daemon --log-level=fatal &
     fi
 
 before_script:
-  - |
-    if [ "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" ]; then
-      echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
-    fi
+  - test "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" ] && echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
 
 script:
   - PKGS="./internal/... ./auth"
-  - if [[ "$MODE" == "unit" ]]; then go test -v -short $PKGS ; fi
+  - test "x$MODE" = "xunit" && go test -v -short $PKGS
   - |
     if [[ "$MODE" == "windows-build" ]]; then
       go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
@@ -112,7 +110,7 @@ deploy:
     skip_cleanup: true
     script: ./involucro upload-to-hub
     on:
-      condition: $MODE = integration && $DOCKER_VERSION = latest
+      condition: $LATEST = 1
 
 notifications:
   irc: "chat.freenode.net#involucro"
