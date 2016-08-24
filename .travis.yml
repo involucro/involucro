@@ -42,7 +42,7 @@ install:
     if [[ "$MODE" == "integration" ]]; then
       sudo service docker stop && \
       wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION.tgz && \
-      tar xvf --strip=3 docker-$DOCKER_VERSION.tgz && \
+      tar xvf docker-$DOCKER_VERSION.tgz --strip-components=3  && \
       chmod +x docker || exit 2
       sudo ./docker daemon --log-level=fatal &
     fi
