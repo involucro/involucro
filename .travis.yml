@@ -13,23 +13,23 @@ matrix:
       env: MODE=unit FILENAME=involucro.darwin
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.12.1 FILENAME=involucro LATEST=1
+      env: MODE=integration DOCKER_VERSION=1.12.1 EXECUTABLE=docker/docker FILENAME=involucro LATEST=1
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.11.2 FILENAME=involucro
+      env: MODE=integration DOCKER_VERSION=1.11.2 EXECUTABLE=docker/docker FILENAME=involucro
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.10.3 FILENAME=involucro
+      env: MODE=integration DOCKER_VERSION=1.10.3 EXECUTABLE=docker FILENAME=involucro
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.9.1 FILENAME=involucro
+      env: MODE=integration DOCKER_VERSION=1.9.1 EXECUTABLE=docker FILENAME=involucro
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.8.3 FILENAME=involucro
+      env: MODE=integration DOCKER_VERSION=1.8.3 EXECUTABLE=docker FILENAME=involucro
       services: [docker]
     - os: linux
       env: MODE=windows-build
@@ -44,7 +44,7 @@ install:
       wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION.tgz && \
       tar xvf docker-$DOCKER_VERSION.tgz --strip-components=3  && \
       chmod +x docker || exit 2
-      sudo ./docker daemon --log-level=fatal &
+      sudo ./$EXECUTABLE daemon --log-level=fatal &
     fi
 
 before_script: |
