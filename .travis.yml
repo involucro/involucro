@@ -48,7 +48,7 @@ install:
     fi
 
 before_script: |
-  test "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" ] && echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
+  test "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" && echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
 
 script:
   - PKGS="./internal/... ./auth"
