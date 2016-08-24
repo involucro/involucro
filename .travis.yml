@@ -13,11 +13,11 @@ matrix:
       env: MODE=unit FILENAME=involucro.darwin
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.12.1 EXECUTABLE=docker/docker FILENAME=involucro LATEST=1
+      env: MODE=integration DOCKER_VERSION=1.12.1 EXECUTABLE=dockerd FILENAME=involucro LATEST=1
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.11.2 EXECUTABLE=docker/docker FILENAME=involucro
+      env: MODE=integration DOCKER_VERSION=1.11.2 EXECUTABLE=dockerd FILENAME=involucro
       services: [docker]
     - os: linux
       sudo: required
