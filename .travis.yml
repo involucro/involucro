@@ -48,11 +48,11 @@ install:
     fi
 
 before_script: |
-  test "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" && echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
+  test ! "x$TRAVIS_SECURE_ENV_VARS" = "xtrue" || echo '{"auths": ["'${HUB_TOKEN}'"]}' > ~/.involucro
 
 script:
   - PKGS="./internal/... ./auth"
-  - test "x$MODE" = "xunit" && go test -v -short $PKGS
+  - test ! "x$MODE" = "xunit" || go test -v -short $PKGS
   - |
     if [[ "$MODE" == "windows-build" ]]; then
       go get -u github.com/josephspurrier/goversioninfo/cmd/goversioninfo
