@@ -13,23 +13,15 @@ matrix:
       env: MODE=unit FILENAME=involucro.darwin
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.12.1 EXECUTABLE=dockerd DROP=2 FILENAME=involucro LATEST=1
+      env: MODE=integration SOURCE=get.docker.com FILENAME=involucro LATEST=1
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.11.2 EXECUTABLE=dockerd DROP=2 FILENAME=involucro
+      env: MODE=integration SOURCE=test.docker.com FILENAME=involucro
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration DOCKER_VERSION=1.10.3 EXECUTABLE=docker DROP=4 FILENAME=involucro
-      services: [docker]
-    - os: linux
-      sudo: required
-      env: MODE=integration DOCKER_VERSION=1.9.1 EXECUTABLE=docker DROP=4 FILENAME=involucro
-      services: [docker]
-    - os: linux
-      sudo: required
-      env: MODE=integration DOCKER_VERSION=1.8.3 EXECUTABLE=docker DROP=4 FILENAME=involucro
+      env: MODE=integration SOURCE=experimental.docker.com FILENAME=involucro
       services: [docker]
     - os: linux
       env: MODE=windows-build
@@ -40,10 +32,7 @@ install:
   # Replace existing Docker with specific version
   - |
     if [[ "$MODE" == "integration" ]]; then
-      sudo service docker stop && \
-      wget https://get.docker.com/builds/Linux/x86_64/docker-$DOCKER_VERSION.tgz && \
-      tar xvf docker-$DOCKER_VERSION.tgz --strip-components=$DROP || exit 2
-      sudo ./$EXECUTABLE daemon --log-level=fatal &
+      wget https://$SOURCE/ | sudo sh
     fi
 
 before_script: |
