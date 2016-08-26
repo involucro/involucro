@@ -32,7 +32,7 @@ install:
   # Replace existing Docker with specific version
   - |
     if [[ "$MODE" == "integration" ]]; then
-      wget https://$SOURCE/ | sudo sh
+      curl https://$SOURCE/ | sudo sh
     fi
 
 before_script: |
