@@ -255,7 +255,7 @@ func packItUp(sourceDirectory string, tarfile io.Writer, prefix string) error {
 				return err
 			}
 
-			symlinkTarget = preparePathForTarHeader(symlinkOsTarget, sourceDirectory, prefix)
+			symlinkTarget = filepath.ToSlash(symlinkOsTarget)
 		}
 
 		header, err := tar.FileInfoHeader(info, symlinkTarget)
@@ -291,11 +291,10 @@ func preparePathForTarHeader(filename string, sourceDir, prefix string) string {
 }
 
 func rebaseFilename(oldprefix, newprefix string, filename string) string {
-	withoutOld := strings.TrimPrefix(filename, oldprefix)
-	if withoutOld == filename {
-		return filename
+	withoutOld, err := filepath.Rel(oldprefix, filename)
+	if err != nil {
+		ilog.Warn.Logf("Unable to relativize %s with base %s: %v", filename, oldprefix, err)
 	}
-
 	return path.Join(newprefix, withoutOld)
 }
 
