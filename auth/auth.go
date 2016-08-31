@@ -31,7 +31,13 @@ func (a *authenticationInfo) UnmarshalString(s string) error {
 	}
 	a.Username = u.User.Username()
 	a.Password, _ = u.User.Password()
-	a.ServerAddress = u.Host + u.Path
+
+	if u.Host + u.Path == "index.docker.io/v1/" {
+		a.ServerAddress = u.Host + u.Path
+	} else {
+		a.ServerAddress = u.Host
+	}
+
 	a.Email = u.Query().Get("email")
 	return nil
 }

@@ -13,6 +13,7 @@ var source = `{
 		"auths": [
 			"https://user:pw@blubb.de",
 			"https://alice:a11c3@blah.de?email=test@example.com",
+			"https://alice:al@blah2.de/?email=test@example.com",
 			"https://a:b@index.docker.io/v1/"
 		]
 	}`
@@ -41,6 +42,7 @@ func TestGetAllFrom(t *testing.T) {
 	expected := []string{
 		"[user/pw: @ blubb.de]",
 		"[alice/a11c3:test@example.com @ blah.de]",
+		"[alice/al:test@example.com @ blah2.de]",
 		"[a/b: @ index.docker.io/v1/]",
 	}
 
@@ -108,6 +110,7 @@ func TestForServerInFile(t *testing.T) {
 
 	cases := []authcase{
 		{"blah.de", "[alice/a11c3:test@example.com @ blah.de]", true},
+		{"blah2.de", "[alice/al:test@example.com @ blah2.de]", true},
 		{"blee.de", "[/: @ ]", false},
 		{"", "[a/b: @ https://index.docker.io/v1/]", true},
 		{"index.docker.io/v1/", "[a/b: @ https://index.docker.io/v1/]", true},
