@@ -34,18 +34,7 @@ func Main(args []string) error {
 	}
 
 	if remoteWrapTask != "" {
-		ilog.StdLog.SetMinPrintLevel(-2)
-		step := runtime.DecodeWrapStep(remoteWrapTask)
-		client, err := docker.NewClient("unix:///sock")
-		if err != nil {
-			return err
-		}
-
-		ctx := runtime.New(make(map[string]string), client, "/")
-		if err := step.Take(&ctx); err != nil {
-			return err
-		}
-		return nil
+		return runRemoteWrapTask()
 	}
 
 	ilog.StdLog.SetMinPrintLevel(-verbosity)
@@ -108,4 +97,19 @@ func runControlScriptOn(ctx *runtime.Runtime) error {
 	}
 
 	return ctx.RunFile(filename)
+}
+
+func runRemoteWrapTask() error {
+	ilog.StdLog.SetMinPrintLevel(-2)
+	step := runtime.DecodeWrapStep(remoteWrapTask)
+	client, err := docker.NewClient("unix:///sock")
+	if err != nil {
+		return err
+	}
+
+	ctx := runtime.New(make(map[string]string), client, "/")
+	if err := step.Take(&ctx); err != nil {
+		return err
+	}
+	return nil
 }
