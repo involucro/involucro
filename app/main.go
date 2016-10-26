@@ -34,18 +34,7 @@ func Main(args []string) error {
 	}
 
 	if remoteWrapTask != "" {
-		ilog.StdLog.SetMinPrintLevel(-2)
-		step := runtime.DecodeWrapStep(remoteWrapTask)
-		client, err := docker.NewClient("unix:///sock")
-		if err != nil {
-			return err
-		}
-
-		ctx := runtime.New(make(map[string]string), client, "/")
-		if err := step.Take(&ctx); err != nil {
-			return err
-		}
-		return nil
+		return runRemoteWrapTask()
 	}
 
 	ilog.StdLog.SetMinPrintLevel(-verbosity)
@@ -71,36 +60,10 @@ func Main(args []string) error {
 		return fmt.Errorf("Specified both -e and -f")
 	}
 
-	if controlScript != "" {
-		if err := ctx.RunString(controlScript); err != nil {
-			return err
-		}
-	} else {
-		filename := controlFile
-
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			if _, err := os.Stat(filename + ".md"); err == nil {
-				filename += ".md"
-			}
-		}
-
-		if strings.HasSuffix(filename, ".md") {
-			if err := ctx.RunLiterateFile(filename); err != nil {
-				return err
-			}
-		} else {
-			if err := ctx.RunFile(filename); err != nil {
-				return err
-			}
-		}
-	}
+	runControlScriptOn(&ctx)
 
 	if showTasks {
-		tasks := ctx.TaskIDList()
-		sort.Strings(tasks)
-		for _, id := range tasks {
-			fmt.Println(id)
-		}
+		showTasksOf(&ctx)
 		return nil
 	}
 
@@ -108,6 +71,49 @@ func Main(args []string) error {
 		if err := ctx.RunTask(element); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func runControlScriptOn(ctx *runtime.Runtime) error {
+	if controlScript != "" {
+		return ctx.RunString(controlScript)
+	}
+
+	filename := controlFile
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		filename += ".md"
+	}
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return fmt.Errorf("Control file %v (and %v.md) not found", filename, filename)
+	}
+
+	if strings.HasSuffix(filename, ".md") {
+		return ctx.RunLiterateFile(filename)
+	}
+
+	return ctx.RunFile(filename)
+}
+
+func showTasksOf(ctx *runtime.Runtime) {
+	tasks := ctx.TaskIDList()
+	sort.Strings(tasks)
+	for _, id := range tasks {
+		fmt.Println(id)
+	}
+}
+
+func runRemoteWrapTask() error {
+	ilog.StdLog.SetMinPrintLevel(-2)
+	step := runtime.DecodeWrapStep(remoteWrapTask)
+	client, err := docker.NewClient("unix:///sock")
+	if err != nil {
+		return err
+	}
+
+	ctx := runtime.New(make(map[string]string), client, "/")
+	if err := step.Take(&ctx); err != nil {
+		return err
 	}
 	return nil
 }
