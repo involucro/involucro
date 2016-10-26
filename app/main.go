@@ -71,29 +71,7 @@ func Main(args []string) error {
 		return fmt.Errorf("Specified both -e and -f")
 	}
 
-	if controlScript != "" {
-		if err := ctx.RunString(controlScript); err != nil {
-			return err
-		}
-	} else {
-		filename := controlFile
-
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			if _, err := os.Stat(filename + ".md"); err == nil {
-				filename += ".md"
-			}
-		}
-
-		if strings.HasSuffix(filename, ".md") {
-			if err := ctx.RunLiterateFile(filename); err != nil {
-				return err
-			}
-		} else {
-			if err := ctx.RunFile(filename); err != nil {
-				return err
-			}
-		}
-	}
+	runControlScriptOn(&ctx)
 
 	if showTasks {
 		tasks := ctx.TaskIDList()
@@ -110,4 +88,24 @@ func Main(args []string) error {
 		}
 	}
 	return nil
+}
+
+func runControlScriptOn(ctx *runtime.Runtime) error {
+	if controlScript != "" {
+		return ctx.RunString(controlScript)
+	}
+
+	filename := controlFile
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		filename += ".md"
+	}
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return fmt.Errorf("Control file %v (and %v.md) not found", filename, filename)
+	}
+
+	if strings.HasSuffix(filename, ".md") {
+		return ctx.RunLiterateFile(filename)
+	}
+
+	return ctx.RunFile(filename)
 }
