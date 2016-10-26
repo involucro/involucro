@@ -63,11 +63,7 @@ func Main(args []string) error {
 	runControlScriptOn(&ctx)
 
 	if showTasks {
-		tasks := ctx.TaskIDList()
-		sort.Strings(tasks)
-		for _, id := range tasks {
-			fmt.Println(id)
-		}
+		showTasksOf(&ctx)
 		return nil
 	}
 
@@ -97,6 +93,14 @@ func runControlScriptOn(ctx *runtime.Runtime) error {
 	}
 
 	return ctx.RunFile(filename)
+}
+
+func showTasksOf(ctx *runtime.Runtime) {
+	tasks := ctx.TaskIDList()
+	sort.Strings(tasks)
+	for _, id := range tasks {
+		fmt.Println(id)
+	}
 }
 
 func runRemoteWrapTask() error {
