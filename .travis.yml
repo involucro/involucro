@@ -17,10 +17,6 @@ matrix:
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration SOURCE=test.docker.com FILENAME=involucro
-      services: [docker]
-    - os: linux
-      sudo: required
       env: MODE=integration SOURCE=experimental.docker.com FILENAME=involucro
       services: [docker]
     - os: linux
@@ -32,7 +28,6 @@ install:
   # Replace existing Docker with specific version
   - |
     if [[ "$MODE" == "integration" ]]; then
-      sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
       curl https://$SOURCE/ | sudo sh
     fi
 
