@@ -32,7 +32,7 @@ install:
   # Replace existing Docker with specific version
   - |
     if [[ "$MODE" == "integration" ]]; then
-      apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
+      sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
       curl https://$SOURCE/ | sudo sh
     fi
 
