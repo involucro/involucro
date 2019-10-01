@@ -17,16 +17,12 @@ matrix:
       services: [docker]
     - os: linux
       sudo: required
-      env: MODE=integration SOURCE=test.docker.com FILENAME=involucro
-      services: [docker]
-    - os: linux
-      sudo: required
       env: MODE=integration SOURCE=experimental.docker.com FILENAME=involucro
       services: [docker]
     - os: linux
       env: MODE=windows-build
 
-go: "1.10"
+go: "1.13"
 
 install:
   # Replace existing Docker with specific version
