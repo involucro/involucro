@@ -22,7 +22,7 @@ matrix:
     - os: linux
       env: MODE=windows-build
 
-go: "1.13"
+go: "1.15"
 
 install:
   # Replace existing Docker with specific version
