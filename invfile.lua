@@ -7,6 +7,7 @@ local platforms = {
 	amd64 = "linux/amd64",
 	arm64 = "linux/arm64",
 	armv7 = "linux/arm/v7",
+	riscv64 = "linux/riscv64",
 }
 local platform = platforms[arch]
 

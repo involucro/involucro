@@ -43,6 +43,11 @@ linux-arm-v7)
     file "$FILENAME"
     ;;
 
+linux-riscv64)
+    CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -o "$FILENAME" -ldflags "$LDFLAGS" ./cmd/involucro
+    file "$FILENAME"
+    ;;
+
 *)
     echo "Unknown MODE: $MODE" >&2
     exit 1

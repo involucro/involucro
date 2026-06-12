@@ -42,7 +42,8 @@ From source:
 As binary for Linux:
 [amd64](https://github.com/involucro/involucro/releases/download/latest/involucro.linux-amd64) |
 [arm64](https://github.com/involucro/involucro/releases/download/latest/involucro.linux-arm64) |
-[armv7](https://github.com/involucro/involucro/releases/download/latest/involucro.linux-armv7)
+[armv7](https://github.com/involucro/involucro/releases/download/latest/involucro.linux-armv7) |
+[riscv64](https://github.com/involucro/involucro/releases/download/latest/involucro.linux-riscv64)
 
 Or, for Windows:
 [involucro.exe](https://github.com/involucro/involucro/releases/download/latest/involucro.exe)

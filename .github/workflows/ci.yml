@@ -102,7 +102,7 @@ jobs:
           DOCKER_API_VERSION: "1.44"
         run: |
           # Setup directories for each architecture
-          mkdir -p docker-context/amd64 docker-context/arm64 docker-context/armv7
+          mkdir -p docker-context/amd64 docker-context/arm64 docker-context/armv7 docker-context/riscv64
 
           # 1. Prepare amd64 (already built)
           cp involucro docker-context/amd64/involucro
@@ -113,8 +113,11 @@ jobs:
           # 3. Build and prepare armv7
           CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o docker-context/armv7/involucro -ldflags "-s -w -X github.com/involucro/involucro/app.version=$(git describe --tags --always)" ./cmd/involucro
 
+          # 4. Build and prepare riscv64
+          CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -o docker-context/riscv64/involucro -ldflags "-s -w -X github.com/involucro/involucro/app.version=$(git describe --tags --always)" ./cmd/involucro
+
           # Build and Push each architecture using Involucro
-          for arch in amd64 arm64 armv7; do
+          for arch in amd64 arm64 armv7 riscv64; do
             echo "Wrapping and Pushing $arch..."
             TARGETARCH=$arch ./involucro wrap push
           done
@@ -123,17 +126,20 @@ jobs:
           test "$(docker image inspect ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-amd64 --format '{{.Os}}/{{.Architecture}}')" = "linux/amd64"
           test "$(docker image inspect ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-arm64 --format '{{.Os}}/{{.Architecture}}')" = "linux/arm64"
           test "$(docker image inspect ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-armv7 --format '{{.Os}}/{{.Architecture}}/{{.Variant}}')" = "linux/arm/v7"
+          test "$(docker image inspect ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-riscv64 --format '{{.Os}}/{{.Architecture}}')" = "linux/riscv64"
 
           # Create and push the manifest list using the Docker CLI
           # These tags must already exist in the registry (pushed by 'involucro push' above)
           docker manifest create ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG} \
             ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-amd64 \
             ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-arm64 \
-            ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-armv7
+            ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-armv7 \
+            ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-riscv64
 
           docker manifest annotate ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG} ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-amd64 --os linux --arch amd64
           docker manifest annotate ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG} ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-arm64 --os linux --arch arm64
           docker manifest annotate ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG} ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-armv7 --os linux --arch arm --variant v7
+          docker manifest annotate ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG} ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}-riscv64 --os linux --arch riscv64
 
           docker manifest push ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${IMAGE_TAG}
   windows:
@@ -187,6 +193,10 @@ jobs:
             mode: linux-arm-v7
             filename: involucro.linux-armv7
             artifacts: involucro.linux-armv7
+          - name: linux-riscv64
+            mode: linux-riscv64
+            filename: involucro.linux-riscv64
+            artifacts: involucro.linux-riscv64
     steps:
       - uses: actions/checkout@v4
         with:
